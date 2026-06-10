@@ -1,0 +1,17 @@
+# Dependencias
+node_modules
+
+# Builds
+dist
+dev-dist
+coverage
+
+# Logs y temporales
+*.log
+.DS_Store
+*.local
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea

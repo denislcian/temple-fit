@@ -1,0 +1,35 @@
+# Integración continua: lint + tipos + tests + build en cada push y pull request.
+# GitHub Actions es gratuito y sin límite de minutos en repositorios públicos.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint (ESLint + jsx-a11y)
+        run: npm run lint
+
+      - name: Comprobar tipos (TypeScript)
+        run: npm run typecheck
+
+      - name: Tests (Vitest)
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build

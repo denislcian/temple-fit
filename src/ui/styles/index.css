@@ -1,0 +1,12 @@
+/* Capa 0: reset mínimo. El design system completo llega en la Capa 3 (interfaz). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
