@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | **Autor** | Dani (elgnomopalomo@gmail.com) |
-| **Fecha** | 10 de junio de 2026 |
-| **Versión** | 1.0 |
+| **Fecha** | 11 de junio de 2026 |
+| **Versión** | 1.1 (añade la visión de producto ampliada y el roadmap, sección 14) |
 | **Repositorio** | `forjafit` (proyecto personal de portfolio) |
 | **Coste total del proyecto** | 0 € (todas las herramientas son gratuitas) |
 
@@ -125,11 +125,16 @@ Persona que entrena fuerza en gimnasio o en casa y quiere registrar su progreso 
 | F8 | **PWA instalable y 100% offline** (service worker + IndexedDB) | Queja nº 3: dependencia de internet en el gimnasio |
 | F9 | Tema claro/oscuro con contraste AA en ambos | WCAG 1.4.3/1.4.11; dark mode con gris `#121212`, no negro puro |
 | F10 | Ejercicios personalizados ilimitados, en español | Catálogo propio (sección 4) |
+| F11 | **Generador de planes según objetivo** (fuerza/hipertrofia/definición × días/semana × material × nivel) | Algoritmo propio basado en patrones de movimiento, determinista y testeado; las apps comerciales lo venden como IA premium |
 
-**Won't have (decisiones deliberadas, documentadas en el README):**
+**Fuera de la v1 (planificado por fases — ver sección 14, Roadmap):**
 
-- ❌ Cuentas de usuario, login y sincronización en la nube — la v1 es local-first; una capa futura podría añadir Supabase free *detrás de la misma interfaz de repositorio* (con keep-alive semanal en GitHub Actions, porque Supabase pausa proyectos tras 7 días de inactividad).
-- ❌ Feed social, IA, nutrición, integración con wearables — alto esfuerzo, bajo retorno para un equipo de 1; es donde los MVPs mueren por *scope creep*.
+- Cuentas de usuario, login seguro y capa social (likes/comentarios) → v2 con Supabase Free.
+- Nutrición: diario de calorías/macros, dietas con alimentos reales → v2.1 con Open Food Facts.
+- Foto → calorías/macros con IA de visión → v2.2 con Gemini API free tier.
+- Imágenes de ejecución de ejercicios → cuando haya fuente con licencia limpia (wger CC-BY-SA o ilustración propia).
+
+La regla sigue siendo anti-*scope creep*: **cada fase se construye solo cuando la anterior está terminada, testeada y desplegada**, y la v1 debe seguir funcionando 100% offline aunque las capas de red fallen.
 
 ### 5.3 Modelo de datos
 
@@ -296,7 +301,26 @@ Por qué importa: las propias ofertas junior españolas piden testing con Jest/T
 
 ---
 
-## 14. Fuentes principales
+## 14. Roadmap de producto: visión ampliada
+
+La visión a largo plazo es una **plataforma fitness completa y diferenciada**: lo que el mercado ya ofrece (nutrición, social, generación inteligente) pero sin paywalls sobre lo básico, con accesibilidad real y con el núcleo siempre funcional sin conexión. Cada fase usa exclusivamente herramientas con tier gratuito verificado y se apoya en la arquitectura por capas: **lo local sigue siendo la fuente de verdad; la red es una capa opcional que enriquece**.
+
+| Fase | Qué añade | Herramienta gratuita (verificada) | Riesgos y mitigación |
+|---|---|---|---|
+| **v1.1 ✅ hecha** | Generador de planes según objetivo (fuerza/hipertrofia/definición, 2-5 días, material, nivel) | Algoritmo propio en `src/domain` (puro, testeado) | Ninguno: sin dependencias |
+| **v2.0** | Login seguro + perfil | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU. Login con *magic link* y Google OAuth → cumple WCAG 3.3.8 (sin tests cognitivos) y evita gestionar contraseñas | El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. Seguridad: Row Level Security (RLS) en todas las tablas desde el día 1 |
+| **v2.0** | Capa social: publicar la rutina/sesión de hoy, me gusta y comentarios visibles | Supabase (mismas tablas Postgres + RLS + Realtime para ver likes/comentarios en vivo) | Moderación: publicación opt-in, solo texto estructurado (rutina + nota), sin imágenes de usuarios en esta fase. Privacidad: por defecto todo es privado; compartir es una acción explícita |
+| **v2.1** | Diario de calorías y macros + generador de dietas con alimentos reales | **Open Food Facts** (API sin key, 15 req/min, licencia ODbL; búsqueda por nombre y código de barras) + cálculo local: TDEE con Mifflin-St Jeor, reparto de macros por objetivo, y dietas componiendo alimentos reales de OFF con caché local agresiva | Respeto del rate limit con caché en IndexedDB; atribución ODbL en la app. La calidad de datos de OFF es comunitaria → permitir corrección manual |
+| **v2.2** | Foto del plato → calorías/macros estimados | **Google Gemini API (free tier de AI Studio)**: visión multimodal con cuota diaria gratuita | La pieza más frágil: cuotas y términos del free tier cambian → la feature se diseña como *enhancement* opcional con degradación elegante (si no hay cuota/red, registro manual). La clave de API NUNCA va en el repo: proxy mínimo en Supabase Edge Functions (500K invocaciones gratis/mes) |
+| **v2.3** | Imágenes/ilustraciones de ejecución de ejercicios | Las 357 imágenes de wger (CC-BY-SA 4.0, atribución **por imagen** — verificado: solo 83 son de Everkinetic) o ilustraciones SVG propias en el estilo de la app | Nunca datasets scrapeados: hay DMCA confirmado (abr-2026) contra redistribuidores de ExerciseDB. Lo legal es parte del diseño |
+
+**Por qué este orden:** primero lo que no requiere cuentas de terceros (v1.1, ya hecha); después la base de identidad (auth) que la capa social y el proxy de IA necesitan; nutrición antes que IA de visión porque la IA estima contra la base de alimentos; y las imágenes cuando haya presupuesto de tiempo para hacerlas con licencia limpia.
+
+**Implicación arquitectónica clave (argumento de entrevista):** gracias al patrón repositorio de la Capa 1, añadir Supabase no toca la UI ni el dominio — se añade una implementación `SupabaseRepository` junto a la actual `DexieRepository` con sincronización tipo *outbox* (lo local manda, la red reconcilia). El informe original ya anticipaba esta evolución.
+
+---
+
+## 15. Fuentes principales
 
 **Mercado y competidores:** polarismarketresearch.com (fitness app market) · gymgod.app/blog/strong-vs-hevy · setgraph.app (Hevy vs Strong 2026) · github.com/wger-project/wger · github.com/LiamMorrow/LiftLog · github.com/brandonp2412/Flexify · news.ycombinator.com/item?id=38283760 · apps.apple.com (reviews Strong) · trustpilot.com/review/www.jefit.com
 
