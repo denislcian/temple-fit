@@ -93,7 +93,11 @@ export function ExercisesView() {
             <div style={{ flex: 1 }}>
               <span className="title">
                 {exercise.name}
-                {exercise.isCustom && <span className="pr-badge" style={{ marginLeft: '0.5rem' }}>propio</span>}
+                {exercise.isCustom && (
+                  <span className="pr-badge badge--steel" style={{ marginLeft: '0.5rem' }}>
+                    propio
+                  </span>
+                )}
               </span>
               <br />
               <span className="meta">

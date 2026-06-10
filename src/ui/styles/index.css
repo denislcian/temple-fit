@@ -18,6 +18,8 @@
   --accent: #f97316; /* brasa */
   --accent-text: #fb923c; /* texto naranja sobre fondo oscuro: ~7.9:1 */
   --on-accent: #1c1006;
+  --accent-2: #2dd4bf; /* acero templado (teal complementario): ~9.7:1 sobre --bg */
+  --on-accent-2: #042f2a;
   --danger: #f87171;
   --danger-strong: #dc2626;
   --success: #4ade80;
@@ -52,6 +54,8 @@
   --accent: #c2410c;
   --accent-text: #b03c0a; /* ~5.2:1 sobre --bg */
   --on-accent: #fff7ed;
+  --accent-2: #0f766e; /* teal profundo: ~5.3:1 sobre --bg claro */
+  --on-accent-2: #f0fdfa;
   --danger: #b91c1c;
   --danger-strong: #b91c1c;
   --success: #166534;
@@ -76,9 +80,13 @@ html {
 
 body {
   margin: 0;
+  /* Atmósfera: brasa arriba a la derecha, acero templado abajo a la
+     izquierda — los dos polos de la paleta, muy atenuados. */
   background:
     radial-gradient(60rem 24rem at 85% -8rem, var(--bg-glow), transparent 60%),
+    radial-gradient(50rem 30rem at -10% 110%, color-mix(in srgb, var(--accent-2) 6%, transparent), transparent 60%),
     var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 1rem;
@@ -550,10 +558,17 @@ legend {
   text-transform: uppercase;
 }
 
+/* Variante acero (teal): etiquetas informativas, p. ej. ejercicio "propio". */
+.badge--steel {
+  background: var(--accent-2);
+  color: var(--on-accent-2);
+}
+
 .last-time {
   font-size: 0.85rem;
   color: var(--text-muted);
   background: var(--surface-2);
+  border-left: 3px solid var(--accent-2);
   border-radius: var(--radius-s);
   padding: 0.35rem 0.6rem;
   display: inline-block;

@@ -14,6 +14,7 @@ import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
+import { PlanGeneratorDialog } from '../components/PlanGeneratorDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 
 interface EditorState {
@@ -29,6 +30,7 @@ export function RoutinesView() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [nameError, setNameError] = useState<string | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [generatorOpen, setGeneratorOpen] = useState(false);
   const [toDelete, setToDelete] = useState<Routine | null>(null);
 
   const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
@@ -92,6 +94,9 @@ export function RoutinesView() {
       <div className="btn-row" style={{ marginBottom: '1rem' }}>
         <button type="button" className="btn btn--primary" onClick={openNew}>
           + Nueva rutina
+        </button>
+        <button type="button" className="btn" onClick={() => setGeneratorOpen(true)}>
+          ✦ Generar plan según tu objetivo
         </button>
       </div>
 
@@ -213,6 +218,13 @@ export function RoutinesView() {
         exercises={exercises ?? []}
         onPick={addExercise}
         onClose={() => setPickerOpen(false)}
+      />
+
+      <PlanGeneratorDialog
+        open={generatorOpen}
+        exercises={exercises ?? []}
+        onSaved={reload}
+        onClose={() => setGeneratorOpen(false)}
       />
 
       <ConfirmDialog

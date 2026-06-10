@@ -49,7 +49,7 @@ export function ProgressionChart({ data }: { data: ProgressionPoint[] }) {
           type="monotone"
           dataKey="peso"
           name="Peso máximo"
-          stroke="currentColor"
+          stroke="var(--accent-2)"
           strokeWidth={2}
           strokeDasharray="6 4"
           dot={{ r: 3 }}
