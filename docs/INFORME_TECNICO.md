@@ -6,7 +6,7 @@
 |---|---|
 | **Autor** | Dani (elgnomopalomo@gmail.com) |
 | **Fecha** | 11 de junio de 2026 |
-| **Versión** | 1.1 (añade la visión de producto ampliada y el roadmap, sección 14) |
+| **Versión** | 1.2 (fase 2 implementada en modo local: perfil, nutrición, escáner IA y comunidad — ver sección 14) |
 | **Repositorio** | `forjafit` (proyecto personal de portfolio) |
 | **Coste total del proyecto** | 0 € (todas las herramientas son gratuitas) |
 
@@ -127,14 +127,14 @@ Persona que entrena fuerza en gimnasio o en casa y quiere registrar su progreso 
 | F10 | Ejercicios personalizados ilimitados, en español | Catálogo propio (sección 4) |
 | F11 | **Generador de planes según objetivo** (fuerza/hipertrofia/definición × días/semana × material × nivel) | Algoritmo propio basado en patrones de movimiento, determinista y testeado; las apps comerciales lo venden como IA premium |
 
-**Fuera de la v1 (planificado por fases — ver sección 14, Roadmap):**
+**Fase 2 (implementada en las capas 6-8 — estado detallado en la sección 14, Roadmap):**
 
-- Cuentas de usuario, login seguro y capa social (likes/comentarios) → v2 con Supabase Free.
-- Nutrición: diario de calorías/macros, dietas con alimentos reales → v2.1 con Open Food Facts.
-- Foto → calorías/macros con IA de visión → v2.2 con Gemini API free tier.
-- Imágenes de ejecución de ejercicios → cuando haya fuente con licencia limpia (wger CC-BY-SA o ilustración propia).
+- ✅ Perfil local y objetivos de calorías/macros (Mifflin-St Jeor).
+- ✅ Nutrición: diario por comidas, Open Food Facts (nombre + código de barras), generador de dietas y escáner de macros por foto (Gemini, clave del usuario).
+- ✅ Comunidad (likes/comentarios) en modo local de demostración, con la interfaz lista para Supabase.
+- Pendiente de cuenta externa: nube real (Supabase: login + social compartido). Imágenes de ejercicios: cuando haya fuente con licencia limpia.
 
-La regla sigue siendo anti-*scope creep*: **cada fase se construye solo cuando la anterior está terminada, testeada y desplegada**, y la v1 debe seguir funcionando 100% offline aunque las capas de red fallen.
+La regla sigue siendo anti-*scope creep*: **cada fase se construye solo cuando la anterior está terminada, testeada y verificada**, y el núcleo debe seguir funcionando 100% offline aunque las capas de red fallen.
 
 ### 5.3 Modelo de datos
 
@@ -305,16 +305,17 @@ Por qué importa: las propias ofertas junior españolas piden testing con Jest/T
 
 La visión a largo plazo es una **plataforma fitness completa y diferenciada**: lo que el mercado ya ofrece (nutrición, social, generación inteligente) pero sin paywalls sobre lo básico, con accesibilidad real y con el núcleo siempre funcional sin conexión. Cada fase usa exclusivamente herramientas con tier gratuito verificado y se apoya en la arquitectura por capas: **lo local sigue siendo la fuente de verdad; la red es una capa opcional que enriquece**.
 
-| Fase | Qué añade | Herramienta gratuita (verificada) | Riesgos y mitigación |
+| Fase | Qué añade | Herramienta gratuita (verificada) | Estado y notas |
 |---|---|---|---|
-| **v1.1 ✅ hecha** | Generador de planes según objetivo (fuerza/hipertrofia/definición, 2-5 días, material, nivel) | Algoritmo propio en `src/domain` (puro, testeado) | Ninguno: sin dependencias |
-| **v2.0** | Login seguro + perfil | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU. Login con *magic link* y Google OAuth → cumple WCAG 3.3.8 (sin tests cognitivos) y evita gestionar contraseñas | El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. Seguridad: Row Level Security (RLS) en todas las tablas desde el día 1 |
-| **v2.0** | Capa social: publicar la rutina/sesión de hoy, me gusta y comentarios visibles | Supabase (mismas tablas Postgres + RLS + Realtime para ver likes/comentarios en vivo) | Moderación: publicación opt-in, solo texto estructurado (rutina + nota), sin imágenes de usuarios en esta fase. Privacidad: por defecto todo es privado; compartir es una acción explícita |
-| **v2.1** | Diario de calorías y macros + generador de dietas con alimentos reales | **Open Food Facts** (API sin key, 15 req/min, licencia ODbL; búsqueda por nombre y código de barras) + cálculo local: TDEE con Mifflin-St Jeor, reparto de macros por objetivo, y dietas componiendo alimentos reales de OFF con caché local agresiva | Respeto del rate limit con caché en IndexedDB; atribución ODbL en la app. La calidad de datos de OFF es comunitaria → permitir corrección manual |
-| **v2.2** | Foto del plato → calorías/macros estimados | **Google Gemini API (free tier de AI Studio)**: visión multimodal con cuota diaria gratuita | La pieza más frágil: cuotas y términos del free tier cambian → la feature se diseña como *enhancement* opcional con degradación elegante (si no hay cuota/red, registro manual). La clave de API NUNCA va en el repo: proxy mínimo en Supabase Edge Functions (500K invocaciones gratis/mes) |
-| **v2.3** | Imágenes/ilustraciones de ejecución de ejercicios | Las 357 imágenes de wger (CC-BY-SA 4.0, atribución **por imagen** — verificado: solo 83 son de Everkinetic) o ilustraciones SVG propias en el estilo de la app | Nunca datasets scrapeados: hay DMCA confirmado (abr-2026) contra redistribuidores de ExerciseDB. Lo legal es parte del diseño |
+| **v1.1 ✅** | Generador de planes según objetivo (fuerza/hipertrofia/definición, 2-5 días, material, nivel) | Algoritmo propio en `src/domain` (puro, testeado) | **Hecha.** Sin dependencias |
+| **v1.2 ✅** | Perfil local + objetivos de calorías y macros | Mifflin-St Jeor + factores de actividad + reparto de macros, en `src/domain/nutritionTargets.ts` (testeado con valores de referencia) | **Hecha.** El perfil vive en el dispositivo; será la semilla del perfil en la nube |
+| **v1.3 ✅** | Diario de calorías/macros, búsqueda de alimentos, generador de dietas y escáner por foto | **Open Food Facts** (sin key; nombre + código de barras, con caché local y mensajes que distinguen sin-conexión del rate limit) · dietas resolviendo gramos con sistema lineal 3×3 (−1,2% verificado) · **Gemini free tier** con clave del propio usuario guardada solo en su dispositivo | **Hecha.** Catálogo propio de ~70 alimentos en español como base offline |
+| **v1.4 ✅** | Comunidad: feed, publicar rutina/sesión, me gusta y comentarios | Modo local sobre IndexedDB con publicaciones de ejemplo; interfaz `SocialRepository` como contrato | **Hecha** en modo demostración: experiencia completa sin servidor |
+| **v2.0** | Login seguro + comunidad compartida de verdad | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU, Realtime. Login con *magic link* y Google OAuth → cumple WCAG 3.3.8 | Pendiente (requiere crear la cuenta). El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. RLS en todas las tablas desde el día 1. Gracias al patrón repositorio, solo se escribe el adaptador: la UI no cambia |
+| **v2.1** | Proxy para el escáner IA | Supabase Edge Functions (500K invocaciones gratis/mes) | En la app personal actual la clave Gemini es del propio usuario y vive solo en su dispositivo (aceptable); en un despliegue multiusuario debe moverse a un proxy |
+| **v2.2** | Imágenes/ilustraciones de ejecución de ejercicios | Las 357 imágenes de wger (CC-BY-SA 4.0, atribución **por imagen** — verificado: solo 83 son de Everkinetic) o ilustraciones SVG propias | Nunca datasets scrapeados: hay DMCA confirmado (abr-2026) contra redistribuidores de ExerciseDB |
 
-**Por qué este orden:** primero lo que no requiere cuentas de terceros (v1.1, ya hecha); después la base de identidad (auth) que la capa social y el proxy de IA necesitan; nutrición antes que IA de visión porque la IA estima contra la base de alimentos; y las imágenes cuando haya presupuesto de tiempo para hacerlas con licencia limpia.
+**El orden seguido:** primero todo lo que no requiere cuentas de terceros (v1.1-v1.4, hechas — la app completa funciona hoy sin ningún servicio externo obligatorio); después la base de identidad (auth) que convierte la comunidad local en compartida; y las imágenes cuando haya presupuesto de tiempo para hacerlas con licencia limpia.
 
 **Implicación arquitectónica clave (argumento de entrevista):** gracias al patrón repositorio de la Capa 1, añadir Supabase no toca la UI ni el dominio — se añade una implementación `SupabaseRepository` junto a la actual `DexieRepository` con sincronización tipo *outbox* (lo local manda, la red reconcilia). El informe original ya anticipaba esta evolución.
 

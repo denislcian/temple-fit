@@ -53,6 +53,13 @@ Estos huecos no son una corazonada: salen de una investigación de mercado con v
 - **PWA instalable**: "Añadir a pantalla de inicio" y funciona en modo avión.
 - **Tema oscuro (gimnasio) y claro (papel)**, ambos con contraste AA.
 
+Y desde la fase 2 (capas 6-8):
+
+- **Perfil y objetivos**: tus datos corporales calculan tus objetivos de calorías y macros (fórmula de Mifflin-St Jeor) — todo en tu dispositivo.
+- **Nutrición**: diario de calorías/macros por comidas con barras de progreso; catálogo de ~70 alimentos en español; **búsqueda real en Open Food Facts** por nombre y código de barras (gratis, sin API key); **generador de dietas** que compone un día completo con alimentos reales resolviendo los gramos con un sistema lineal 3×3 por comida.
+- **Escáner de macros por foto (IA)**: haz una foto del plato y Gemini estima alimentos, gramos y macros. Usa **tu propia clave gratuita** de [Google AI Studio](https://aistudio.google.com/apikey) (se guarda solo en tu dispositivo, nunca en el código); sin clave o sin red, la app degrada al registro manual.
+- **Comunidad**: publica tu rutina o tu última sesión, recibe me gusta y comentarios. En **modo local de demostración** (todo en tu dispositivo, con publicaciones de ejemplo): la interfaz `SocialRepository` está lista para enchufar Supabase en la fase de nube sin tocar la UI.
+
 📸 *Capturas: ver [docs/capturas](docs/capturas/README.md).*
 
 ## 3. Cómo ejecutarlo
@@ -139,6 +146,12 @@ Cada capa se cerró con su código, sus tests en verde y su commit descriptivo (
 4. Detalles que marcan la diferencia: inputs numéricos con el patrón GOV.UK (`inputmode`, nunca `type="number"`), diálogos con `<dialog>` nativo (focus trap gratis), targets de 44 px, gráficas con resumen + tabla, `prefers-reduced-motion`.
 5. La vista Progreso se carga en diferido (`React.lazy`): Recharts (~107 KB gzip) solo se descarga si entras.
 
+### Capas 6-8 — Fase 2: perfil, nutrición y comunidad
+
+1. **Capa 6 — Perfil** (`feat(perfil)`): datos corporales y objetivo → BMR con Mifflin-St Jeor, TDEE por actividad y reparto de macros (proteína por g/kg según objetivo, grasa al 25%, resto carbohidratos), todo testeado con valores de referencia.
+2. **Capa 7 — Nutrición** (`feat(nutricion)`): diario por comidas con objetivos del perfil; catálogo de alimentos propio; cliente de Open Food Facts con manejo honesto de errores (distingue "sin conexión" del límite de 10 búsquedas/min del servicio, que descubrimos verificando en navegador); generador de dietas con álgebra lineal (regla de Cramer) verificado a −1,2% de las kcal objetivo; escáner por foto con Gemini y degradación elegante; export/import v2 retrocompatible con copias v1.
+3. **Capa 8 — Comunidad** (`feat(comunidad)`): feed con likes accesibles (`aria-pressed` + anuncios), comentarios y publicación de rutinas/sesiones estructuradas. Navegación móvil rediseñada a 5 pestañas + vista "Más". El repositorio social es una interfaz: la implementación local de hoy se sustituirá por el adaptador Supabase de la fase de nube sin tocar ninguna vista.
+
 ### Capa 4 — PWA y auditoría (`feat(pwa): app instalable y 100% offline + auditoria a11y`)
 
 1. `vite-plugin-pwa` (Workbox): manifest en español + precache completa → offline real tras la primera visita. Iconos generados por script propio ([scripts/generate-icons.py](scripts/generate-icons.py)).
@@ -213,11 +226,13 @@ La accesibilidad es el ángulo diferenciador del proyecto: **ningún competidor 
 
 La visión completa (con herramientas gratuitas verificadas y riesgos) está en el [informe técnico, sección 14](docs/INFORME_TECNICO.md). En corto:
 
-- ✅ **v1.1** — Generador de planes según objetivo (hecho).
-- **v2.0** — Login accesible (magic link / Google) y **capa social**: publica tu rutina de hoy, likes y comentarios. Supabase Free + Row Level Security; lo local sigue siendo la fuente de verdad.
-- **v2.1** — Nutrición: diario de calorías/macros y generador de dietas con alimentos reales (Open Food Facts, TDEE Mifflin-St Jeor).
-- **v2.2** — Foto del plato → calorías/macros estimados (Gemini API free tier tras un proxy en Edge Functions; degradación elegante si no hay red/cuota).
-- **v2.3** — Imágenes de ejecución de ejercicios con licencia limpia (wger CC-BY-SA o ilustración propia).
+- ✅ **v1.1** — Generador de planes según objetivo.
+- ✅ **v1.2** — Perfil + objetivos de macros (Mifflin-St Jeor).
+- ✅ **v1.3** — Nutrición completa: diario, Open Food Facts, generador de dietas y escáner por foto (Gemini con clave propia).
+- ✅ **v1.4** — Comunidad en modo local: feed, likes y comentarios con publicaciones de ejemplo.
+- **v2.0** — La nube (requiere crear cuenta gratuita de Supabase): login accesible (magic link / Google), y que la Comunidad sea compartida de verdad — la interfaz `SocialRepository` ya existe, solo falta el adaptador. Recordatorio: keep-alive semanal en GitHub Actions (Supabase Free se pausa a los 7 días) y Row Level Security desde el día 1.
+- **v2.1** — Mover la llamada a Gemini detrás de un proxy en Supabase Edge Functions (en producción multiusuario la clave no debe viajar desde el cliente; en la app personal actual es la clave del propio usuario y vive solo en su dispositivo).
+- **v2.2** — Imágenes de ejecución de ejercicios con licencia limpia (wger CC-BY-SA o ilustración propia).
 
 ## 12. Cómo presentarlo
 
