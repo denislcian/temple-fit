@@ -8,12 +8,14 @@ import '@fontsource/archivo/600.css';
 import '@fontsource/archivo/700.css';
 import '@fontsource/archivo-black/400.css';
 import { requestPersistentStorage } from '../data/db';
+import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
 import { ROUTE_LABELS, ROUTES, useHashRoute, type Route } from './hooks/useHashRoute';
 import { useTheme } from './hooks/useTheme';
 import { ExercisesView } from './views/ExercisesView';
 import { HistoryView } from './views/HistoryView';
+import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { TrainView } from './views/TrainView';
@@ -26,6 +28,13 @@ const ICONS: Record<Route, ReactNode> = {
     // Mancuerna
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11" strokeLinecap="round" />
+    </svg>
+  ),
+  nutricion: (
+    // Manzana
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 8c-1.5-2-4.5-2.5-6.5-.5S3 13 5 16.5 9.5 21 12 19.5c2.5 1.5 5-.5 7-3.5s1.5-7-.5-9S13.5 6 12 8Z" />
+      <path d="M12 8c0-2 1-3.5 3-4.5" strokeLinecap="round" />
     </svg>
   ),
   historial: (
@@ -69,9 +78,9 @@ function AppShell() {
   const [ready, setReady] = useState(false);
   const prevRoute = useRef<Route | null>(null);
 
-  // Primer arranque: sembrar el catálogo y pedir almacenamiento persistente.
+  // Primer arranque: sembrar los catálogos y pedir almacenamiento persistente.
   useEffect(() => {
-    ensureSeeded().then(() => {
+    Promise.all([ensureSeeded(), ensureFoodsSeeded()]).then(() => {
       setReady(true);
       requestPersistentStorage();
     });
@@ -123,6 +132,7 @@ function AppShell() {
         ) : (
           <>
             {route === 'entrenar' && <TrainView />}
+            {route === 'nutricion' && <NutritionView />}
             {route === 'historial' && <HistoryView />}
             {route === 'rutinas' && <RoutinesView />}
             {route === 'ejercicios' && <ExercisesView />}

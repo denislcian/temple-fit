@@ -684,6 +684,36 @@ dialog::backdrop {
   background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
+/* ── Barras de macros (Nutrición) ───────────────────────── */
+.macro-row {
+  margin-bottom: 0.6rem;
+}
+
+.macro-label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.macro-bar {
+  height: 0.6rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.macro-bar .fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  border-radius: 999px;
+  transition: width 300ms ease-out;
+}
+
+.macro-bar .fill.over {
+  background: var(--danger-strong);
+}
+
 /* ── Gráficas ───────────────────────────────────────────── */
 .chart-block {
   margin-bottom: 1.5rem;

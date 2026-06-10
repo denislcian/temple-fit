@@ -3,21 +3,28 @@
 // paywall (lo que Strong y Hevy cobran). Esquema versionado y validado.
 import { db } from './db';
 import type { Exercise, ExportBundle, Routine, Session } from './models';
+import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
 
 /** Exporta toda la base de datos a un paquete JSON versionado. */
 export async function exportBundle(): Promise<ExportBundle> {
-  const [exercises, routines, sessions] = await Promise.all([
+  const [exercises, routines, sessions, allFoods, diary, posts] = await Promise.all([
     db.exercises.toArray(),
     db.routines.toArray(),
     db.sessions.toArray(),
+    db.foods.toArray(),
+    db.diary.toArray(),
+    db.posts.toArray(),
   ]);
   return {
     schema: 'forjafit',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     exercises,
     routines,
     sessions,
+    foods: allFoods.filter((f) => f.source !== 'catalogo'),
+    diary,
+    posts,
   };
 }
 
@@ -25,6 +32,9 @@ export interface ImportResult {
   exercises: number;
   routines: number;
   sessions: number;
+  foods: number;
+  diary: number;
+  posts: number;
 }
 
 /**
@@ -33,31 +43,59 @@ export interface ImportResult {
  */
 export async function importBundle(raw: unknown): Promise<ImportResult> {
   const bundle = parseBundle(raw);
-  const result: ImportResult = { exercises: 0, routines: 0, sessions: 0 };
+  const result: ImportResult = { exercises: 0, routines: 0, sessions: 0, foods: 0, diary: 0, posts: 0 };
 
-  await db.transaction('rw', [db.exercises, db.routines, db.sessions], async () => {
-    for (const exercise of bundle.exercises) {
-      const exists = await db.exercises.get(exercise.id);
-      if (!exists) {
-        await db.exercises.add(exercise);
-        result.exercises++;
-      }
-    }
-    for (const routine of bundle.routines) {
-      const exists = await db.routines.get(routine.id);
-      if (!exists) {
-        await db.routines.add(routine);
-        result.routines++;
-      }
-    }
-    for (const session of bundle.sessions) {
-      const exists = await db.sessions.get(session.id);
-      if (!exists) {
-        await db.sessions.add(session);
-        result.sessions++;
-      }
-    }
-  });
+  await db.transaction(
+    'rw',
+    [db.exercises, db.routines, db.sessions, db.foods, db.diary, db.posts],
+    async () => {
+      const addMissing = async <T extends { id: string }>(
+        get: (id: string) => Promise<T | undefined>,
+        add: (item: T) => Promise<unknown>,
+        items: T[],
+      ): Promise<number> => {
+        let added = 0;
+        for (const item of items) {
+          if (!(await get(item.id))) {
+            await add(item);
+            added++;
+          }
+        }
+        return added;
+      };
+
+      result.exercises = await addMissing(
+        (id) => db.exercises.get(id),
+        (e) => db.exercises.add(e),
+        bundle.exercises,
+      );
+      result.routines = await addMissing(
+        (id) => db.routines.get(id),
+        (r) => db.routines.add(r),
+        bundle.routines,
+      );
+      result.sessions = await addMissing(
+        (id) => db.sessions.get(id),
+        (s) => db.sessions.add(s),
+        bundle.sessions,
+      );
+      result.foods = await addMissing(
+        (id) => db.foods.get(id),
+        (f) => db.foods.add(f),
+        bundle.foods,
+      );
+      result.diary = await addMissing(
+        (id) => db.diary.get(id),
+        (d) => db.diary.add(d),
+        bundle.diary,
+      );
+      result.posts = await addMissing(
+        (id) => db.posts.get(id),
+        (p) => db.posts.add(p),
+        bundle.posts,
+      );
+    },
+  );
 
   return result;
 }
@@ -103,7 +141,9 @@ function parseBundle(raw: unknown): ExportBundle {
   if (raw.schema !== 'forjafit') {
     throw new Error('El archivo no es una exportación de ForjaFit');
   }
-  if (raw.version !== 1) {
+  // v1 (solo entrenamiento) sigue siendo importable: las colecciones nuevas
+  // simplemente llegan vacías.
+  if (raw.version !== 1 && raw.version !== 2) {
     throw new Error(`Versión de exportación no soportada: ${String(raw.version)}`);
   }
   if (
@@ -122,7 +162,74 @@ function parseBundle(raw: unknown): ExportBundle {
   for (const s of raw.sessions) {
     if (!isSession(s)) throw new Error('Hay una sesión con formato inválido en el archivo');
   }
-  return raw as unknown as ExportBundle;
+
+  const foods = Array.isArray(raw.foods) ? raw.foods : [];
+  const diary = Array.isArray(raw.diary) ? raw.diary : [];
+  const posts = Array.isArray(raw.posts) ? raw.posts : [];
+  for (const f of foods) {
+    if (!isFood(f)) throw new Error('Hay un alimento con formato inválido en el archivo');
+  }
+  for (const d of diary) {
+    if (!isDiaryEntry(d)) throw new Error('Hay una entrada del diario con formato inválido');
+  }
+  for (const p of posts) {
+    if (!isPost(p)) throw new Error('Hay una publicación con formato inválido en el archivo');
+  }
+
+  return {
+    schema: 'forjafit',
+    version: 2,
+    exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : new Date().toISOString(),
+    exercises: raw.exercises as Exercise[],
+    routines: raw.routines as Routine[],
+    sessions: raw.sessions as Session[],
+    foods: foods as FoodItem[],
+    diary: diary as DiaryEntry[],
+    posts: posts as Post[],
+  };
+}
+
+function hasMacros(v: Record<string, unknown>): boolean {
+  return (
+    typeof v.kcal === 'number' &&
+    typeof v.proteinG === 'number' &&
+    typeof v.carbsG === 'number' &&
+    typeof v.fatG === 'number'
+  );
+}
+
+function isFood(v: unknown): v is FoodItem {
+  return (
+    isRecord(v) &&
+    typeof v.id === 'string' &&
+    typeof v.name === 'string' &&
+    typeof v.source === 'string' &&
+    hasMacros(v)
+  );
+}
+
+function isDiaryEntry(v: unknown): v is DiaryEntry {
+  return (
+    isRecord(v) &&
+    typeof v.id === 'string' &&
+    typeof v.date === 'string' &&
+    typeof v.meal === 'string' &&
+    typeof v.foodName === 'string' &&
+    typeof v.grams === 'number' &&
+    hasMacros(v)
+  );
+}
+
+function isPost(v: unknown): v is Post {
+  return (
+    isRecord(v) &&
+    typeof v.id === 'string' &&
+    typeof v.author === 'string' &&
+    typeof v.createdAt === 'string' &&
+    typeof v.text === 'string' &&
+    typeof v.likes === 'number' &&
+    Array.isArray(v.comments)
+  );
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

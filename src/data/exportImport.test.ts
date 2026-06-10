@@ -21,7 +21,7 @@ describe('exportImport', () => {
 
     const bundle = await exportBundle();
     expect(bundle.schema).toBe('forjafit');
-    expect(bundle.version).toBe(1);
+    expect(bundle.version).toBe(2);
     expect(bundle.exercises.length).toBeGreaterThanOrEqual(50);
     expect(bundle.routines).toHaveLength(1);
     expect(bundle.sessions).toHaveLength(1);
@@ -47,6 +47,26 @@ describe('exportImport', () => {
     await expect(
       importBundle({ schema: 'forjafit', version: 99, exercises: [], routines: [], sessions: [] }),
     ).rejects.toThrow(/Versión de exportación no soportada/);
+  });
+
+  it('sigue importando copias antiguas v1 (sin nutrición ni comunidad)', async () => {
+    const v1 = {
+      schema: 'forjafit',
+      version: 1,
+      exportedAt: '2026-06-01T00:00:00.000Z',
+      exercises: [],
+      routines: [],
+      sessions: [
+        {
+          id: 'legacy-1',
+          date: '2026-05-01T10:00:00.000Z',
+          entries: [{ exerciseId: 'sentadilla', sets: [{ reps: 5, weightKg: 80, done: true }] }],
+        },
+      ],
+    };
+    const result = await importBundle(v1);
+    expect(result.sessions).toBe(1);
+    expect(result.foods).toBe(0);
   });
 
   it('genera CSV con una fila por serie y campos escapados', () => {

@@ -85,14 +85,21 @@ export interface Routine {
   createdAt: string;
 }
 
-/** Paquete de exportación/importación de datos. Esquema versionado. */
+import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
+
+/** Paquete de exportación/importación de datos. Esquema versionado:
+ *  v1 = entrenamiento · v2 añade nutrición y comunidad. */
 export interface ExportBundle {
   schema: 'forjafit';
-  version: 1;
+  version: 2;
   exportedAt: string;
   exercises: Exercise[];
   routines: Routine[];
   sessions: Session[];
+  /** Alimentos del usuario y caché de OFF (el catálogo base no se exporta). */
+  foods: FoodItem[];
+  diary: DiaryEntry[];
+  posts: Post[];
 }
 
 export function newId(): string {

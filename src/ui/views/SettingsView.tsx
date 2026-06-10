@@ -3,6 +3,7 @@
 // comerciales es el secuestro de sus datos.
 import { useCallback, useRef, useState } from 'react';
 import { exportBundle, importBundle, sessionsToCsv } from '../../data/exportImport';
+import { loadGeminiKey, saveGeminiKey } from '../../data/profile';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { useAnnounce } from '../components/Announcer';
@@ -28,6 +29,7 @@ function download(filename: string, content: string, type: string) {
 export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   const announce = useAnnounce();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [geminiKey, setGeminiKey] = useState(loadGeminiKey);
   const [importMessage, setImportMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(
     null,
   );
@@ -135,6 +137,42 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
           Consejo: exporta el JSON de vez en cuando como copia de seguridad. La importación fusiona
           datos, nunca borra lo que ya tienes.
         </p>
+      </section>
+
+      <section className="card" aria-labelledby="gemini-heading">
+        <h2 id="gemini-heading">Escáner de macros por foto (opcional)</h2>
+        <p className="muted">
+          La función "Foto (IA)" de Nutrición usa la API gratuita de Google Gemini con tu propia
+          clave. Créala gratis en{' '}
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+            aistudio.google.com/apikey
+          </a>
+          . La clave se guarda <strong>solo en este dispositivo</strong> (nunca en el código ni en
+          ningún servidor de la app).
+        </p>
+        <div className="field">
+          <label htmlFor="gemini-key">Clave de API de Gemini</label>
+          <input
+            id="gemini-key"
+            className="input"
+            type="password"
+            value={geminiKey}
+            onChange={(e) => setGeminiKey(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div className="btn-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              saveGeminiKey(geminiKey);
+              announce(geminiKey.trim() ? 'Clave de Gemini guardada en este dispositivo' : 'Clave de Gemini eliminada');
+            }}
+          >
+            Guardar clave
+          </button>
+        </div>
       </section>
 
       <section className="card" aria-labelledby="help-heading">

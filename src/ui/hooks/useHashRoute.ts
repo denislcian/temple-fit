@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export const ROUTES = [
   'entrenar',
+  'nutricion',
   'historial',
   'rutinas',
   'ejercicios',
@@ -17,6 +18,7 @@ export type Route = (typeof ROUTES)[number];
 
 export const ROUTE_LABELS: Record<Route, string> = {
   entrenar: 'Entrenar',
+  nutricion: 'Nutrición',
   historial: 'Historial',
   rutinas: 'Rutinas',
   ejercicios: 'Ejercicios',

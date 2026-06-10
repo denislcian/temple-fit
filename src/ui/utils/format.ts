@@ -21,6 +21,22 @@ export function formatShortDate(iso: string): string {
   return shortDateFormat.format(new Date(iso));
 }
 
+/** Fecha local en formato YYYY-MM-DD (para las claves del diario). */
+export function localDateISO(date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+/** Suma días a una fecha YYYY-MM-DD (respetando el calendario local). */
+export function addDays(dateISO: string, days: number): string {
+  const [y, m, d] = dateISO.split('-').map(Number);
+  const date = new Date(y!, m! - 1, d! + days);
+  return localDateISO(date);
+}
+
 /** Parsea un entero positivo escrito por el usuario ("8"). */
 export function parseReps(raw: string): number | null {
   if (!/^\d+$/.test(raw.trim())) return null;
