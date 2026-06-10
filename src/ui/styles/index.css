@@ -193,8 +193,9 @@ p {
   gap: 1rem;
   height: var(--header-h);
   padding: 0 1rem;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px);
+  /* Sin backdrop-filter: crearía un containing block y rompería la
+     navegación fija inferior en móvil (position: fixed de un descendiente). */
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
   border-bottom: 1px solid var(--border);
 }
 
@@ -287,6 +288,19 @@ p {
 
   .main-nav ul {
     justify-content: space-around;
+  }
+
+  /* 6 destinos en 375px: targets de 44px sin desbordar. */
+  .main-nav a {
+    flex: 1;
+    min-width: 0;
+    padding: 0.35rem 0.15rem;
+    font-size: 0.66rem;
+  }
+
+  .main-nav li {
+    flex: 1;
+    min-width: 0;
   }
 }
 
