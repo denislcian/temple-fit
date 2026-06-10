@@ -1,0 +1,37 @@
+// CAPA 1 · Datos — Base de datos local (IndexedDB vía Dexie).
+// Los datos viven en el dispositivo del usuario: sin cuentas, sin servidores.
+import Dexie, { type EntityTable } from 'dexie';
+import type { Exercise, Routine, Session } from './models';
+
+export class ForjaFitDB extends Dexie {
+  exercises!: EntityTable<Exercise, 'id'>;
+  routines!: EntityTable<Routine, 'id'>;
+  sessions!: EntityTable<Session, 'id'>;
+
+  constructor() {
+    super('forjafit');
+    // Solo se indexan los campos por los que se busca u ordena.
+    this.version(1).stores({
+      exercises: 'id, name, muscleGroup, isCustom',
+      routines: 'id, name, createdAt',
+      sessions: 'id, date',
+    });
+  }
+}
+
+export const db = new ForjaFitDB();
+
+/**
+ * Pide al navegador almacenamiento persistente para reducir el riesgo de
+ * que IndexedDB se borre por presión de disco (best-effort).
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (navigator.storage?.persist) {
+    try {
+      return await navigator.storage.persist();
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
