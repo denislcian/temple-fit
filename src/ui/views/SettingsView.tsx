@@ -6,6 +6,7 @@ import { exportBundle, importBundle, sessionsToCsv } from '../../data/exportImpo
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { useAnnounce } from '../components/Announcer';
+import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { Theme } from '../hooks/useTheme';
 
@@ -66,6 +67,8 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       <h1 id="view-title" tabIndex={-1}>
         Ajustes
       </h1>
+
+      <ProfileCard />
 
       <section className="card" aria-labelledby="theme-heading">
         <h2 id="theme-heading">Tema</h2>
