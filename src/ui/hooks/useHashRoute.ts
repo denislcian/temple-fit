@@ -7,11 +7,13 @@ import { useCallback, useEffect, useState } from 'react';
 export const ROUTES = [
   'entrenar',
   'nutricion',
+  'social',
+  'progreso',
   'historial',
   'rutinas',
   'ejercicios',
-  'progreso',
   'ajustes',
+  'mas',
 ] as const;
 
 export type Route = (typeof ROUTES)[number];
@@ -19,12 +21,19 @@ export type Route = (typeof ROUTES)[number];
 export const ROUTE_LABELS: Record<Route, string> = {
   entrenar: 'Entrenar',
   nutricion: 'Nutrición',
+  social: 'Comunidad',
+  progreso: 'Progreso',
   historial: 'Historial',
   rutinas: 'Rutinas',
   ejercicios: 'Ejercicios',
-  progreso: 'Progreso',
   ajustes: 'Ajustes',
+  mas: 'Más',
 };
+
+/** Pestañas principales (siempre visibles). */
+export const PRIMARY_ROUTES: readonly Route[] = ['entrenar', 'nutricion', 'social', 'progreso'];
+/** Solo en la cabecera de escritorio; en móvil viven dentro de "Más". */
+export const SECONDARY_ROUTES: readonly Route[] = ['historial', 'rutinas', 'ejercicios', 'ajustes'];
 
 function parseHash(): Route {
   const raw = window.location.hash.replace(/^#\/?/, '');

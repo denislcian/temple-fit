@@ -11,13 +11,21 @@ import { requestPersistentStorage } from '../data/db';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
-import { ROUTE_LABELS, ROUTES, useHashRoute, type Route } from './hooks/useHashRoute';
+import {
+  PRIMARY_ROUTES,
+  ROUTE_LABELS,
+  SECONDARY_ROUTES,
+  useHashRoute,
+  type Route,
+} from './hooks/useHashRoute';
 import { useTheme } from './hooks/useTheme';
 import { ExercisesView } from './views/ExercisesView';
 import { HistoryView } from './views/HistoryView';
+import { MoreView } from './views/MoreView';
 import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
+import { SocialView } from './views/SocialView';
 import { TrainView } from './views/TrainView';
 
 // Recharts solo se descarga si el usuario entra en Progreso (code splitting).
@@ -35,6 +43,23 @@ const ICONS: Record<Route, ReactNode> = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M12 8c-1.5-2-4.5-2.5-6.5-.5S3 13 5 16.5 9.5 21 12 19.5c2.5 1.5 5-.5 7-3.5s1.5-7-.5-9S13.5 6 12 8Z" />
       <path d="M12 8c0-2 1-3.5 3-4.5" strokeLinecap="round" />
+    </svg>
+  ),
+  social: (
+    // Dos personas
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" strokeLinecap="round" />
+      <circle cx="17" cy="9.5" r="2.4" />
+      <path d="M16 14.7c2.3.2 4 1.7 4.5 4.3" strokeLinecap="round" />
+    </svg>
+  ),
+  mas: (
+    // Puntos
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none" />
     </svg>
   ),
   historial: (
@@ -112,7 +137,7 @@ function AppShell() {
         </a>
         <nav className="main-nav" aria-label="Principal">
           <ul>
-            {ROUTES.map((r) => (
+            {PRIMARY_ROUTES.map((r) => (
               <li key={r}>
                 <a href={`#/${r}`} aria-current={route === r ? 'page' : undefined}>
                   {ICONS[r]}
@@ -120,6 +145,27 @@ function AppShell() {
                 </a>
               </li>
             ))}
+            {SECONDARY_ROUTES.map((r) => (
+              <li key={r} className="nav-item--desktop">
+                <a href={`#/${r}`} aria-current={route === r ? 'page' : undefined}>
+                  {ICONS[r]}
+                  <span>{ROUTE_LABELS[r]}</span>
+                </a>
+              </li>
+            ))}
+            <li className="nav-item--mobile">
+              <a
+                href="#/mas"
+                aria-current={
+                  route === 'mas' || (SECONDARY_ROUTES as readonly string[]).includes(route)
+                    ? 'page'
+                    : undefined
+                }
+              >
+                {ICONS.mas}
+                <span>{ROUTE_LABELS.mas}</span>
+              </a>
+            </li>
           </ul>
         </nav>
       </header>
@@ -133,6 +179,8 @@ function AppShell() {
           <>
             {route === 'entrenar' && <TrainView />}
             {route === 'nutricion' && <NutritionView />}
+            {route === 'social' && <SocialView />}
+            {route === 'mas' && <MoreView icons={ICONS} />}
             {route === 'historial' && <HistoryView />}
             {route === 'rutinas' && <RoutinesView />}
             {route === 'ejercicios' && <ExercisesView />}
