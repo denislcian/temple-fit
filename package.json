@@ -19,6 +19,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@fontsource/archivo": "^5.2.8",
+    "@fontsource/archivo-black": "^5.2.8",
     "dexie": "^4.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

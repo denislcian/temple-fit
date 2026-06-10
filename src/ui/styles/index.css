@@ -1,12 +1,673 @@
-/* Capa 0: reset mínimo. El design system completo llega en la Capa 3 (interfaz). */
+/* ============================================================
+   ForjaFit · Design system "hierro y brasa"
+   CAPA 3 · Interfaz — tokens, base accesible y componentes.
+   Contrastes verificados AA (4.5:1 texto, 3:1 UI) en ambos temas.
+   ============================================================ */
+
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+  /* Tema oscuro por defecto: la app se usa en el gimnasio.
+     Fondo gris hierro (no negro puro: evita halation). */
+  --bg: #14161a;
+  --bg-glow: rgba(249, 115, 22, 0.07);
+  --surface: #1d2026;
+  --surface-2: #262a31;
+  --border: #3a404b;
+  --text: #edeef0;
+  --text-muted: #a9b0bb;
+  --accent: #f97316; /* brasa */
+  --accent-text: #fb923c; /* texto naranja sobre fondo oscuro: ~7.9:1 */
+  --on-accent: #1c1006;
+  --danger: #f87171;
+  --danger-strong: #dc2626;
+  --success: #4ade80;
+  --on-success: #06270f;
+  --focus: #ffb454;
+
+  --font-display: 'Archivo Black', 'Arial Black', sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* WCAG 2.5.8: tamaño mínimo de objetivo. Usamos el recomendado móvil. */
+  --target: 44px;
+
+  --header-h: 3.5rem;
+
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  /* Papel cálido: un cuaderno de gimnasio, no un formulario clínico. */
+  --bg: #f6f3ed;
+  --bg-glow: rgba(194, 65, 12, 0.06);
+  --surface: #fffdf8;
+  --surface-2: #ede8df;
+  --border: #c9c2b4;
+  --text: #211d18;
+  --text-muted: #5d564a;
+  --accent: #c2410c;
+  --accent-text: #b03c0a; /* ~5.2:1 sobre --bg */
+  --on-accent: #fff7ed;
+  --danger: #b91c1c;
+  --danger-strong: #b91c1c;
+  --success: #166534;
+  --on-success: #f0fdf4;
+  --focus: #9a3412;
+  --shadow: 0 8px 24px rgba(60, 40, 20, 0.12);
+
+  color-scheme: light;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+html {
+  /* WCAG 2.4.11: que la cabecera sticky nunca tape el elemento con foco. */
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
+  background:
+    radial-gradient(60rem 24rem at 85% -8rem, var(--bg-glow), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  /* Receptor del foco al cambiar de vista (gestión de foco en SPA). */
+  outline: none;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+/* Foco SIEMPRE visible, alto contraste en ambos temas (WCAG 2.4.7). */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Utilidades ─────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -10rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  border-radius: var(--radius-m);
+  text-decoration: none;
+  transition: top 120ms ease-out;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+.kicker {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 0.35rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Estructura de la app ───────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: var(--header-h);
+  padding: 0 1rem;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: var(--target);
+}
+
+.brand .spark {
+  width: 0.85rem;
+  height: 0.85rem;
+  background: linear-gradient(135deg, var(--accent) 0%, #fbbf24 100%);
+  clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%);
+}
+
+.brand em {
+  font-style: normal;
+  color: var(--accent-text);
+}
+
+.app-main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 7rem; /* hueco para la nav inferior en móvil */
+}
+
+/* Navegación principal: inferior en móvil (alcance del pulgar),
+   superior integrada en escritorio. */
+.main-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.main-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0.35rem 0.6rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-m);
+}
+
+.main-nav a svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.main-nav a:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.main-nav a[aria-current='page'] {
+  color: var(--accent-text);
+}
+
+.main-nav a[aria-current='page'] svg {
+  filter: drop-shadow(0 0 6px var(--bg-glow));
+}
+
+@media (max-width: 47.9rem) {
+  .main-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
+  }
+
+  .main-nav ul {
+    justify-content: space-around;
+  }
+}
+
+@media (min-width: 48rem) {
+  .main-nav ul {
+    gap: 0.25rem;
+  }
+
+  .main-nav a {
+    flex-direction: row;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .app-main {
+    padding-bottom: 2rem;
+  }
+}
+
+/* ── Tarjetas y secciones ───────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card--accent {
+  border-left: 4px solid var(--accent);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 0.75rem;
+}
+
+.stat .value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat .label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Botones (todos ≥ 44px de alto: WCAG 2.5.8 holgado) ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--target);
+  min-width: var(--target);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn--danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+  background: transparent;
+}
+
+.btn--danger:hover {
+  border-color: var(--danger);
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+.btn--small {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.7rem;
+}
+
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ── Formularios ────────────────────────────────────────── */
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.field .hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0;
+}
+
+.input,
+select.input,
+textarea.input {
+  width: 100%;
+  min-height: var(--target);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+}
+
+.input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+  border-width: 2px;
+}
+
+.field .error {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.3rem 0 0;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 0.4rem;
+}
+
+/* ── Registro de series ─────────────────────────────────── */
+.set-row {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr auto auto;
+  gap: 0.5rem;
+  align-items: end;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.set-row .set-index {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  padding-bottom: 0.6rem;
+}
+
+.set-row .field {
+  margin: 0;
+}
+
+.set-row .input {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.set-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: transparent;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.set-done[aria-pressed='true'] {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--on-success);
+}
+
+.pr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, var(--accent), #d97706);
+  color: var(--on-accent);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.last-time {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border-radius: var(--radius-s);
+  padding: 0.35rem 0.6rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Temporizador de descanso ───────────────────────────── */
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.timer .display {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 5.5rem;
+}
+
+.timer .display.running {
+  color: var(--accent-text);
+}
+
+/* ── Listas ─────────────────────────────────────────────── */
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item-list > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.item-list .title {
+  font-weight: 700;
+}
+
+.item-list .meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Tablas (alternativa accesible a las gráficas) ──────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.table caption {
+  text-align: left;
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/* ── Diálogos ───────────────────────────────────────────── */
+dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  color: var(--text);
+  padding: 1.25rem;
+  max-width: min(34rem, calc(100vw - 2rem));
+  width: 100%;
+  box-shadow: var(--shadow);
+}
+
+dialog::backdrop {
+  background: rgba(8, 9, 11, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Avisos de estado ───────────────────────────────────── */
+.notice {
+  border-radius: var(--radius-m);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.notice--success {
+  border-color: var(--success);
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.notice--error {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* ── Gráficas ───────────────────────────────────────────── */
+.chart-block {
+  margin-bottom: 1.5rem;
+}
+
+.chart-summary {
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-s);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.chart-frame {
+  height: 260px;
 }
