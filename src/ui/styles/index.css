@@ -190,7 +190,21 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Estructura de la app ───────────────────────────────── */
+/* ── Estructura de la app ─────────────────────────────────
+   Móvil  (<48rem): cabecera superior + pestañas fijas inferiores (pulgar).
+   Escritorio (≥48rem): barra lateral fija con secciones agrupadas
+   (más jerarquía visual y espacio para crecer que una fila de enlaces). */
+.app-shell {
+  min-height: 100vh;
+}
+
+@media (min-width: 48rem) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+  }
+}
+
 .app-header {
   position: sticky;
   top: 0;
@@ -205,6 +219,13 @@ p {
      navegación fija inferior en móvil (position: fixed de un descendiente). */
   background: color-mix(in srgb, var(--bg) 96%, transparent);
   border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 48rem) {
+  /* En escritorio la marca vive en la barra lateral. */
+  .app-header {
+    display: none;
+  }
 }
 
 .brand {
@@ -234,38 +255,50 @@ p {
 .app-main {
   max-width: 60rem;
   margin: 0 auto;
+  width: 100%;
   padding: 1.25rem 1rem 7rem; /* hueco para la nav inferior en móvil */
 }
 
-/* Navegación principal: inferior en móvil (alcance del pulgar),
-   superior integrada en escritorio. */
+@media (min-width: 48rem) {
+  .app-main {
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* Botón de tema rápido (sol/luna), accesible desde cualquier vista. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.05rem;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+
+/* ── Navegación: base común ─────────────────────────────── */
 .main-nav ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
 }
 
 .main-nav a {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  min-width: var(--target);
-  min-height: var(--target);
-  padding: 0.35rem 0.6rem;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   border-radius: var(--radius-m);
-}
-
-.main-nav a svg {
-  width: 1.35rem;
-  height: 1.35rem;
 }
 
 .main-nav a:hover {
@@ -277,24 +310,145 @@ p {
   color: var(--accent-text);
 }
 
-.main-nav a[aria-current='page'] svg {
-  filter: drop-shadow(0 0 6px var(--bg-glow));
+/* ── Móvil: pestañas inferiores ─────────────────────────── */
+.nav-tabs {
+  display: flex;
+  justify-content: space-around;
 }
 
-/* Las secciones secundarias solo aparecen en la cabecera de escritorio;
-   en móvil viven dentro de la pestaña "Más" (máx. 5 pestañas inferiores). */
+.nav-tabs a {
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--target);
+  padding: 0.4rem 0.15rem 0.35rem;
+  font-size: 0.66rem;
+}
+
+.nav-tabs a svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/* Indicador de pestaña activa: barra superior de brasa. */
+.nav-tabs a[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--accent), #fbbf24);
+}
+
 @media (max-width: 47.9rem) {
-  .nav-item--desktop {
+  .main-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    padding: 0 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
+  }
+
+  .nav-sections {
     display: none;
   }
 }
 
+/* ── Escritorio: barra lateral ──────────────────────────── */
 @media (min-width: 48rem) {
-  .nav-item--mobile {
+  .main-nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 0.9rem;
+    border-right: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 55%, var(--bg));
+  }
+
+  .nav-tabs {
     display: none;
+  }
+
+  .nav-sections {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.25rem;
+  }
+
+  .nav-brand {
+    margin: 0.25rem 0.5rem 1.5rem;
+  }
+
+  .nav-kicker {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 1.1rem 0.6rem 0.35rem;
+  }
+
+  .nav-sections a {
+    position: relative;
+    gap: 0.7rem;
+    min-height: var(--target);
+    padding: 0.45rem 0.7rem;
+    font-size: 0.92rem;
+  }
+
+  .nav-sections a svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Sección activa: barra lateral de brasa + fondo sutil. */
+  .nav-sections a[aria-current='page'] {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .nav-sections a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: -0.9rem;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, var(--accent), #fbbf24);
+  }
+
+  /* Empuja Ajustes y el botón de tema al pie de la barra. */
+  .nav-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .nav-footer .theme-toggle {
+    align-self: flex-start;
+    margin-left: 0.35rem;
   }
 }
 
+/* Vista "Más" (solo se llega desde móvil). */
 .more-link {
   display: flex;
   align-items: center;
@@ -315,53 +469,6 @@ p {
   width: 1.6rem;
   height: 1.6rem;
   color: var(--accent-text);
-}
-
-@media (max-width: 47.9rem) {
-  .main-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 20;
-    background: color-mix(in srgb, var(--bg) 92%, transparent);
-    backdrop-filter: blur(8px);
-    border-top: 1px solid var(--border);
-    padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
-  }
-
-  .main-nav ul {
-    justify-content: space-around;
-  }
-
-  /* 6 destinos en 375px: targets de 44px sin desbordar. */
-  .main-nav a {
-    flex: 1;
-    min-width: 0;
-    padding: 0.35rem 0.15rem;
-    font-size: 0.66rem;
-  }
-
-  .main-nav li {
-    flex: 1;
-    min-width: 0;
-  }
-}
-
-@media (min-width: 48rem) {
-  .main-nav ul {
-    gap: 0.25rem;
-  }
-
-  .main-nav a {
-    flex-direction: row;
-    gap: 0.45rem;
-    font-size: 0.85rem;
-  }
-
-  .app-main {
-    padding-bottom: 2rem;
-  }
 }
 
 /* ── Tarjetas y secciones ───────────────────────────────── */

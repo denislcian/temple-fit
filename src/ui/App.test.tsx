@@ -19,14 +19,28 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /entrenamiento libre/i })).toBeInTheDocument();
   });
 
-  it('tiene navegación principal con las 6 vistas y skip link', async () => {
+  it('tiene navegación principal con todas las vistas y skip link', async () => {
     render(<App />);
     await screen.findByRole('heading', { level: 1, name: /entrenar/i });
 
     const nav = screen.getByRole('navigation', { name: /principal/i });
     expect(nav).toBeInTheDocument();
-    for (const label of ['Entrenar', 'Historial', 'Rutinas', 'Ejercicios', 'Progreso', 'Ajustes']) {
-      expect(screen.getByRole('link', { name: new RegExp(label, 'i') })).toBeInTheDocument();
+    // Los destinos existen en las pestañas móviles, en la barra lateral de
+    // escritorio o en ambas (jsdom no aplica las media queries que muestran
+    // solo una de las dos).
+    for (const label of [
+      'Entrenar',
+      'Nutrición',
+      'Comunidad',
+      'Progreso',
+      'Historial',
+      'Rutinas',
+      'Ejercicios',
+      'Ajustes',
+      'Más',
+    ]) {
+      const links = screen.getAllByRole('link', { name: new RegExp(`^${label}$`, 'i') });
+      expect(links.length).toBeGreaterThanOrEqual(1);
     }
     expect(screen.getByRole('link', { name: /saltar al contenido/i })).toBeInTheDocument();
   });

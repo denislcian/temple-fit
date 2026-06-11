@@ -150,7 +150,8 @@ Cada capa se cerró con su código, sus tests en verde y su commit descriptivo (
 
 1. **Capa 6 — Perfil** (`feat(perfil)`): datos corporales y objetivo → BMR con Mifflin-St Jeor, TDEE por actividad y reparto de macros (proteína por g/kg según objetivo, grasa al 25%, resto carbohidratos), todo testeado con valores de referencia.
 2. **Capa 7 — Nutrición** (`feat(nutricion)`): diario por comidas con objetivos del perfil; catálogo de alimentos propio; cliente de Open Food Facts con manejo honesto de errores (distingue "sin conexión" del límite de 10 búsquedas/min del servicio, que descubrimos verificando en navegador); generador de dietas con álgebra lineal (regla de Cramer) verificado a −1,2% de las kcal objetivo; escáner por foto con Gemini y degradación elegante; export/import v2 retrocompatible con copias v1.
-3. **Capa 8 — Comunidad** (`feat(comunidad)`): feed con likes accesibles (`aria-pressed` + anuncios), comentarios y publicación de rutinas/sesiones estructuradas. Navegación móvil rediseñada a 5 pestañas + vista "Más". El repositorio social es una interfaz: la implementación local de hoy se sustituirá por el adaptador Supabase de la fase de nube sin tocar ninguna vista.
+3. **Capa 8 — Comunidad** (`feat(comunidad)`): feed con likes accesibles (`aria-pressed` + anuncios), comentarios y publicación de rutinas/sesiones estructuradas. El repositorio social es una interfaz: la implementación local de hoy se sustituirá por el adaptador Supabase de la fase de nube sin tocar ninguna vista.
+4. **Navegación adaptativa** (`feat(nav)`): en móvil, 5 pestañas inferiores en la zona del pulgar con indicador de pestaña activa + vista "Más"; en escritorio, barra lateral fija con secciones agrupadas (Entrenamiento / Seguimiento / Comunidad), marca arriba y Ajustes + cambio de tema al pie. Título de la pestaña del navegador dinámico por vista.
 
 ### Capa 4 — PWA y auditoría (`feat(pwa): app instalable y 100% offline + auditoria a11y`)
 

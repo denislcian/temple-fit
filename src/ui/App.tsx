@@ -18,7 +18,7 @@ import {
   useHashRoute,
   type Route,
 } from './hooks/useHashRoute';
-import { useTheme } from './hooks/useTheme';
+import { useTheme, type Theme } from './hooks/useTheme';
 import { ExercisesView } from './views/ExercisesView';
 import { HistoryView } from './views/HistoryView';
 import { MoreView } from './views/MoreView';
@@ -96,6 +96,45 @@ const ICONS: Record<Route, ReactNode> = {
   ),
 };
 
+// Agrupación de la barra lateral de escritorio (en móvil: 5 pestañas + Más).
+const NAV_GROUPS: Array<{ label: string; routes: Route[] }> = [
+  { label: 'Entrenamiento', routes: ['entrenar', 'rutinas', 'ejercicios', 'historial'] },
+  { label: 'Seguimiento', routes: ['progreso', 'nutricion'] },
+  { label: 'Comunidad', routes: ['social'] },
+];
+
+function Brand() {
+  return (
+    <a className="brand" href="#/entrenar">
+      <span className="spark" aria-hidden="true" />
+      Forja<em>Fit</em>
+    </a>
+  );
+}
+
+function NavLink({ to, route }: { to: Route; route: Route }) {
+  return (
+    <a href={`#/${to}`} aria-current={route === to ? 'page' : undefined}>
+      {ICONS[to]}
+      <span>{ROUTE_LABELS[to]}</span>
+    </a>
+  );
+}
+
+function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  const next: Theme = theme === 'dark' ? 'light' : 'dark';
+  return (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => setTheme(next)}
+      aria-label={next === 'light' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+    >
+      <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+    </button>
+  );
+}
+
 function AppShell() {
   const { route } = useHashRoute();
   const { theme, setTheme } = useTheme();
@@ -111,6 +150,11 @@ function AppShell() {
     });
   }, []);
 
+  // Título de la pestaña del navegador acorde a la vista actual.
+  useEffect(() => {
+    document.title = `${ROUTE_LABELS[route]} — ForjaFit`;
+  }, [route]);
+
   // Gestión de foco al navegar (no en la carga inicial). Se compara con la
   // ruta anterior en lugar de usar un flag: así sobrevive al doble efecto
   // de StrictMode en desarrollo.
@@ -125,50 +169,69 @@ function AppShell() {
   }, [route, announce]);
 
   return (
-    <>
+    <div className="app-shell">
       <a className="skip-link" href="#main">
         Saltar al contenido
       </a>
 
+      {/* Cabecera solo en móvil: marca + cambio de tema. */}
       <header className="app-header">
-        <a className="brand" href="#/entrenar">
-          <span className="spark" aria-hidden="true" />
-          Forja<em>Fit</em>
-        </a>
-        <nav className="main-nav" aria-label="Principal">
-          <ul>
-            {PRIMARY_ROUTES.map((r) => (
-              <li key={r}>
-                <a href={`#/${r}`} aria-current={route === r ? 'page' : undefined}>
-                  {ICONS[r]}
-                  <span>{ROUTE_LABELS[r]}</span>
-                </a>
-              </li>
-            ))}
-            {SECONDARY_ROUTES.map((r) => (
-              <li key={r} className="nav-item--desktop">
-                <a href={`#/${r}`} aria-current={route === r ? 'page' : undefined}>
-                  {ICONS[r]}
-                  <span>{ROUTE_LABELS[r]}</span>
-                </a>
-              </li>
-            ))}
-            <li className="nav-item--mobile">
-              <a
-                href="#/mas"
-                aria-current={
-                  route === 'mas' || (SECONDARY_ROUTES as readonly string[]).includes(route)
-                    ? 'page'
-                    : undefined
-                }
-              >
-                {ICONS.mas}
-                <span>{ROUTE_LABELS.mas}</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
+        <Brand />
+        <ThemeToggle theme={theme} setTheme={setTheme} />
       </header>
+
+      <nav className="main-nav" aria-label="Principal">
+        {/* Móvil: 5 pestañas inferiores en la zona del pulgar. */}
+        <ul className="nav-tabs">
+          {PRIMARY_ROUTES.map((r) => (
+            <li key={r}>
+              <NavLink to={r} route={route} />
+            </li>
+          ))}
+          <li>
+            <a
+              href="#/mas"
+              aria-current={
+                route === 'mas' || (SECONDARY_ROUTES as readonly string[]).includes(route)
+                  ? 'page'
+                  : undefined
+              }
+            >
+              {ICONS.mas}
+              <span>{ROUTE_LABELS.mas}</span>
+            </a>
+          </li>
+        </ul>
+
+        {/* Escritorio: barra lateral con secciones agrupadas. */}
+        <div className="nav-sections">
+          <div className="nav-brand">
+            <Brand />
+          </div>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <span className="nav-kicker" aria-hidden="true">
+                {group.label}
+              </span>
+              <ul aria-label={group.label}>
+                {group.routes.map((r) => (
+                  <li key={r}>
+                    <NavLink to={r} route={route} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <div className="nav-footer">
+            <ul aria-label="Aplicación">
+              <li>
+                <NavLink to="ajustes" route={route} />
+              </li>
+            </ul>
+            <ThemeToggle theme={theme} setTheme={setTheme} />
+          </div>
+        </div>
+      </nav>
 
       <main className="app-main" id="main">
         {!ready ? (
@@ -199,7 +262,7 @@ function AppShell() {
           </>
         )}
       </main>
-    </>
+    </div>
   );
 }
 
