@@ -1,22 +1,37 @@
 // CAPA 3 · Interfaz — Progreso: la analítica que los comerciales cobran.
 // Cada gráfica sigue el patrón accesible de tres capas (ver ChartBlock).
 import { useCallback, useMemo, useState } from 'react';
+import { db } from '../../data/db';
+import { getAllMeasurements } from '../../data/repositories/bodyRepo';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
+import { achievements, trainingCalendar, weeklyStreak } from '../../domain/consistency';
 import { computeRecords } from '../../domain/records';
 import { exerciseProgression, summarizeProgress, totals } from '../../domain/stats';
 import { weeklyVolume } from '../../domain/volume';
+import { BodyMeasureDialog } from '../components/BodyMeasureDialog';
 import { ChartBlock } from '../components/ChartBlock';
+import { BodyWeightChart } from '../components/charts/BodyWeightChart';
 import { ProgressionChart } from '../components/charts/ProgressionChart';
 import { VolumeChart } from '../components/charts/VolumeChart';
 import { SelectField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
-import { formatKg, formatShortDate } from '../utils/format';
+import { formatKg, formatShortDate, localDateISO } from '../utils/format';
 
 export default function ProgressView() {
   const { data: sessions } = useAsyncData(useCallback(() => getAllSessions(), []));
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
+  const { data: measurements, reload: reloadBody } = useAsyncData(
+    useCallback(() => getAllMeasurements(), []),
+  );
+  const { data: extras } = useAsyncData(
+    useCallback(async () => {
+      const [diary, posts] = await Promise.all([db.diary.toArray(), db.posts.toArray()]);
+      return { diary, posts };
+    }, []),
+  );
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [measuring, setMeasuring] = useState(false);
 
   const trainedExercises = useMemo(() => {
     if (!sessions || !exercises) return [];
@@ -59,10 +74,19 @@ export default function ProgressView() {
     );
   }
 
+  const today = localDateISO();
   const total = totals(sessions);
   const weekly = weeklyVolume(sessions);
   const weeklySummary = summarizeProgress(weekly.map((w) => w.volumeKg));
   const records = computeRecords(sessions);
+  const streak = weeklyStreak(sessions, today);
+  const calendar = trainingCalendar(sessions, today, 12);
+  const trainedDays = calendar.filter((d) => d.sessions > 0).length;
+  const badges = extras
+    ? achievements({ sessions, diary: extras.diary, posts: extras.posts, todayISO: today })
+    : [];
+  const unlockedCount = badges.filter((b) => b.achieved).length;
+  const lastMeasure = measurements && measurements.length > 0 ? measurements[measurements.length - 1] : undefined;
 
   const progression = exerciseId ? exerciseProgression(sessions, exerciseId) : [];
   const rmSummary = summarizeProgress(progression.map((p) => p.best1RM));
@@ -93,6 +117,107 @@ export default function ProgressView() {
           <span className="label">kg de volumen total</span>
         </div>
       </div>
+
+      <section className="card" aria-labelledby="streak-heading">
+        <h2 id="streak-heading">Constancia</h2>
+        <div className="stat-grid">
+          <div className="stat">
+            <span className="value num">{streak.currentWeeks}</span>
+            <span className="label">semanas seguidas (racha actual)</span>
+          </div>
+          <div className="stat">
+            <span className="value num">{streak.bestWeeks}</span>
+            <span className="label">mejor racha de semanas</span>
+          </div>
+        </div>
+        <p className="chart-summary">
+          Has entrenado {trainedDays} {trainedDays === 1 ? 'día' : 'días'} en las últimas 12
+          semanas.
+        </p>
+        <div className="heatmap" aria-hidden="true">
+          {calendar.map((day) => (
+            <span
+              key={day.date}
+              className={`cell ${day.sessions > 0 ? (day.sessions > 1 ? 'l2' : 'l1') : ''}`}
+              title={`${day.date}: ${day.sessions} ${day.sessions === 1 ? 'sesión' : 'sesiones'}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {badges.length > 0 && (
+        <section className="card" aria-labelledby="badges-heading">
+          <h2 id="badges-heading">
+            Logros <span className="muted num">· {unlockedCount} de {badges.length}</span>
+          </h2>
+          <ul className="achievements">
+            {badges.map((badge) => (
+              <li key={badge.id} className={badge.achieved ? 'achieved' : ''}>
+                <span className="medal" aria-hidden="true">
+                  {badge.achieved ? '🏅' : '🔒'}
+                </span>
+                <span>
+                  <span className="title">{badge.title}</span>
+                  <br />
+                  <span className="meta">
+                    {badge.description}
+                    {!badge.achieved && badge.progress ? ` — llevas ${badge.progress}` : ''}
+                  </span>
+                  <span className="visually-hidden">
+                    {badge.achieved ? '. Conseguido' : '. Pendiente'}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="card" aria-labelledby="body-heading">
+        <div className="btn-row" style={{ justifyContent: 'space-between' }}>
+          <h2 id="body-heading" style={{ margin: 0 }}>
+            Tu cuerpo
+          </h2>
+          <button type="button" className="btn btn--small btn--primary" onClick={() => setMeasuring(true)}>
+            + Registrar medidas
+          </button>
+        </div>
+        {lastMeasure ? (
+          <>
+            <p className="muted num" style={{ marginTop: '0.5rem' }}>
+              Último registro ({formatShortDate(`${lastMeasure.date}T00:00:00.000Z`)}):{' '}
+              {formatKg(lastMeasure.weightKg)}
+              {lastMeasure.bodyFatPct ? ` · ${lastMeasure.bodyFatPct}% graso` : ''}
+              {lastMeasure.waistCm ? ` · cintura ${lastMeasure.waistCm} cm` : ''}
+            </p>
+            {measurements && measurements.length > 1 && (
+              <ChartBlock
+                title="Evolución del peso corporal"
+                summary={(() => {
+                  const s = summarizeProgress(measurements.map((m) => m.weightKg));
+                  return s
+                    ? `Tu peso pasó de ${formatKg(s.firstValue)} a ${formatKg(s.lastValue)} (${s.deltaAbs > 0 ? '+' : ''}${s.deltaAbs} kg) en ${s.points} registros.`
+                    : '';
+                })()}
+                tableHeaders={['Fecha', 'Peso (kg)', '% graso', 'Cintura (cm)']}
+                tableRows={measurements.map((m) => [
+                  formatShortDate(`${m.date}T00:00:00.000Z`),
+                  m.weightKg.toLocaleString('es-ES'),
+                  m.bodyFatPct?.toLocaleString('es-ES') ?? '—',
+                  m.waistCm?.toLocaleString('es-ES') ?? '—',
+                ])}
+              >
+                <BodyWeightChart data={measurements} />
+              </ChartBlock>
+            )}
+          </>
+        ) : (
+          <p className="muted">
+            Registra tu peso (y, si quieres, medidas) para ver tu evolución. El peso actualiza
+            automáticamente tus objetivos de macros.
+          </p>
+        )}
+      </section>
 
       <div className="card">
         <ChartBlock
@@ -156,6 +281,8 @@ export default function ProgressView() {
           </ChartBlock>
         </div>
       )}
+
+      <BodyMeasureDialog open={measuring} onSaved={reloadBody} onClose={() => setMeasuring(false)} />
     </>
   );
 }

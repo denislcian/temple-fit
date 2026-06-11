@@ -87,13 +87,15 @@ export interface Routine {
   createdAt: string;
 }
 
+import type { BodyMeasurement, WaterDay } from './bodyModels';
 import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
 
 /** Paquete de exportación/importación de datos. Esquema versionado:
- *  v1 = entrenamiento · v2 añade nutrición y comunidad. */
+ *  v1 = entrenamiento · v2 añade nutrición y comunidad · v3 cuerpo e
+ *  hidratación. Las versiones antiguas siguen siendo importables. */
 export interface ExportBundle {
   schema: 'forjafit';
-  version: 2;
+  version: 3;
   exportedAt: string;
   exercises: Exercise[];
   routines: Routine[];
@@ -102,6 +104,8 @@ export interface ExportBundle {
   foods: FoodItem[];
   diary: DiaryEntry[];
   posts: Post[];
+  bodyMetrics: BodyMeasurement[];
+  water: WaterDay[];
 }
 
 export function newId(): string {

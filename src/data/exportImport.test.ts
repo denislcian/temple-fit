@@ -21,7 +21,7 @@ describe('exportImport', () => {
 
     const bundle = await exportBundle();
     expect(bundle.schema).toBe('forjafit');
-    expect(bundle.version).toBe(2);
+    expect(bundle.version).toBe(3);
     expect(bundle.exercises.length).toBeGreaterThanOrEqual(50);
     expect(bundle.routines).toHaveLength(1);
     expect(bundle.sessions).toHaveLength(1);

@@ -1,6 +1,7 @@
 // CAPA 1 · Datos — Base de datos local (IndexedDB vía Dexie).
 // Los datos viven en el dispositivo del usuario: sin cuentas, sin servidores.
 import Dexie, { type EntityTable } from 'dexie';
+import type { BodyMeasurement, WaterDay } from './bodyModels';
 import type { Exercise, Routine, Session } from './models';
 import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
 
@@ -11,6 +12,8 @@ export class ForjaFitDB extends Dexie {
   foods!: EntityTable<FoodItem, 'id'>;
   diary!: EntityTable<DiaryEntry, 'id'>;
   posts!: EntityTable<Post, 'id'>;
+  bodyMetrics!: EntityTable<BodyMeasurement, 'id'>;
+  water!: EntityTable<WaterDay, 'date'>;
 
   constructor() {
     super('forjafit');
@@ -29,6 +32,17 @@ export class ForjaFitDB extends Dexie {
       foods: 'id, name, source, barcode',
       diary: 'id, date, meal',
       posts: 'id, createdAt',
+    });
+    // v3: medidas corporales e hidratación.
+    this.version(3).stores({
+      exercises: 'id, name, muscleGroup, isCustom',
+      routines: 'id, name, createdAt',
+      sessions: 'id, date',
+      foods: 'id, name, source, barcode',
+      diary: 'id, date, meal',
+      posts: 'id, createdAt',
+      bodyMetrics: 'id, date',
+      water: 'date',
     });
   }
 }

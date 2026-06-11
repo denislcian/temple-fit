@@ -1,23 +1,27 @@
 // CAPA 1 · Datos — Exportación e importación de datos.
 // Propiedad de los datos: el usuario puede llevarse TODO en un clic, sin
 // paywall (lo que Strong y Hevy cobran). Esquema versionado y validado.
+import type { BodyMeasurement, WaterDay } from './bodyModels';
 import { db } from './db';
 import type { Exercise, ExportBundle, Routine, Session } from './models';
 import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
 
 /** Exporta toda la base de datos a un paquete JSON versionado. */
 export async function exportBundle(): Promise<ExportBundle> {
-  const [exercises, routines, sessions, allFoods, diary, posts] = await Promise.all([
-    db.exercises.toArray(),
-    db.routines.toArray(),
-    db.sessions.toArray(),
-    db.foods.toArray(),
-    db.diary.toArray(),
-    db.posts.toArray(),
-  ]);
+  const [exercises, routines, sessions, allFoods, diary, posts, bodyMetrics, water] =
+    await Promise.all([
+      db.exercises.toArray(),
+      db.routines.toArray(),
+      db.sessions.toArray(),
+      db.foods.toArray(),
+      db.diary.toArray(),
+      db.posts.toArray(),
+      db.bodyMetrics.toArray(),
+      db.water.toArray(),
+    ]);
   return {
     schema: 'forjafit',
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     exercises,
     routines,
@@ -25,6 +29,8 @@ export async function exportBundle(): Promise<ExportBundle> {
     foods: allFoods.filter((f) => f.source !== 'catalogo'),
     diary,
     posts,
+    bodyMetrics,
+    water,
   };
 }
 
@@ -35,6 +41,8 @@ export interface ImportResult {
   foods: number;
   diary: number;
   posts: number;
+  bodyMetrics: number;
+  water: number;
 }
 
 /**
@@ -43,11 +51,20 @@ export interface ImportResult {
  */
 export async function importBundle(raw: unknown): Promise<ImportResult> {
   const bundle = parseBundle(raw);
-  const result: ImportResult = { exercises: 0, routines: 0, sessions: 0, foods: 0, diary: 0, posts: 0 };
+  const result: ImportResult = {
+    exercises: 0,
+    routines: 0,
+    sessions: 0,
+    foods: 0,
+    diary: 0,
+    posts: 0,
+    bodyMetrics: 0,
+    water: 0,
+  };
 
   await db.transaction(
     'rw',
-    [db.exercises, db.routines, db.sessions, db.foods, db.diary, db.posts],
+    [db.exercises, db.routines, db.sessions, db.foods, db.diary, db.posts, db.bodyMetrics, db.water],
     async () => {
       const addMissing = async <T extends { id: string }>(
         get: (id: string) => Promise<T | undefined>,
@@ -94,6 +111,18 @@ export async function importBundle(raw: unknown): Promise<ImportResult> {
         (p) => db.posts.add(p),
         bundle.posts,
       );
+      result.bodyMetrics = await addMissing(
+        (id) => db.bodyMetrics.get(id),
+        (m) => db.bodyMetrics.add(m),
+        bundle.bodyMetrics,
+      );
+      // El agua usa la fecha como clave (no hay id).
+      for (const day of bundle.water) {
+        if (!(await db.water.get(day.date))) {
+          await db.water.add(day);
+          result.water++;
+        }
+      }
     },
   );
 
@@ -141,9 +170,9 @@ function parseBundle(raw: unknown): ExportBundle {
   if (raw.schema !== 'forjafit') {
     throw new Error('El archivo no es una exportación de ForjaFit');
   }
-  // v1 (solo entrenamiento) sigue siendo importable: las colecciones nuevas
-  // simplemente llegan vacías.
-  if (raw.version !== 1 && raw.version !== 2) {
+  // Las versiones antiguas siguen siendo importables: las colecciones que
+  // no existían en su época simplemente llegan vacías.
+  if (raw.version !== 1 && raw.version !== 2 && raw.version !== 3) {
     throw new Error(`Versión de exportación no soportada: ${String(raw.version)}`);
   }
   if (
@@ -166,6 +195,8 @@ function parseBundle(raw: unknown): ExportBundle {
   const foods = Array.isArray(raw.foods) ? raw.foods : [];
   const diary = Array.isArray(raw.diary) ? raw.diary : [];
   const posts = Array.isArray(raw.posts) ? raw.posts : [];
+  const bodyMetrics = Array.isArray(raw.bodyMetrics) ? raw.bodyMetrics : [];
+  const water = Array.isArray(raw.water) ? raw.water : [];
   for (const f of foods) {
     if (!isFood(f)) throw new Error('Hay un alimento con formato inválido en el archivo');
   }
@@ -175,10 +206,16 @@ function parseBundle(raw: unknown): ExportBundle {
   for (const p of posts) {
     if (!isPost(p)) throw new Error('Hay una publicación con formato inválido en el archivo');
   }
+  for (const m of bodyMetrics) {
+    if (!isBodyMeasurement(m)) throw new Error('Hay una medida corporal con formato inválido');
+  }
+  for (const w of water) {
+    if (!isWaterDay(w)) throw new Error('Hay un registro de hidratación con formato inválido');
+  }
 
   return {
     schema: 'forjafit',
-    version: 2,
+    version: 3,
     exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : new Date().toISOString(),
     exercises: raw.exercises as Exercise[],
     routines: raw.routines as Routine[],
@@ -186,7 +223,22 @@ function parseBundle(raw: unknown): ExportBundle {
     foods: foods as FoodItem[],
     diary: diary as DiaryEntry[],
     posts: posts as Post[],
+    bodyMetrics: bodyMetrics as BodyMeasurement[],
+    water: water as WaterDay[],
   };
+}
+
+function isBodyMeasurement(v: unknown): v is BodyMeasurement {
+  return (
+    isRecord(v) &&
+    typeof v.id === 'string' &&
+    typeof v.date === 'string' &&
+    typeof v.weightKg === 'number'
+  );
+}
+
+function isWaterDay(v: unknown): v is WaterDay {
+  return isRecord(v) && typeof v.date === 'string' && typeof v.glasses === 'number';
 }
 
 function hasMacros(v: Record<string, unknown>): boolean {
