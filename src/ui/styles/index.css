@@ -870,11 +870,19 @@ dialog::backdrop {
   padding: 0.6rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
-  opacity: 0.65;
+}
+
+/* Pendiente: se atenúa SOLO lo decorativo (medalla y borde), nunca el
+   texto — una opacity en el item entero rompería el contraste AA. */
+.achievements li:not(.achieved) {
+  border-style: dashed;
+}
+
+.achievements li:not(.achieved) .medal {
+  filter: grayscale(1) opacity(0.55);
 }
 
 .achievements li.achieved {
-  opacity: 1;
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }

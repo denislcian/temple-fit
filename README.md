@@ -60,6 +60,17 @@ Y desde la fase 2 (capas 6-8):
 - **Escáner de macros por foto (IA)**: haz una foto del plato y Gemini estima alimentos, gramos y macros. Usa **tu propia clave gratuita** de [Google AI Studio](https://aistudio.google.com/apikey) (se guarda solo en tu dispositivo, nunca en el código); sin clave o sin red, la app degrada al registro manual.
 - **Comunidad**: publica tu rutina o tu última sesión, recibe me gusta y comentarios. En **modo local de demostración** (todo en tu dispositivo, con publicaciones de ejemplo): la interfaz `SocialRepository` está lista para enchufar Supabase en la fase de nube sin tocar la UI.
 
+Y desde la fase 3 (capas 9-11), las herramientas que el mercado cobra en premium:
+
+- **Calculadora de discos**: dime tu peso objetivo y te digo qué poner en cada lado de la barra (con aviso si el peso no es montable con discos estándar) + **series de calentamiento** sugeridas (barra, 40/60/80%).
+- **Progresión sugerida**: al ver "lo que hiciste la última vez", la app te dice si toca subir peso, buscar una repetición más o consolidar (doble progresión clásica) — sin humo de IA, reglas claras y testeadas.
+- **Cronómetro de sesión** y duración guardada en el historial.
+- **Tu cuerpo**: registro de peso y medidas (cintura, pecho, brazo, muslo, % graso) con gráfica de evolución; el peso nuevo **recalcula automáticamente tus objetivos de macros**.
+- **Constancia**: racha de semanas entrenando y heatmap de los últimos 3 meses.
+- **12 logros** derivados de tus datos reales (tonelaje acumulado, rachas, récords, días de diario…): o lo has hecho o no — no hay insignias regaladas.
+- **Hidratación**: contador de vasos de agua por día.
+- **Copiar el día anterior** en el diario de nutrición (la fricción nº 1 del registro diario).
+
 📸 *Capturas: ver [docs/capturas](docs/capturas/README.md).*
 
 ## 3. Cómo ejecutarlo
@@ -152,6 +163,13 @@ Cada capa se cerró con su código, sus tests en verde y su commit descriptivo (
 2. **Capa 7 — Nutrición** (`feat(nutricion)`): diario por comidas con objetivos del perfil; catálogo de alimentos propio; cliente de Open Food Facts con manejo honesto de errores (distingue "sin conexión" del límite de 10 búsquedas/min del servicio, que descubrimos verificando en navegador); generador de dietas con álgebra lineal (regla de Cramer) verificado a −1,2% de las kcal objetivo; escáner por foto con Gemini y degradación elegante; export/import v2 retrocompatible con copias v1.
 3. **Capa 8 — Comunidad** (`feat(comunidad)`): feed con likes accesibles (`aria-pressed` + anuncios), comentarios y publicación de rutinas/sesiones estructuradas. El repositorio social es una interfaz: la implementación local de hoy se sustituirá por el adaptador Supabase de la fase de nube sin tocar ninguna vista.
 4. **Navegación adaptativa** (`feat(nav)`): en móvil, 5 pestañas inferiores en la zona del pulgar con indicador de pestaña activa + vista "Más"; en escritorio, barra lateral fija con secciones agrupadas (Entrenamiento / Seguimiento / Comunidad), marca arriba y Ajustes + cambio de tema al pie. Título de la pestaña del navegador dinámico por vista.
+
+### Capas 9-11 — Fase 3: herramientas premium, cuerpo y constancia
+
+1. **Capa 9 — Herramientas de fuerza** (`feat(fuerza)`): `gymTools.ts` con la calculadora de discos (algoritmo voraz con residual cuando el peso no es montable), series de calentamiento (redondeadas a múltiplos de 2,5 kg) y sugerencia de progresión (subir / repetir / consolidar). Cronómetro de sesión y duración persistida.
+2. **Capa 10 — Cuerpo y constancia** (`feat(cuerpo)`): medidas corporales que sincronizan el perfil (y con él los objetivos de macros), racha semanal robusta (no se rompe un lunes por la mañana), heatmap de 12 semanas y 12 logros **derivados** de los datos — al ser funciones puras sobre el estado real, no hay nada que pueda desincronizarse. DB v3 y export v3 retrocompatible.
+3. **Capa 11 — Nutrición plus** (`feat(nutricion)`): hidratación diaria persistida y "copiar el día anterior".
+4. Bug real cazado por axe en esta fase (en el log de git): una `opacity` sobre los logros pendientes degradaba el contraste del texto a 3,98:1 — se corrigió atenuando solo lo decorativo. Las herramientas automáticas valen cuando se ejecutan sobre la UI real.
 
 ### Capa 4 — PWA y auditoría (`feat(pwa): app instalable y 100% offline + auditoria a11y`)
 
