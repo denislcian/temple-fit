@@ -922,6 +922,25 @@ dialog::backdrop {
   background: var(--danger-strong);
 }
 
+/* ── Hidratación ────────────────────────────────────────── */
+.water {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+
+.water-cups .cup {
+  filter: grayscale(1) opacity(0.35);
+}
+
+.water-cups .cup.full {
+  filter: none;
+}
+
 /* ── Gráficas ───────────────────────────────────────────── */
 .chart-block {
   margin-bottom: 1.5rem;

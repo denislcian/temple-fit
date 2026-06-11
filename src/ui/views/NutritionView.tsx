@@ -2,10 +2,17 @@
 // Lo que MyFitnessPal cobra (escáner, objetivos, sin anuncios), aquí gratis
 // y con tus datos en tu dispositivo.
 import { useCallback, useMemo, useState } from 'react';
+import { WATER_GOAL_GLASSES } from '../../data/bodyModels';
 import type { Meal } from '../../data/nutritionModels';
 import { MEAL_LABELS, MEALS } from '../../data/nutritionModels';
 import { loadProfile } from '../../data/profile';
-import { dayTotals, getDiary, removeDiaryEntry } from '../../data/repositories/nutritionRepo';
+import { getWater, setWater } from '../../data/repositories/bodyRepo';
+import {
+  addDiaryEntryAbsolute,
+  dayTotals,
+  getDiary,
+  removeDiaryEntry,
+} from '../../data/repositories/nutritionRepo';
 import { macroTargets } from '../../domain/nutritionTargets';
 import { useAnnounce } from '../components/Announcer';
 import { AddFoodDialog } from '../components/AddFoodDialog';
@@ -43,9 +50,37 @@ export function NutritionView() {
 
   const loadEntries = useCallback(() => getDiary(date), [date]);
   const { data: entries, reload } = useAsyncData(loadEntries);
+  const loadWater = useCallback(() => getWater(date), [date]);
+  const { data: waterGlasses, reload: reloadWater } = useAsyncData(loadWater);
 
   const totals = useMemo(() => dayTotals(entries ?? []), [entries]);
   const isToday = date === localDateISO();
+
+  async function changeWater(delta: number) {
+    const value = await setWater(date, (waterGlasses ?? 0) + delta);
+    await reloadWater();
+    announce(`${value} de ${WATER_GOAL_GLASSES} vasos de agua`);
+  }
+
+  async function copyYesterday() {
+    const yesterday = await getDiary(addDays(date, -1));
+    if (yesterday.length === 0) {
+      announce('El día anterior no tiene registros que copiar');
+      return;
+    }
+    for (const e of yesterday) {
+      await addDiaryEntryAbsolute({
+        date,
+        meal: e.meal,
+        foodName: e.foodName,
+        ...(e.foodId ? { foodId: e.foodId } : {}),
+        grams: e.grams,
+        macros: { kcal: e.kcal, proteinG: e.proteinG, carbsG: e.carbsG, fatG: e.fatG },
+      });
+    }
+    await reload();
+    announce(`${yesterday.length} alimentos copiados del día anterior`);
+  }
 
   return (
     <>
@@ -103,13 +138,47 @@ export function NutritionView() {
           </p>
         )}
 
-        {targets && (
-          <div className="btn-row" style={{ marginTop: '0.75rem' }}>
+        <div className="btn-row" style={{ marginTop: '0.75rem' }}>
+          {targets && (
             <button type="button" className="btn" onClick={() => setDietOpen(true)}>
               ✦ Generar menú del día
             </button>
-          </div>
-        )}
+          )}
+          <button type="button" className="btn btn--ghost" onClick={copyYesterday}>
+            ⧉ Copiar el día anterior
+          </button>
+        </div>
+
+        <div className="water" role="group" aria-label="Hidratación del día">
+          <button
+            type="button"
+            className="btn btn--small"
+            onClick={() => changeWater(-1)}
+            disabled={(waterGlasses ?? 0) === 0}
+            aria-label="Quitar un vaso de agua"
+          >
+            −
+          </button>
+          <span className="water-cups" aria-hidden="true">
+            {Array.from({ length: WATER_GOAL_GLASSES }, (_, i) => (
+              <span key={i} className={`cup ${i < (waterGlasses ?? 0) ? 'full' : ''}`}>
+                💧
+              </span>
+            ))}
+          </span>
+          <span className="num">
+            {waterGlasses ?? 0} de {WATER_GOAL_GLASSES} vasos
+            {(waterGlasses ?? 0) > WATER_GOAL_GLASSES ? ' ¡y extra!' : ''}
+          </span>
+          <button
+            type="button"
+            className="btn btn--small"
+            onClick={() => changeWater(1)}
+            aria-label="Añadir un vaso de agua"
+          >
+            +
+          </button>
+        </div>
       </div>
 
       {MEALS.map((meal) => {
