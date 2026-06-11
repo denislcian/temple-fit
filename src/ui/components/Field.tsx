@@ -16,6 +16,12 @@ interface TextFieldProps extends BaseFieldProps {
   mode?: 'text' | 'int' | 'decimal';
   autoComplete?: string;
   required?: boolean;
+  /**
+   * Nombre accesible extendido cuando la etiqueta visible es corta (p. ej.
+   * label="Reps", ariaLabel="Reps, serie 2 de Press de banca"). Para cumplir
+   * WCAG 2.5.3 (Label in Name) DEBE empezar por el texto visible.
+   */
+  ariaLabel?: string;
 }
 
 export function TextField({
@@ -27,6 +33,7 @@ export function TextField({
   mode = 'text',
   autoComplete,
   required,
+  ariaLabel,
 }: TextFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
@@ -53,6 +60,7 @@ export function TextField({
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         aria-required={required || undefined}
+        aria-label={ariaLabel}
         autoComplete={autoComplete}
       />
       {error && (

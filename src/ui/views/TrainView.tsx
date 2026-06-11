@@ -20,8 +20,9 @@ import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
 import { GymToolsDialog } from '../components/GymToolsDialog';
-import { RestTimer } from '../components/RestTimer';
+import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { formatKg, parseReps, parseWeight } from '../utils/format';
 
 const DRAFT_KEY = 'forjafit-draft';
@@ -89,6 +90,9 @@ export function TrainView() {
 
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const { data: routines } = useAsyncData(useCallback(() => getAllRoutines(), []));
+
+  // Pantalla siempre encendida mientras hay entrenamiento en curso.
+  const screenAwake = useWakeLock(draft !== null);
 
   const exerciseById = new Map((exercises ?? []).map((e) => [e.id, e]));
 
@@ -189,6 +193,11 @@ export function TrainView() {
       return;
     }
     updateSet(entryIndex, setIndex, { done: !set.done });
+    // Al COMPLETAR una serie, el temporizador de descanso arranca solo
+    // (si el auto-inicio está activado en la tarjeta del temporizador).
+    if (!set.done) {
+      window.dispatchEvent(new CustomEvent(SET_DONE_EVENT));
+    }
   }
 
   async function finishWorkout() {
@@ -305,6 +314,7 @@ export function TrainView() {
     <>
       <span className="kicker">
         Entrenamiento en curso · <span className="num">{elapsedMin} min</span>
+        {screenAwake && <span className="muted"> · pantalla siempre encendida</span>}
       </span>
       <h1 id="view-title" tabIndex={-1}>
         Entrenar
@@ -374,21 +384,26 @@ export function TrainView() {
                   <span className="set-index" aria-hidden="true">
                     {setIndex + 1}
                   </span>
+                  {/* Etiquetas cortas visibles (espacio de una mano en móvil) con
+                      nombre accesible completo que EMPIEZA por el texto visible
+                      (WCAG 2.5.3 Label in Name). */}
                   <TextField
-                    label={`Repeticiones, serie ${setIndex + 1}`}
+                    label="Reps"
+                    ariaLabel={`Reps, serie ${setIndex + 1} de ${exercise?.name ?? entry.exerciseId}`}
                     mode="int"
                     value={set.reps}
                     onChange={(v) => updateSet(entryIndex, setIndex, { reps: v })}
                     error={invalid && parseReps(set.reps) === null ? 'Número entero, mínimo 1' : undefined}
                   />
                   <TextField
-                    label={`Peso en kg, serie ${setIndex + 1}`}
+                    label="kg"
+                    ariaLabel={`kg, serie ${setIndex + 1} de ${exercise?.name ?? entry.exerciseId}`}
                     mode="decimal"
                     value={set.weight}
                     onChange={(v) => updateSet(entryIndex, setIndex, { weight: v })}
                     error={
                       invalid && parseWeight(set.weight) === null
-                        ? 'Ej.: 60 o 62,5 (0 = peso corporal)'
+                        ? 'Ej.: 60 o 62,5 (0 = corporal)'
                         : undefined
                     }
                   />

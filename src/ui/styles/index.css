@@ -73,9 +73,24 @@
   box-sizing: border-box;
 }
 
+/* El feedback táctil lo dan nuestros estados :active/:hover, no el
+   resaltado azul genérico del navegador móvil. */
+a,
+button,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
 html {
-  /* WCAG 2.4.11: que la cabecera sticky nunca tape el elemento con foco. */
+  /* WCAG 2.4.11: que ni la cabecera sticky ni la barra de pestañas
+     inferior (móvil) tapen nunca el elemento con foco. */
   scroll-padding-top: calc(var(--header-h) + 1rem);
+  scroll-padding-bottom: 6rem;
+}
+
+body {
+  /* Sin pull-to-refresh accidental a mitad de entrenamiento. */
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -665,6 +680,21 @@ legend {
 .set-row .input {
   font-variant-numeric: tabular-nums;
   text-align: center;
+  /* ≥16px: evita el zoom automático de iOS al enfocar un input. */
+  font-size: 1rem;
+}
+
+.set-row .field label {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 47.9rem) {
+  .set-row {
+    grid-template-columns: 1.4rem 1fr 1fr auto auto;
+    gap: 0.4rem;
+  }
 }
 
 .set-done {
@@ -737,6 +767,23 @@ legend {
   color: var(--accent-text);
 }
 
+.auto-rest {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  min-height: var(--target);
+  cursor: pointer;
+}
+
+.auto-rest input {
+  width: 1.35rem;
+  height: 1.35rem;
+  accent-color: var(--accent);
+}
+
 /* ── Listas ─────────────────────────────────────────────── */
 .item-list {
   list-style: none;
@@ -798,7 +845,23 @@ dialog {
   padding: 1.25rem;
   max-width: min(34rem, calc(100vw - 2rem));
   width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: var(--shadow);
+}
+
+/* En móvil los diálogos son hojas inferiores: contenido en la zona del
+   pulgar y gesto mental conocido de las apps nativas. */
+@media (max-width: 47.9rem) {
+  dialog {
+    margin: auto 0 0;
+    max-width: 100vw;
+    width: 100vw;
+    max-height: 88dvh;
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
+    border-bottom: none;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
 }
 
 dialog::backdrop {
