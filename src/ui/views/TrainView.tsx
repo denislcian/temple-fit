@@ -12,12 +12,14 @@ import {
   getAllSessions,
   getLastSetsForExercise,
 } from '../../data/repositories/sessionRepo';
+import { suggestProgression } from '../../domain/gymTools';
 import { beatsRecord, computeRecords } from '../../domain/records';
 import { sessionVolume } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
+import { GymToolsDialog } from '../components/GymToolsDialog';
 import { RestTimer } from '../components/RestTimer';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg, parseReps, parseWeight } from '../utils/format';
@@ -69,6 +71,21 @@ export function TrainView() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [finishedNotice, setFinishedNotice] = useState<string | null>(null);
   const [finishError, setFinishError] = useState<string | null>(null);
+  const [gymTools, setGymTools] = useState<{ weight: string; exerciseName?: string } | null>(null);
+  const [elapsedMin, setElapsedMin] = useState(0);
+
+  // Cronómetro de la sesión (se actualiza cada medio minuto).
+  useEffect(() => {
+    if (!draft) {
+      setElapsedMin(0);
+      return;
+    }
+    const update = () =>
+      setElapsedMin(Math.max(0, Math.floor((Date.now() - new Date(draft.startedAt).getTime()) / 60_000)));
+    update();
+    const interval = setInterval(update, 30_000);
+    return () => clearInterval(interval);
+  }, [draft]);
 
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const { data: routines } = useAsyncData(useCallback(() => getAllRoutines(), []));
@@ -202,10 +219,15 @@ export function TrainView() {
     const previousSessions = await getAllSessions();
     const previousRecords = computeRecords(previousSessions);
 
+    const durationMin = Math.max(
+      1,
+      Math.round((Date.now() - new Date(draft.startedAt).getTime()) / 60_000),
+    );
     const session = await addSession({
       date: draft.startedAt,
       ...(draft.routineId ? { routineId: draft.routineId } : {}),
       entries,
+      durationMin,
     });
 
     const prExercises = new Set<string>();
@@ -222,7 +244,7 @@ export function TrainView() {
       prExercises.size > 0
         ? ` ¡Récord personal en ${[...prExercises].join(', ')}!`
         : '';
-    const message = `Entrenamiento guardado: ${doneSets.length} series, ${volume} de volumen.${prText}`;
+    const message = `Entrenamiento guardado: ${doneSets.length} series, ${volume} de volumen en ${durationMin} min.${prText}`;
 
     setDraft(null);
     setLastSets(new Map());
@@ -281,7 +303,9 @@ export function TrainView() {
 
   return (
     <>
-      <span className="kicker">Entrenamiento en curso</span>
+      <span className="kicker">
+        Entrenamiento en curso · <span className="num">{elapsedMin} min</span>
+      </span>
       <h1 id="view-title" tabIndex={-1}>
         Entrenar
       </h1>
@@ -289,6 +313,7 @@ export function TrainView() {
       {draft.entries.map((entry, entryIndex) => {
         const exercise = exerciseById.get(entry.exerciseId);
         const last = lastSets.get(entry.exerciseId);
+        const suggestion = last && last.length > 0 ? suggestProgression(last) : null;
         return (
           <section key={entry.exerciseId} className="card" aria-label={exercise?.name}>
             <div className="btn-row" style={{ justifyContent: 'space-between' }}>
@@ -305,8 +330,42 @@ export function TrainView() {
             {last && last.length > 0 && (
               <p className="last-time">
                 La última vez: {last.map((s) => `${s.reps}×${formatKg(s.weightKg)}`).join(' · ')}
+                {suggestion && (
+                  <>
+                    <br />
+                    <strong>
+                      {suggestion.action === 'subir'
+                        ? `Hoy prueba ${formatKg(suggestion.nextWeightKg)}.`
+                        : suggestion.action === 'repetir'
+                          ? `Hoy: ${formatKg(suggestion.nextWeightKg)} buscando una repetición más.`
+                          : `Hoy consolida ${formatKg(suggestion.nextWeightKg)}.`}
+                    </strong>{' '}
+                    {suggestion.reason}
+                  </>
+                )}
               </p>
             )}
+
+            <div className="btn-row" style={{ marginBottom: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn btn--small btn--ghost"
+                onClick={() =>
+                  setGymTools({
+                    weight: String(
+                      suggestion?.nextWeightKg ??
+                        (last && last.length > 0
+                          ? Math.max(...last.map((s) => s.weightKg))
+                          : ''),
+                    ).replace('.', ','),
+                    ...(exercise?.name ? { exerciseName: exercise.name } : {}),
+                  })
+                }
+              >
+                🏋 Barra y calentamiento
+                <span className="visually-hidden"> para {exercise?.name}</span>
+              </button>
+            </div>
 
             {entry.sets.map((set, setIndex) => {
               const invalid = invalidSets.has(`${entryIndex}-${setIndex}`);
@@ -396,6 +455,15 @@ export function TrainView() {
         onPick={addExercise}
         onClose={() => setPickerOpen(false)}
       />
+
+      {gymTools && (
+        <GymToolsDialog
+          open={gymTools !== null}
+          initialWeight={gymTools.weight}
+          exerciseName={gymTools.exerciseName}
+          onClose={() => setGymTools(null)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmDiscard}

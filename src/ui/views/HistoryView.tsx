@@ -43,6 +43,7 @@ export function HistoryView() {
             <h2>{formatDate(session.date)}</h2>
             <p className="muted num">
               {totalSets} series completadas · {formatKg(sessionVolume(session))} de volumen
+              {session.durationMin ? ` · ${session.durationMin} min` : ''}
             </p>
             <details>
               <summary className="btn btn--small btn--ghost">Ver detalle</summary>

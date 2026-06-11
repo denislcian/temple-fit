@@ -74,6 +74,8 @@ export interface Session {
   routineId?: string;
   entries: SessionEntry[];
   notes?: string;
+  /** Duración del entrenamiento en minutos. */
+  durationMin?: number;
 }
 
 /** Una rutina: plantilla reutilizable de ejercicios. Sin límite de rutinas. */
