@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Registro de entrenamientos de fuerza — PWA local-first y accesible (WCAG 2.2 AA)",
-  "author": "Dani <elgnomopalomo@gmail.com>",
+  "author": "Denis Lucian <denislucianwork@protonmail.com>",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

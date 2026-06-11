@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Autor** | Dani (elgnomopalomo@gmail.com) |
+| **Autor** | Denis Lucian (denislucianwork@protonmail.com) |
 | **Fecha** | 11 de junio de 2026 |
 | **Versión** | 1.2 (fase 2 implementada en modo local: perfil, nutrición, escáner IA y comunidad — ver sección 14) |
 | **Repositorio** | `forjafit` (proyecto personal de portfolio) |
