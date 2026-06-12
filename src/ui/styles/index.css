@@ -793,6 +793,39 @@ legend {
   object-fit: cover;
 }
 
+/* Popup "Cómo se hace": ilustración grande + instrucciones. */
+.exercise-detail {
+  text-align: center;
+}
+
+.exercise-detail .muscle-img {
+  margin: 0 auto 0.75rem;
+  display: block;
+}
+
+.exercise-detail .meta-line {
+  margin-bottom: 0.5rem;
+}
+
+.exercise-detail .color-legend {
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+}
+
+.exercise-detail .legend-primary {
+  color: var(--accent-text);
+}
+
+.exercise-detail .legend-secondary {
+  color: var(--accent-2);
+}
+
+.exercise-detail .instructions {
+  text-align: left;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
 /* ── Listas ─────────────────────────────────────────────── */
 .item-list {
   list-style: none;

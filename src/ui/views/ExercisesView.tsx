@@ -1,7 +1,7 @@
 // CAPA 3 · Interfaz — Biblioteca de ejercicios: catálogo propio en español
 // + ejercicios personalizados sin límite (Strong: 3, Hevy: 7).
 import { useCallback, useMemo, useState } from 'react';
-import type { Equipment, MuscleGroup } from '../../data/models';
+import type { Equipment, Exercise, MuscleGroup } from '../../data/models';
 import { MUSCLE_GROUPS } from '../../data/models';
 import {
   addCustomExercise,
@@ -31,6 +31,7 @@ export function ExercisesView() {
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
   const [creating, setCreating] = useState(false);
+  const [detail, setDetail] = useState<Exercise | null>(null);
   const [form, setForm] = useState({ name: '', muscleGroup: 'pecho', equipment: 'barra', instructions: '' });
   const [formError, setFormError] = useState<string | undefined>();
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -106,10 +107,13 @@ export function ExercisesView() {
                 {exercise.muscleGroup} · {exercise.equipment}
               </span>
               {exercise.instructions && (
-                <details>
-                  <summary className="btn btn--small btn--ghost">Cómo se hace</summary>
-                  <p className="muted">{exercise.instructions}</p>
-                </details>
+                <button
+                  type="button"
+                  className="btn btn--small btn--ghost"
+                  onClick={() => setDetail(exercise)}
+                >
+                  Cómo se hace<span className="visually-hidden">: {exercise.name}</span>
+                </button>
               )}
             </div>
             {exercise.isCustom && (
@@ -125,6 +129,28 @@ export function ExercisesView() {
         ))}
         {filtered.length === 0 && <li>No hay ejercicios que coincidan con la búsqueda.</li>}
       </ul>
+
+      {detail && (
+        <AppDialog open={detail !== null} title={detail.name} onClose={() => setDetail(null)}>
+          <div className="exercise-detail">
+            <ExerciseImage exerciseId={detail.id} size={200} />
+            <p className="meta-line">
+              <span className="pr-badge">{detail.muscleGroup}</span>
+              <span className="muted"> · {detail.equipment}</span>
+            </p>
+            <p className="color-legend muted">
+              En la ilustración: <strong className="legend-primary">naranja</strong> = músculo
+              principal · <strong className="legend-secondary">verde azulado</strong> = secundarios
+            </p>
+            <p className="instructions">{detail.instructions}</p>
+            <div className="btn-row">
+              <button type="button" className="btn" onClick={() => setDetail(null)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </AppDialog>
+      )}
 
       <AppDialog open={creating} title="Nuevo ejercicio personalizado" onClose={() => setCreating(false)}>
         <TextField
