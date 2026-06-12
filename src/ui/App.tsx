@@ -107,7 +107,9 @@ function Brand() {
   return (
     <a className="brand" href="#/entrenar">
       <span className="spark" aria-hidden="true" />
-      Temp<em>le</em>
+      <span>
+        Temp<em>le</em>
+      </span>
     </a>
   );
 }

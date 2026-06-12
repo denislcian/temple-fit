@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import type { Exercise, MuscleGroup } from '../../data/models';
 import { MUSCLE_GROUPS } from '../../data/models';
 import { AppDialog } from './AppDialog';
+import { ExerciseImage } from './ExerciseImage';
 import { SelectField, TextField } from './Field';
 
 interface ExercisePickerProps {
@@ -51,7 +52,8 @@ export function ExercisePicker({ open, exercises, onPick, onClose }: ExercisePic
       <ul className="item-list">
         {filtered.slice(0, 30).map((exercise) => (
           <li key={exercise.id}>
-            <div>
+            <ExerciseImage exerciseId={exercise.id} size={48} />
+            <div style={{ flex: 1 }}>
               <span className="title">{exercise.name}</span>
               <br />
               <span className="meta">

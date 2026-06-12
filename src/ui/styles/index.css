@@ -784,6 +784,15 @@ legend {
   accent-color: var(--accent);
 }
 
+/* ── Ilustraciones de músculos ──────────────────────────── */
+.muscle-img {
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  background: #14161a; /* el fondo de la ilustración, fijo en ambos temas */
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
 /* ── Listas ─────────────────────────────────────────────── */
 .item-list {
   list-style: none;

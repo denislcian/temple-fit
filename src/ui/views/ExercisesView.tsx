@@ -10,6 +10,7 @@ import {
 } from '../../data/repositories/exerciseRepo';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
+import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 
@@ -90,6 +91,7 @@ export function ExercisesView() {
       <ul className="item-list">
         {filtered.map((exercise) => (
           <li key={exercise.id}>
+            <ExerciseImage exerciseId={exercise.id} />
             <div style={{ flex: 1 }}>
               <span className="title">
                 {exercise.name}

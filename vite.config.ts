@@ -33,9 +33,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precachear todo el build, fuentes incluidas: tras la primera
-        // visita la app funciona sin red (el gimnasio sin cobertura).
-        globPatterns: ['**/*.{js,css,html,png,ico,woff2}'],
+        // Precachear todo el build, fuentes e ilustraciones de músculos
+        // incluidas: tras la primera visita la app funciona sin red
+        // (el gimnasio sin cobertura).
+        globPatterns: ['**/*.{js,css,html,png,ico,woff2,webp}'],
         navigateFallback: 'index.html',
       },
     }),
