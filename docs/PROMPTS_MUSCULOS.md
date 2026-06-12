@@ -162,6 +162,291 @@ Solo hay dos vistas en todo el set (otra clave de coherencia):
 
 ---
 
+## Prompts listos para copiar (usar CON la imagen de referencia de estilo)
+
+> Las tablas de arriba son el mapa; estos son los prompts montados. Cada uno es autocontenido:
+> color + músculo en la misma frase y negaciones cruzadas para evitar inversiones de color.
+> **Recuerda: formato 1:1 en tu herramienta.**
+
+Estructura común (no la cambies): *"Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia."* + vista + naranja + teal + neutro + *"Sin texto, sin etiquetas. Formato cuadrado 1:1."*
+
+### Pecho
+
+**press-banca.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el pectoral mayor completo de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides anteriores (cara frontal de ambos hombros) y tríceps (borde posterior de ambos brazos). El pecho NO es verde azulado; hombros y brazos NO son naranjas. Resto del cuerpo neutro, sin otros colores. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**press-banca-inclinado.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE la porción SUPERIOR (clavicular) del pectoral, ambos lados; la parte baja del pecho queda neutra. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides anteriores y tríceps. Hombros NO naranjas. Resto del cuerpo neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**press-mancuernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el pectoral mayor completo de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: tríceps y deltoides anteriores. El pecho NO es verde azulado. Resto del cuerpo neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**aperturas-mancuernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el pectoral mayor completo de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: solo los deltoides anteriores. Brazos y abdomen neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**flexiones.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el pectoral mayor completo. EN VERDE AZULADO (#2dd4bf) sin resplandor: tríceps y recto abdominal. El abdomen es verde azulado tenue, NO naranja. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**cruce-poleas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE la porción INFERIOR y central (esternal) del pectoral, ambos lados; la parte alta del pecho queda neutra. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides anteriores. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**press-pecho-maquina.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el pectoral mayor completo de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: solo los tríceps. Hombros neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Espalda
+
+**dominadas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el dorsal ancho de ambos lados (la gran V de la espalda). EN VERDE AZULADO (#2dd4bf) sin resplandor: bíceps (borde frontal de los brazos) y romboides (centro alto de la espalda). La espalda baja y las piernas neutras. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**jalon-al-pecho.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el dorsal ancho de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: solo los bíceps. Trapecio y lumbar neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**remo-barra.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor: dorsal ancho y romboides. EN VERDE AZULADO (#2dd4bf) sin resplandor: trapecio medio, bíceps y zona lumbar. Piernas neutras. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**remo-mancuerna.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el dorsal ancho del lado DERECHO; el lado izquierdo de la espalda queda neutro. EN VERDE AZULADO (#2dd4bf) sin resplandor: romboides y bíceps del lado derecho. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**remo-polea-baja.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor: dorsal ancho y romboides, ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: bíceps y trapecio medio. Lumbar y piernas neutras. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**pullover-mancuerna.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el dorsal ancho de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: solo los tríceps. Trapecio neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**encogimientos.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el trapecio superior (entre el cuello y los hombros, ambos lados). SIN músculos en verde azulado en esta imagen. Dorsal y resto del cuerpo neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Hombros
+
+**press-militar.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los deltoides (anterior y lateral) de ambos hombros. EN VERDE AZULADO (#2dd4bf) sin resplandor: tríceps y trapecio superior (base del cuello). El pecho NO lleva color. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**press-hombro-mancuernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los deltoides completos de ambos hombros. EN VERDE AZULADO (#2dd4bf) sin resplandor: solo los tríceps. Pecho neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**elevaciones-laterales.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el deltoides LATERAL (la cara externa del hombro, ambos lados). EN VERDE AZULADO (#2dd4bf) sin resplandor: trapecio superior. Brazos y pecho neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**elevaciones-frontales.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el deltoides ANTERIOR (la cara frontal del hombro, ambos lados). EN VERDE AZULADO (#2dd4bf) sin resplandor: porción superior del pectoral. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**pajaros.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el deltoides POSTERIOR (parte trasera del hombro, ambos lados). EN VERDE AZULADO (#2dd4bf) sin resplandor: romboides y trapecio medio. Dorsal neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**face-pull.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el deltoides posterior de ambos hombros. EN VERDE AZULADO (#2dd4bf) sin resplandor: trapecio completo. Dorsal y lumbar neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Bíceps
+
+**curl-barra.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los bíceps de ambos brazos. EN VERDE AZULADO (#2dd4bf) sin resplandor: los antebrazos. Hombros y pecho neutros, NO naranjas. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**curl-mancuernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los bíceps de ambos brazos. EN VERDE AZULADO (#2dd4bf) sin resplandor: los antebrazos. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**curl-martillo.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor: los bíceps Y la cara externa de los antebrazos (braquiorradial), ambos brazos. SIN músculos en verde azulado en esta imagen. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**curl-polea.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los bíceps de ambos brazos. EN VERDE AZULADO (#2dd4bf) sin resplandor: los antebrazos. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**curl-scott.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los bíceps de ambos brazos. EN VERDE AZULADO (#2dd4bf) sin resplandor: los antebrazos. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Tríceps
+
+**press-frances.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los tríceps de ambos brazos (parte trasera del brazo). SIN músculos en verde azulado. Espalda y piernas neutras. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**extension-triceps-polea.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los tríceps de ambos brazos. SIN músculos en verde azulado. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**fondos-paralelas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el borde posterior de ambos brazos (tríceps visto de frente). EN VERDE AZULADO (#2dd4bf) sin resplandor: porción inferior del pectoral y deltoides anterior. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**patada-triceps.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el tríceps del brazo DERECHO; el brazo izquierdo neutro. SIN músculos en verde azulado. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**press-cerrado.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el borde posterior de ambos brazos (tríceps visto de frente). EN VERDE AZULADO (#2dd4bf) sin resplandor: el pectoral. El pecho NO es naranja. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Pierna
+
+**sentadilla.webp** *(tu imagen de referencia — ya la tienes)*
+
+**sentadilla-frontal.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los cuádriceps de ambas piernas. EN VERDE AZULADO (#2dd4bf) sin resplandor: el recto abdominal. Pecho y brazos neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**sentadilla-goblet.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los cuádriceps de ambas piernas. EN VERDE AZULADO (#2dd4bf) sin resplandor: el borde lateral de la cadera (glúteo visto de frente). Abdomen neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**prensa-piernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los cuádriceps de ambas piernas. EN VERDE AZULADO (#2dd4bf) sin resplandor: el borde lateral de la cadera. Resto neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**zancadas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el cuádriceps de la pierna DERECHA; la pierna izquierda neutra. EN VERDE AZULADO (#2dd4bf) sin resplandor: glúteo e isquiotibial derechos (borde lateral del muslo). Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**extension-cuadriceps.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los cuádriceps de ambas piernas. SIN músculos en verde azulado. Todo lo demás neutro. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**curl-femoral.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los isquiotibiales (parte trasera de ambos muslos). EN VERDE AZULADO (#2dd4bf) sin resplandor: los gemelos. Glúteos y espalda neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**peso-muerto-rumano.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los isquiotibiales de ambas piernas. EN VERDE AZULADO (#2dd4bf) sin resplandor: glúteos y zona lumbar. Gemelos neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**elevacion-gemelos.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los gemelos de ambas piernas. SIN músculos en verde azulado. Muslos y espalda neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Glúteo
+
+**hip-thrust.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los glúteos, ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: los isquiotibiales. Lumbar y gemelos neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**puente-gluteo.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los glúteos. EN VERDE AZULADO (#2dd4bf) sin resplandor: isquiotibiales y zona lumbar. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**patada-gluteo-polea.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el glúteo DERECHO; el izquierdo neutro. EN VERDE AZULADO (#2dd4bf) sin resplandor: isquiotibial derecho. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Core
+
+**plancha.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el recto abdominal completo. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides de ambos hombros. Pecho y piernas neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**plancha-lateral.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los oblicuos del costado DERECHO (lateral del abdomen); el costado izquierdo neutro. EN VERDE AZULADO (#2dd4bf) sin resplandor: el deltoides derecho. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**crunch.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE la porción SUPERIOR del recto abdominal; la parte baja del abdomen neutra. SIN músculos en verde azulado. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**elevaciones-piernas.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE la porción INFERIOR del recto abdominal (bajo vientre). EN VERDE AZULADO (#2dd4bf) sin resplandor: los flexores de la cadera (pliegue entre abdomen y muslo). Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**rueda-abdominal.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el recto abdominal completo. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides y el borde lateral del torso (dorsal visto de frente). Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**giro-ruso.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE los oblicuos de AMBOS costados del abdomen. EN VERDE AZULADO (#2dd4bf) sin resplandor: el recto abdominal central. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+### Cuerpo completo
+
+**peso-muerto.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor: glúteos, isquiotibiales y zona lumbar (toda la cadena posterior central). EN VERDE AZULADO (#2dd4bf) sin resplandor: trapecio y antebrazos. Gemelos neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**kettlebell-swing.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor: glúteos e isquiotibiales. EN VERDE AZULADO (#2dd4bf) sin resplandor: zona lumbar y deltoides posteriores. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**burpees.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista frontal. EN NARANJA (#f97316) con sutil resplandor, repartido: pectoral, cuádriceps y recto abdominal. EN VERDE AZULADO (#2dd4bf) sin resplandor: deltoides. Brazos neutros. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+**remo-renegado.webp**
+```
+Mantener exactamente el estilo visual, la paleta, el trazo y el fondo de la imagen de referencia. Vista POSTERIOR (figura de espaldas). EN NARANJA (#f97316) con sutil resplandor, ÚNICAMENTE el dorsal ancho de ambos lados. EN VERDE AZULADO (#2dd4bf) sin resplandor: oblicuos (borde lateral del torso) y tríceps. Sin texto, sin etiquetas. Formato cuadrado 1:1.
+```
+
+---
+
 ## Restricciones que ya van en la plantilla (no las quites)
 
 - **Sin texto ni etiquetas**: los modelos meten rótulos anatómicos si no se les prohíbe.
