@@ -15,3 +15,6 @@ coverage
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Originales de imagenes (5 MB c/u): solo se versionan las webp optimizadas
+src/img

@@ -3,7 +3,7 @@
 // Catálogo PROPIO, redactado en español desde cero para este proyecto.
 // Decisión documentada en docs/INFORME_TECNICO.md (sección 4): los datasets
 // "gratuitos" habituales tienen imágenes e instrucciones con procedencia
-// legal dudosa (DMCA verificado en abril de 2026), así que ForjaFit no
+// legal dudosa (DMCA verificado en abril de 2026), así que Temple no
 // depende de datos de terceros. Los nombres de ejercicios son hechos de
 // conocimiento común; las instrucciones son texto original de este proyecto.
 import type { Equipment, Exercise, MuscleGroup } from './models';

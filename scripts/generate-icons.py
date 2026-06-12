@@ -1,4 +1,4 @@
-# Genera los iconos PWA de ForjaFit (PNG) con Pillow.
+# Genera los iconos PWA de Temple (PNG) con Pillow.
 # Diseño: mancuerna naranja brasa sobre gris hierro, esquinas redondeadas.
 # Uso: py scripts/generate-icons.py
 from PIL import Image, ImageDraw

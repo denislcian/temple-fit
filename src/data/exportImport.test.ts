@@ -41,7 +41,7 @@ describe('exportImport', () => {
     expect(result.exercises).toBe(0);
   });
 
-  it('rechaza archivos que no son exportaciones de ForjaFit', async () => {
+  it('rechaza archivos que no son exportaciones de Temple', async () => {
     await expect(importBundle('esto no es json')).rejects.toThrow(/JSON válido/);
     await expect(importBundle({ otra: 'cosa' })).rejects.toThrow(/no es una exportación/);
     await expect(

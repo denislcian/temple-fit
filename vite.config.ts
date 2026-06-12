@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'ForjaFit — Cuaderno de gimnasio',
-        short_name: 'ForjaFit',
+        name: 'Temple — Cuaderno de gimnasio',
+        short_name: 'Temple',
         description:
           'Registro de entrenamientos de fuerza. Gratis, sin cuentas, 100% offline y accesible.',
         lang: 'es',

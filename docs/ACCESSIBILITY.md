@@ -1,9 +1,9 @@
-# Declaración y auditoría de accesibilidad — ForjaFit
+# Declaración y auditoría de accesibilidad — Temple
 
 **Objetivo de conformidad:** WCAG 2.2 nivel AA
 **Última auditoría:** 10 de junio de 2026
 
-ForjaFit trata la accesibilidad como requisito de primera clase, no como un parche final. Ningún competidor del nicho (Strong, Hevy, Jefit, wger…) publicita cumplimiento WCAG; esta app se diseñó para demostrar que un registro de entrenamientos puede ser usable por cualquiera, incluido quien navega con teclado o lector de pantalla.
+Temple trata la accesibilidad como requisito de primera clase, no como un parche final. Ningún competidor del nicho (Strong, Hevy, Jefit, wger…) publicita cumplimiento WCAG; esta app se diseñó para demostrar que un registro de entrenamientos puede ser usable por cualquiera, incluido quien navega con teclado o lector de pantalla.
 
 ## Resultados de la auditoría automática
 
@@ -27,7 +27,7 @@ ForjaFit trata la accesibilidad como requisito de primera clase, no como un parc
 
 ## Cómo cada criterio nuevo de WCAG 2.2 se aplica aquí
 
-| Criterio | Implementación en ForjaFit |
+| Criterio | Implementación en Temple |
 |---|---|
 | 2.4.11 Focus Not Obscured (AA) | `scroll-padding-top` global del alto de la cabecera sticky: el elemento con foco nunca queda tapado |
 | 2.5.7 Dragging Movements (AA) | Reordenar ejercicios de una rutina se hace con botones ↑/↓ accesibles por teclado, no con arrastre |

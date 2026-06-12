@@ -107,7 +107,7 @@ function Brand() {
   return (
     <a className="brand" href="#/entrenar">
       <span className="spark" aria-hidden="true" />
-      Forja<em>Fit</em>
+      Temp<em>le</em>
     </a>
   );
 }
@@ -152,7 +152,7 @@ function AppShell() {
 
   // Título de la pestaña del navegador acorde a la vista actual.
   useEffect(() => {
-    document.title = `${ROUTE_LABELS[route]} — ForjaFit`;
+    document.title = `${ROUTE_LABELS[route]} — Temple`;
   }, [route]);
 
   // Gestión de foco al navegar (no en la carga inicial). Se compara con la

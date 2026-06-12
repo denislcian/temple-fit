@@ -1,4 +1,4 @@
-# 🔥 ForjaFit — Tu cuaderno de gimnasio
+# 🔥 Temple — Tu cuaderno de gimnasio
 
 > **PWA de registro de entrenamientos de fuerza: gratis, sin cuentas, 100% offline y accesible (WCAG 2.2 AA).** Regala exactamente lo que las apps comerciales cobran — rutinas ilimitadas, historial completo, analítica y export de datos — y funciona donde se usa: un gimnasio sin cobertura.
 
@@ -30,9 +30,9 @@
 
 ## 1. El problema
 
-Construí ForjaFit porque las apps de registro de gimnasio cobran por lo básico y fallan exactamente donde se usan:
+Construí Temple porque las apps de registro de gimnasio cobran por lo básico y fallan exactamente donde se usan:
 
-| Queja real de los usuarios | Lo que hace el mercado | Lo que hace ForjaFit |
+| Queja real de los usuarios | Lo que hace el mercado | Lo que hace Temple |
 |---|---|---|
 | "Solo puedo crear 3 rutinas gratis" | Strong limita a 3 rutinas; Hevy a ~4 | **Rutinas ilimitadas** |
 | "Mi historial de hace 4 meses está bloqueado" | Hevy gratis recorta a ~3 meses | **Historial completo, siempre** |
@@ -257,7 +257,7 @@ La visión completa (con herramientas gratuitas verificadas y riesgos) está en 
 
 **En el CV** (bullets "logré X usando Y con resultado Z"):
 
-> **ForjaFit** — PWA de registro de entrenamientos, local-first y accesible · React, TypeScript, IndexedDB
+> **Temple** — PWA de registro de entrenamientos, local-first y accesible · React, TypeScript, IndexedDB
 > - Desarrollé una PWA offline-first con React 19 + TypeScript estricto y arquitectura por capas, con la capa de dominio testeada al 100% (48 tests, Vitest).
 > - Implementé accesibilidad WCAG 2.2 AA: 0 violaciones axe en auditoría completa, gestión de foco SPA, formularios con patrón GOV.UK y gráficas con alternativa textual.
 > - Diseñé la estrategia de datos tras verificar licencias de datasets públicos (descartando fuentes con riesgo DMCA) y monté CI/CD gratuito con GitHub Actions.

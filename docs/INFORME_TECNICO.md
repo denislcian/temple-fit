@@ -1,4 +1,4 @@
-# ForjaFit — Informe Técnico
+# Temple — Informe Técnico
 
 **Registro de entrenamientos de fuerza · PWA local-first y accesible**
 
@@ -14,11 +14,11 @@
 
 ## 1. Resumen ejecutivo
 
-ForjaFit es una aplicación web progresiva (PWA) de **registro de entrenamientos de fuerza**: el usuario apunta sus series, repeticiones y pesos en el gimnasio, consulta su historial, sus récords personales y la evolución de su progreso en gráficas. Tres principios la diferencian de las apps comerciales del mercado:
+Temple es una aplicación web progresiva (PWA) de **registro de entrenamientos de fuerza**: el usuario apunta sus series, repeticiones y pesos en el gimnasio, consulta su historial, sus récords personales y la evolución de su progreso en gráficas. Tres principios la diferencian de las apps comerciales del mercado:
 
 1. **Local-first / offline-first.** Los datos viven en el dispositivo del usuario (IndexedDB). La app funciona al 100% sin conexión — exactamente donde se usa: un gimnasio con mala cobertura. No hay cuentas, no hay servidores, no hay suscripciones.
-2. **Propiedad de los datos.** Exportación e importación libre en JSON y CSV con un clic, sin paywall. Lo que las apps líderes cobran (rutinas ilimitadas, historial completo, export), ForjaFit lo da gratis.
-3. **Accesibilidad WCAG 2.2 AA.** Ningún competidor del nicho —comercial ni open source— compite en accesibilidad. ForjaFit la trata como requisito de primera clase, auditada y documentada.
+2. **Propiedad de los datos.** Exportación e importación libre en JSON y CSV con un clic, sin paywall. Lo que las apps líderes cobran (rutinas ilimitadas, historial completo, export), Temple lo da gratis.
+3. **Accesibilidad WCAG 2.2 AA.** Ningún competidor del nicho —comercial ni open source— compite en accesibilidad. Temple la trata como requisito de primera clase, auditada y documentada.
 
 El proyecto se construye **por capas** (datos → dominio → interfaz → PWA/calidad), cada una con sus commits, sus tests y su documentación, para que el proceso sea tan presentable como el resultado. Este informe recoge la investigación de mercado que justifica cada decisión, la arquitectura, el plan de desarrollo y la estrategia para presentarlo a empresas.
 
@@ -83,7 +83,7 @@ El proyecto se construye **por capas** (datos → dominio → interfaz → PWA/c
 
 ### 3.4 Propuesta de valor (la frase para el CV)
 
-> *"ForjaFit regala exactamente lo que Strong y Hevy cobran (rutinas ilimitadas, historial completo, export de datos), resuelve las 4 quejas principales de los usuarios (suscripciones, datos secuestrados, dependencia de internet, UIs lentas) y es el único tracker del nicho que compite en accesibilidad."*
+> *"Temple regala exactamente lo que Strong y Hevy cobran (rutinas ilimitadas, historial completo, export de datos), resuelve las 4 quejas principales de los usuarios (suscripciones, datos secuestrados, dependencia de internet, UIs lentas) y es el único tracker del nicho que compite en accesibilidad."*
 
 ---
 
@@ -99,11 +99,11 @@ Una app de gimnasio necesita un catálogo de ejercicios. La investigación evalu
 | **wger API** (`wger.de/api/v2`) | ✅ Gratuita, sin API key para lectura, datos CC-BY-SA 4.0, throttling documentado (120-300 req/min). Verificado en vivo: 851 ejercicios, 264 con traducción al español (~31%) | ✅ Válida como referencia y enriquecimiento, con atribución |
 | **Catálogo propio** | Los *nombres* de ejercicios son hechos no protegibles; las *instrucciones* se redactan desde cero en español | ✅ **Elegida** |
 
-**Decisión:** ForjaFit incluye un **catálogo propio de ~50 ejercicios fundamentales, escrito en español desde cero** (nombres, grupo muscular, material, instrucciones breves), almacenado como JSON en el repositorio y ampliable por el usuario con ejercicios personalizados **sin límite** (lo que Strong limita a 3 y Hevy a 7). Sin imágenes de terceros: iconografía propia por grupo muscular (SVG). Cero riesgo legal, cero API keys, cero dependencias de red, y nombres nativos en español — algo que **ninguna** fuente gratuita ofrece completo.
+**Decisión:** Temple incluye un **catálogo propio de ~50 ejercicios fundamentales, escrito en español desde cero** (nombres, grupo muscular, material, instrucciones breves), almacenado como JSON en el repositorio y ampliable por el usuario con ejercicios personalizados **sin límite** (lo que Strong limita a 3 y Hevy a 7). Sin imágenes de terceros: iconografía propia por grupo muscular (SVG). Cero riesgo legal, cero API keys, cero dependencias de red, y nombres nativos en español — algo que **ninguna** fuente gratuita ofrece completo.
 
 ---
 
-## 5. El producto: ForjaFit
+## 5. El producto: Temple
 
 ### 5.1 Usuarios y escenario
 
@@ -219,9 +219,9 @@ src/
 
 WCAG 2.2 es el estándar vigente (oct-2023) y el **European Accessibility Act** obliga desde el 28-jun-2025 a los servicios digitales en la UE (vía EN 301 549, cuya actualización a WCAG 2.2 llega en 2026). Apuntar a 2.2 AA es la jugada segura y un valor de mercado real: la demanda de perfiles con WCAG creció ~45% interanual.
 
-Criterios aplicados al dominio concreto de ForjaFit:
+Criterios aplicados al dominio concreto de Temple:
 
-| Criterio WCAG 2.2 | Aplicación en ForjaFit |
+| Criterio WCAG 2.2 | Aplicación en Temple |
 |---|---|
 | **3.3.7 Redundant Entry** (A, nuevo) | Precargar peso/reps de la última sesión del mismo ejercicio; botón "igual que la serie anterior". Requisito = feature estrella |
 | **2.5.8 Target Size Minimum** (AA, nuevo) | Todos los controles ≥ 24×24 px CSS (objetivo real: 44 px en móvil): steppers +/-, checks de "serie hecha", botones de borrar |
@@ -290,7 +290,7 @@ Por qué importa: las propias ofertas junior españolas piden testing con Jest/T
 
 **En el CV (1 página, formato "logré X usando Y con resultado Z"):**
 
-> **ForjaFit** — PWA de registro de entrenamientos, local-first y accesible · React, TypeScript, IndexedDB
+> **Temple** — PWA de registro de entrenamientos, local-first y accesible · React, TypeScript, IndexedDB
 > - Desarrollé una PWA offline-first de registro de fuerza con React 19 + TypeScript y arquitectura por capas (datos/dominio/UI), con la capa de dominio testeada al 100% con Vitest.
 > - Implementé accesibilidad WCAG 2.2 AA (gestión de foco SPA, formularios con patrón GOV.UK, gráficas con alternativa textual): Lighthouse Accessibility ≥ 95 y 0 violaciones axe.
 > - Monté CI/CD gratuito con GitHub Actions (lint, tests, build, deploy a GitHub Pages) con commits convencionales.
@@ -336,4 +336,4 @@ La visión a largo plazo es una **plataforma fitness completa y diferenciada**: 
 
 ---
 
-*Informe generado como parte del proyecto ForjaFit. La versión PDF de este documento se genera desde este Markdown (ver README, sección Documentación).*
+*Informe generado como parte del proyecto Temple. La versión PDF de este documento se genera desde este Markdown (ver README, sección Documentación).*

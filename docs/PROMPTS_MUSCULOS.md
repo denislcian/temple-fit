@@ -1,7 +1,7 @@
 # Prompts para las ilustraciones de grupos musculares
 
 **Objetivo:** una ilustración por ejercicio (52) que destaque el músculo trabajado, con estilo
-coherente con ForjaFit (fondo hierro `#14161a`, naranja brasa `#f97316`, teal `#2dd4bf`).
+coherente con Temple (fondo hierro `#14161a`, naranja brasa `#f97316`, teal `#2dd4bf`).
 Generadas por ti con cualquier modelo de imagen (Gemini/Nano Banana, ChatGPT, Flux, Ideogram…):
 al crearlas tú, no hay riesgo de licencias de terceros (el problema que descartó los datasets
 scrapeados, ver informe §4).

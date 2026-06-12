@@ -87,7 +87,7 @@ async function ensurePostsSeeded(): Promise<void> {
   const demoPosts: Post[] = [
     {
       id: 'demo-bienvenida',
-      author: 'Equipo ForjaFit',
+      author: 'Equipo Temple',
       createdAt: hoursAgo(50),
       kind: 'texto',
       text: 'Bienvenido a la comunidad 👋 Esto es el modo local de demostración: las publicaciones y reacciones se guardan solo en tu dispositivo. Cuando actives la fase en la nube (ver roadmap), compartirás de verdad con otras personas — siempre de forma opcional y privada por defecto.',

@@ -5,7 +5,7 @@ import type { BodyMeasurement, WaterDay } from './bodyModels';
 import type { Exercise, Routine, Session } from './models';
 import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
 
-export class ForjaFitDB extends Dexie {
+export class TempleDB extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>;
   routines!: EntityTable<Routine, 'id'>;
   sessions!: EntityTable<Session, 'id'>;
@@ -47,7 +47,7 @@ export class ForjaFitDB extends Dexie {
   }
 }
 
-export const db = new ForjaFitDB();
+export const db = new TempleDB();
 
 /**
  * Pide al navegador almacenamiento persistente para reducir el riesgo de

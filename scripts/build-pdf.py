@@ -48,7 +48,7 @@ hr { border: none; border-top: 1px solid #d8d2c6; margin: 1.6em 0; }
 COVER = """
 <div class="cover">
   <div class="spark">&#10038;</div>
-  <h1>ForjaFit</h1>
+  <h1>Temple</h1>
   <p class="subtitle">Informe t&eacute;cnico &mdash; Registro de entrenamientos de fuerza<br>
   PWA local-first y accesible (WCAG 2.2 AA)</p>
   <p class="meta">
@@ -66,7 +66,7 @@ def main() -> None:
     body = markdown.markdown(text, extensions=['tables', 'fenced_code', 'sane_lists'])
     html = (
         '<!doctype html><html lang="es"><head><meta charset="utf-8">'
-        f'<title>ForjaFit — Informe técnico</title><style>{CSS}</style></head>'
+        f'<title>Temple — Informe técnico</title><style>{CSS}</style></head>'
         f'<body>{COVER}{body}</body></html>'
     )
 
