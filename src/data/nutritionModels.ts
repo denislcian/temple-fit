@@ -26,6 +26,12 @@ export interface FoodItem extends MacroAmounts {
   /** catalogo = incluido en la app · off = Open Food Facts · personalizado = del usuario */
   source: 'catalogo' | 'off' | 'personalizado';
   barcode?: string;
+  // Micronutrientes por 100 g (opcionales): solo presentes en alimentos de
+  // Open Food Facts o de etiqueta escaneada. Necesarios para el Nutri-Score.
+  sugarsG?: number;
+  satFatG?: number;
+  saltG?: number;
+  fiberG?: number;
 }
 
 /** Una entrada del diario: un alimento consumido en una comida de un día.

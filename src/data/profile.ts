@@ -35,6 +35,30 @@ export function saveProfile(profile: UserProfile): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 }
 
+/** Objetivo de peso: peso meta + ritmo deseado (kg/semana). Solo local. */
+export interface WeightGoal {
+  targetKg: number;
+  weeklyRateKg: number;
+}
+
+const WEIGHT_GOAL_KEY = 'forjafit-weight-goal';
+
+export function loadWeightGoal(): WeightGoal | null {
+  try {
+    const raw = localStorage.getItem(WEIGHT_GOAL_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as WeightGoal;
+    if (typeof parsed.targetKg !== 'number' || typeof parsed.weeklyRateKg !== 'number') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function saveWeightGoal(goal: WeightGoal): void {
+  localStorage.setItem(WEIGHT_GOAL_KEY, JSON.stringify(goal));
+}
+
 /** Clave de API de Gemini para el escáner por foto (opcional, solo local). */
 const GEMINI_KEY = 'forjafit-gemini-key';
 

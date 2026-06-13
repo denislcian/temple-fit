@@ -10,6 +10,7 @@ import { computeRecords } from '../../domain/records';
 import { exerciseProgression, summarizeProgress, totals } from '../../domain/stats';
 import { weeklyVolume } from '../../domain/volume';
 import { BodyMeasureDialog } from '../components/BodyMeasureDialog';
+import { WeightGoalCard } from '../components/WeightGoalCard';
 import { ChartBlock } from '../components/ChartBlock';
 import { BodyWeightChart } from '../components/charts/BodyWeightChart';
 import { ProgressionChart } from '../components/charts/ProgressionChart';
@@ -281,6 +282,8 @@ export default function ProgressView() {
           </ChartBlock>
         </div>
       )}
+
+      <WeightGoalCard currentKg={lastMeasure?.weightKg} />
 
       <BodyMeasureDialog open={measuring} onSaved={reloadBody} onClose={() => setMeasuring(false)} />
     </>

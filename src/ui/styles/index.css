@@ -1075,6 +1075,61 @@ dialog::backdrop {
   background: var(--danger-strong);
 }
 
+/* ── Insignia Nutri-Score ───────────────────────────────── */
+.nutri-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  border-radius: var(--radius-s);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.nutri-sm {
+  width: 1.7rem;
+  height: 1.7rem;
+  font-size: 1rem;
+}
+
+.nutri-lg {
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.3rem;
+}
+
+/* Colores oficiales Nutri-Score; texto elegido para contraste AA. */
+.nutri-a {
+  background: #03794a;
+  color: #fff;
+}
+.nutri-b {
+  background: #85bb2f;
+  color: #141608;
+}
+.nutri-c {
+  background: #fecb02;
+  color: #1a1505;
+}
+.nutri-d {
+  background: #ee8100;
+  color: #190e00;
+}
+.nutri-e {
+  background: #d63a0f;
+  color: #fff;
+}
+
+/* ── Objetivo de peso ───────────────────────────────────── */
+.weight-goal-result {
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent-2);
+  border-radius: var(--radius-s);
+  padding: 0.6rem 0.9rem;
+  margin-top: 0.75rem;
+}
+
 /* ── Hidratación ────────────────────────────────────────── */
 .water {
   display: flex;

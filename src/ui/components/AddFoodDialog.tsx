@@ -1,11 +1,12 @@
 // CAPA 3 · Interfaz — Añadir alimento al diario.
-// Cuatro caminos, de más fiable a más cómodo:
+// Cinco caminos, de más fiable a más cómodo:
 //   1. Buscar (catálogo local + tus alimentos + caché de OFF) — offline
 //   2. Online: Open Food Facts por nombre o código de barras — gratis, sin key
-//   3. Foto con IA (Gemini, clave del usuario) — degradación elegante
-//   4. Manual (crea un alimento personalizado) — siempre disponible
+//   3. Describir por texto o VOZ con IA (Gemini, clave del usuario)
+//   4. Foto del plato o de la etiqueta nutricional con IA
+//   5. Manual (crea un alimento personalizado) — siempre disponible
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FoodItem, MacroAmounts, Meal } from '../../data/nutritionModels';
+import type { FoodItem, Meal } from '../../data/nutritionModels';
 import { MEAL_LABELS } from '../../data/nutritionModels';
 import { getOffByBarcode, searchOffByName, type OffProduct } from '../../data/offApi';
 import { loadGeminiKey } from '../../data/profile';
@@ -16,18 +17,29 @@ import {
   saveFood,
   searchFoods,
 } from '../../data/repositories/nutritionRepo';
-import { analyzeFoodPhoto, fileToBase64, type PhotoAnalysis } from '../../data/vision';
+import {
+  analyzeFoodPhoto,
+  analyzeFoodText,
+  analyzeNutritionLabel,
+  fileToBase64,
+  type PhotoAnalysis,
+} from '../../data/vision';
+import { foodNutriScore } from '../../domain/nutriScore';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { parseWeight } from '../utils/format';
 import { useAnnounce } from './Announcer';
 import { AppDialog } from './AppDialog';
 import { TextField } from './Field';
+import { NutriBadge } from './NutriBadge';
 
-type Mode = 'buscar' | 'foto' | 'manual';
+type Mode = 'buscar' | 'describir' | 'foto' | 'manual';
+
+type Micros = Partial<Pick<FoodItem, 'sugarsG' | 'satFatG' | 'saltG' | 'fiberG'>>;
 
 interface SelectedFood {
   name: string;
   foodId?: string;
-  per100: MacroAmounts;
+  per100: FoodItem | (Omit<FoodItem, 'id' | 'name' | 'source'> & Micros);
 }
 
 interface AddFoodDialogProps {
@@ -37,6 +49,19 @@ interface AddFoodDialogProps {
   onAdded: () => Promise<void>;
   onClose: () => void;
 }
+
+const GEMINI_HELP = (
+  <div className="card card--accent">
+    <p>
+      El análisis con IA usa la API gratuita de Google Gemini con <strong>tu propia clave</strong>{' '}
+      (se guarda solo en este dispositivo). Créala gratis en{' '}
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+        aistudio.google.com/apikey
+      </a>{' '}
+      y pégala en <a href="#/ajustes">Ajustes</a>.
+    </p>
+  </div>
+);
 
 export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDialogProps) {
   const announce = useAnnounce();
@@ -51,8 +76,15 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
   const [grams, setGrams] = useState('100');
   const [manual, setManual] = useState({ name: '', kcal: '', protein: '', carbs: '', fat: '' });
   const [analysis, setAnalysis] = useState<PhotoAnalysis | null>(null);
+  const [description, setDescription] = useState('');
   const photoInput = useRef<HTMLInputElement>(null);
+  const labelInput = useRef<HTMLInputElement>(null);
   const geminiKey = loadGeminiKey();
+
+  const appendTranscript = useCallback((text: string) => {
+    setDescription((prev) => (prev ? `${prev} ${text}` : text));
+  }, []);
+  const speech = useSpeechRecognition(appendTranscript);
 
   // Búsqueda local en vivo.
   useEffect(() => {
@@ -78,7 +110,13 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
     reset();
     setQuery('');
     setBarcode('');
+    setDescription('');
     onClose();
+  }
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    reset();
   }
 
   async function searchOnline() {
@@ -112,8 +150,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
         setError(`No se encontró ningún producto con el código ${code}`);
         return;
       }
-      const saved = await saveFood({ ...productToPer100(product), source: 'off', barcode: product.barcode, name: product.name });
-      setSelected({ name: saved.name, foodId: saved.id, per100: saved });
+      await pickOffProduct(product);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al consultar el código');
     } finally {
@@ -122,30 +159,65 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
   }
 
   async function pickOffProduct(product: OffProduct) {
+    // Se guardan también los micros (azúcares, grasa sat., sal, fibra) para
+    // poder calcular el Nutri-Score.
     const saved = await saveFood({
-      ...productToPer100(product),
+      name: product.name,
+      kcal: product.kcal,
+      proteinG: product.proteinG,
+      carbsG: product.carbsG,
+      fatG: product.fatG,
       source: 'off',
       barcode: product.barcode,
-      name: product.name,
+      ...(product.sugarsG !== undefined ? { sugarsG: product.sugarsG } : {}),
+      ...(product.satFatG !== undefined ? { satFatG: product.satFatG } : {}),
+      ...(product.saltG !== undefined ? { saltG: product.saltG } : {}),
+      ...(product.fiberG !== undefined ? { fiberG: product.fiberG } : {}),
     });
     setSelected({ name: saved.name, foodId: saved.id, per100: saved });
   }
 
-  async function analyzePhoto(file: File) {
+  async function runAnalysis(fn: () => Promise<PhotoAnalysis>, label: string) {
     setBusy(true);
     setError(null);
     setAnalysis(null);
     try {
-      const { base64, mimeType } = await fileToBase64(file);
-      const result = await analyzeFoodPhoto(geminiKey, base64, mimeType);
+      const result = await fn();
       setAnalysis(result);
       announce(
         result.items.length > 0
-          ? `Análisis listo: ${result.items.length} alimentos, ${result.total.kcal} calorías estimadas`
-          : 'No se reconoció comida en la imagen',
+          ? `${label}: ${result.items.length} alimentos, ${result.total.kcal} calorías estimadas`
+          : 'No se reconoció comida',
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al analizar la foto');
+      setError(e instanceof Error ? e.message : 'Error al analizar');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function analyzeLabel(file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const { base64, mimeType } = await fileToBase64(file);
+      const label = await analyzeNutritionLabel(geminiKey, base64, mimeType);
+      const saved = await saveFood({
+        name: label.name,
+        kcal: label.kcal,
+        proteinG: label.proteinG,
+        carbsG: label.carbsG,
+        fatG: label.fatG,
+        source: 'personalizado',
+        ...(label.sugarsG !== undefined ? { sugarsG: label.sugarsG } : {}),
+        ...(label.satFatG !== undefined ? { satFatG: label.satFatG } : {}),
+        ...(label.saltG !== undefined ? { saltG: label.saltG } : {}),
+        ...(label.fiberG !== undefined ? { fiberG: label.fiberG } : {}),
+      });
+      setSelected({ name: saved.name, foodId: saved.id, per100: saved });
+      announce(`Etiqueta leída: ${saved.name}, ${saved.kcal} kcal por 100 g`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al leer la etiqueta');
     } finally {
       setBusy(false);
     }
@@ -157,7 +229,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
       await addDiaryEntryAbsolute({
         date,
         meal,
-        foodName: `${item.name} (foto IA)`,
+        foodName: `${item.name} (IA)`,
         grams: item.grams,
         macros: { kcal: item.kcal, proteinG: item.proteinG, carbsG: item.carbsG, fatG: item.fatG },
       });
@@ -210,12 +282,48 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
     close();
   }
 
-  const preview = selected && parseWeight(grams) !== null && Number(parseWeight(grams)) > 0
-    ? {
-        kcal: Math.round((selected.per100.kcal * Number(parseWeight(grams))) / 100),
-        p: Math.round((selected.per100.proteinG * Number(parseWeight(grams))) / 10) / 10,
-      }
-    : null;
+  const gramsNum = parseWeight(grams);
+  const preview =
+    selected && gramsNum !== null && gramsNum > 0
+      ? {
+          kcal: Math.round((selected.per100.kcal * gramsNum) / 100),
+          p: Math.round((selected.per100.proteinG * gramsNum) / 10) / 10,
+        }
+      : null;
+  const selectedScore = selected ? foodNutriScore(selected.per100) : null;
+
+  function renderAnalysis() {
+    if (!analysis) return null;
+    return (
+      <section aria-label="Resultado del análisis" style={{ marginTop: '1rem' }}>
+        {analysis.description && <p className="chart-summary">{analysis.description}</p>}
+        <ul className="item-list">
+          {analysis.items.map((item, i) => (
+            <li key={i}>
+              <div>
+                <span className="title">{item.name}</span>
+                <br />
+                <span className="meta num">
+                  ~{item.grams} g · {item.kcal} kcal · P {item.proteinG} · C {item.carbsG} · G {item.fatG}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {analysis.items.length > 0 && (
+          <div className="btn-row" style={{ marginTop: '0.75rem' }}>
+            <p className="num" style={{ margin: 0 }}>
+              <strong>Total: {analysis.total.kcal} kcal</strong> · P {analysis.total.proteinG} · C{' '}
+              {analysis.total.carbsG} · G {analysis.total.fatG}
+            </p>
+            <button type="button" className="btn btn--primary" onClick={addAnalysis}>
+              Añadir todo al diario
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <AppDialog open={open} title={`Añadir a ${MEAL_LABELS[meal].toLowerCase()}`} onClose={close}>
@@ -223,7 +331,8 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
         {(
           [
             ['buscar', 'Buscar'],
-            ['foto', 'Foto (IA)'],
+            ['describir', 'Describir'],
+            ['foto', 'Foto'],
             ['manual', 'Manual'],
           ] as const
         ).map(([value, label]) => (
@@ -232,10 +341,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
             type="button"
             className={`btn btn--small ${mode === value ? 'btn--primary' : ''}`}
             aria-pressed={mode === value}
-            onClick={() => {
-              setMode(value);
-              reset();
-            }}
+            onClick={() => switchMode(value)}
           >
             {label}
           </button>
@@ -253,24 +359,28 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
         <>
           <TextField label="Buscar alimento" value={query} onChange={setQuery} hint="Catálogo en español + tus alimentos guardados" />
           <ul className="item-list">
-            {localResults.map((food) => (
-              <li key={food.id}>
-                <div>
-                  <span className="title">{food.name}</span>
-                  <br />
-                  <span className="meta num">
-                    {food.kcal} kcal · P {food.proteinG} · C {food.carbsG} · G {food.fatG} (100 g)
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn--small"
-                  onClick={() => setSelected({ name: food.name, foodId: food.id, per100: food })}
-                >
-                  Elegir<span className="visually-hidden"> {food.name}</span>
-                </button>
-              </li>
-            ))}
+            {localResults.map((food) => {
+              const score = foodNutriScore(food);
+              return (
+                <li key={food.id}>
+                  {score && <NutriBadge score={score} />}
+                  <div style={{ flex: 1 }}>
+                    <span className="title">{food.name}</span>
+                    <br />
+                    <span className="meta num">
+                      {food.kcal} kcal · P {food.proteinG} · C {food.carbsG} · G {food.fatG} (100 g)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--small"
+                    onClick={() => setSelected({ name: food.name, foodId: food.id, per100: food })}
+                  >
+                    Elegir<span className="visually-hidden"> {food.name}</span>
+                  </button>
+                </li>
+              );
+            })}
             {localResults.length === 0 && <li>Nada en tu biblioteca local con ese nombre.</li>}
           </ul>
 
@@ -284,20 +394,24 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
             <>
               <h3>Resultados online</h3>
               <ul className="item-list">
-                {offResults.map((product) => (
-                  <li key={product.barcode}>
-                    <div>
-                      <span className="title">{product.name}</span>
-                      <br />
-                      <span className="meta num">
-                        {product.kcal} kcal · P {product.proteinG} · C {product.carbsG} · G {product.fatG} (100 g)
-                      </span>
-                    </div>
-                    <button type="button" className="btn btn--small" onClick={() => pickOffProduct(product)}>
-                      Elegir<span className="visually-hidden"> {product.name}</span>
-                    </button>
-                  </li>
-                ))}
+                {offResults.map((product) => {
+                  const score = foodNutriScore(product);
+                  return (
+                    <li key={product.barcode}>
+                      {score && <NutriBadge score={score} />}
+                      <div style={{ flex: 1 }}>
+                        <span className="title">{product.name}</span>
+                        <br />
+                        <span className="meta num">
+                          {product.kcal} kcal · P {product.proteinG} · C {product.carbsG} · G {product.fatG} (100 g)
+                        </span>
+                      </div>
+                      <button type="button" className="btn btn--small" onClick={() => pickOffProduct(product)}>
+                        Elegir<span className="visually-hidden"> {product.name}</span>
+                      </button>
+                    </li>
+                  );
+                })}
                 {offResults.length === 0 && <li>Sin resultados online para esa búsqueda.</li>}
               </ul>
               <p className="hint">Datos de Open Food Facts (licencia ODbL). Se guardan en tu biblioteca local.</p>
@@ -314,29 +428,71 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
         </>
       )}
 
-      {/* ── Modo foto (IA) ── */}
-      {mode === 'foto' && (
+      {/* ── Modo describir (texto + voz) ── */}
+      {mode === 'describir' && !selected && (
         <>
           {!geminiKey ? (
-            <div className="card card--accent">
-              <p>
-                El escáner por foto usa la API gratuita de Google Gemini con <strong>tu propia clave</strong>
-                {' '}(se guarda solo en este dispositivo). Créala gratis en{' '}
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-                  aistudio.google.com/apikey
-                </a>{' '}
-                y pégala en <a href="#/ajustes">Ajustes</a>.
-              </p>
-            </div>
+            GEMINI_HELP
           ) : (
             <>
               <p className="hint">
-                Haz una foto del plato y la IA estimará alimentos, gramos y macros. Es una estimación:
-                revísala antes de añadirla.
+                Escribe (o dicta) lo que comiste, p. ej. «dos huevos y una tostada con aguacate». La
+                IA lo desglosa en macros. Es una estimación: revísala antes de añadir.
+              </p>
+              <div className="field">
+                <label htmlFor="food-desc">¿Qué has comido?</label>
+                <textarea
+                  id="food-desc"
+                  className="input"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="dos huevos y una tostada con aguacate"
+                />
+              </div>
+              <div className="btn-row">
+                {speech.supported && (
+                  <button
+                    type="button"
+                    className={`btn btn--small ${speech.listening ? 'btn--primary' : ''}`}
+                    onClick={speech.toggle}
+                    aria-pressed={speech.listening}
+                  >
+                    {speech.listening ? '● Escuchando… (toca para parar)' : '🎤 Dictar'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={busy || !description.trim()}
+                  onClick={() => runAnalysis(() => analyzeFoodText(geminiKey, description), 'Análisis listo')}
+                >
+                  {busy ? 'Analizando…' : 'Analizar con IA'}
+                </button>
+              </div>
+              {renderAnalysis()}
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── Modo foto (plato o etiqueta) ── */}
+      {mode === 'foto' && !selected && (
+        <>
+          {!geminiKey ? (
+            GEMINI_HELP
+          ) : (
+            <>
+              <p className="hint">
+                Foto del <strong>plato</strong> para estimar la comida, o foto de la{' '}
+                <strong>etiqueta nutricional</strong> de un producto envasado para leer sus valores.
               </p>
               <div className="btn-row">
                 <button type="button" className="btn" onClick={() => photoInput.current?.click()} disabled={busy}>
-                  {busy ? 'Analizando…' : '📷 Elegir o hacer foto'}
+                  {busy ? 'Analizando…' : '📷 Foto del plato'}
+                </button>
+                <button type="button" className="btn" onClick={() => labelInput.current?.click()} disabled={busy}>
+                  🏷️ Foto de la etiqueta
                 </button>
                 <input
                   ref={photoInput}
@@ -347,40 +503,25 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
                   aria-label="Foto del plato"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) analyzePhoto(file);
+                    if (file) runAnalysis(() => fileToBase64(file).then(({ base64, mimeType }) => analyzeFoodPhoto(geminiKey, base64, mimeType)), 'Análisis listo');
+                    e.target.value = '';
+                  }}
+                />
+                <input
+                  ref={labelInput}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="visually-hidden"
+                  aria-label="Foto de la etiqueta nutricional"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) analyzeLabel(file);
                     e.target.value = '';
                   }}
                 />
               </div>
-              {analysis && (
-                <section aria-label="Resultado del análisis" style={{ marginTop: '1rem' }}>
-                  {analysis.description && <p className="chart-summary">{analysis.description}</p>}
-                  <ul className="item-list">
-                    {analysis.items.map((item, i) => (
-                      <li key={i}>
-                        <div>
-                          <span className="title">{item.name}</span>
-                          <br />
-                          <span className="meta num">
-                            ~{item.grams} g · {item.kcal} kcal · P {item.proteinG} · C {item.carbsG} · G {item.fatG}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  {analysis.items.length > 0 && (
-                    <div className="btn-row" style={{ marginTop: '0.75rem' }}>
-                      <p className="num" style={{ margin: 0 }}>
-                        <strong>Total: {analysis.total.kcal} kcal</strong> · P {analysis.total.proteinG} · C{' '}
-                        {analysis.total.carbsG} · G {analysis.total.fatG}
-                      </p>
-                      <button type="button" className="btn btn--primary" onClick={addAnalysis}>
-                        Añadir todo al diario
-                      </button>
-                    </div>
-                  )}
-                </section>
-              )}
+              {renderAnalysis()}
             </>
           )}
         </>
@@ -406,7 +547,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
       {selected && (
         <section aria-label="Cantidad consumida" style={{ marginTop: '1rem' }}>
           <p>
-            <strong>{selected.name}</strong>{' '}
+            {selectedScore && <NutriBadge score={selectedScore} size="lg" />} <strong>{selected.name}</strong>{' '}
             <button type="button" className="btn btn--small btn--ghost" onClick={reset}>
               Cambiar
             </button>
@@ -429,8 +570,4 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
       )}
     </AppDialog>
   );
-}
-
-function productToPer100(product: OffProduct): MacroAmounts {
-  return { kcal: product.kcal, proteinG: product.proteinG, carbsG: product.carbsG, fatG: product.fatG };
 }

@@ -92,3 +92,33 @@ export const NUTRI_DESCRIPTIONS: Record<NutriLetter, string> = {
   D: 'De consumo ocasional',
   E: 'Mejor reservarlo a un capricho puntual',
 };
+
+/** Alimento con los micronutrientes opcionales necesarios para el score. */
+interface ScorableFood {
+  kcal: number;
+  proteinG: number;
+  sugarsG?: number;
+  satFatG?: number;
+  saltG?: number;
+  fiberG?: number;
+}
+
+/**
+ * Nutri-Score de un alimento, o null si no tiene los micronutrientes
+ * necesarios (azúcares, grasa saturada, sal): solo se puede calcular para
+ * alimentos de Open Food Facts o de etiqueta escaneada, no para el catálogo
+ * básico que solo guarda los 4 macros.
+ */
+export function foodNutriScore(food: ScorableFood): NutriScore | null {
+  if (food.sugarsG === undefined || food.satFatG === undefined || food.saltG === undefined) {
+    return null;
+  }
+  return nutriScore({
+    kcal: food.kcal,
+    proteinG: food.proteinG,
+    sugarsG: food.sugarsG,
+    satFatG: food.satFatG,
+    saltG: food.saltG,
+    fiberG: food.fiberG ?? 0,
+  });
+}

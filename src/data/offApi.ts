@@ -8,6 +8,11 @@ import type { MacroAmounts } from './nutritionModels';
 export interface OffProduct extends MacroAmounts {
   name: string;
   barcode: string;
+  // Micronutrientes por 100 g (para el Nutri-Score), si OFF los aporta.
+  sugarsG?: number;
+  satFatG?: number;
+  saltG?: number;
+  fiberG?: number;
 }
 
 interface OffNutriments {
@@ -15,6 +20,10 @@ interface OffNutriments {
   proteins_100g?: number;
   carbohydrates_100g?: number;
   fat_100g?: number;
+  sugars_100g?: number;
+  'saturated-fat_100g'?: number;
+  salt_100g?: number;
+  fiber_100g?: number;
 }
 
 interface OffRawProduct {
@@ -28,6 +37,8 @@ function toProduct(raw: OffRawProduct): OffProduct | null {
   if (!raw.product_name || !raw.code || !n || typeof n['energy-kcal_100g'] !== 'number') {
     return null;
   }
+  const micro = (v: number | undefined, decimals = 1) =>
+    typeof v === 'number' ? Math.round(v * 10 ** decimals) / 10 ** decimals : undefined;
   return {
     name: raw.product_name,
     barcode: raw.code,
@@ -35,6 +46,10 @@ function toProduct(raw: OffRawProduct): OffProduct | null {
     proteinG: round1(n.proteins_100g ?? 0),
     carbsG: round1(n.carbohydrates_100g ?? 0),
     fatG: round1(n.fat_100g ?? 0),
+    ...(micro(n.sugars_100g) !== undefined ? { sugarsG: micro(n.sugars_100g) } : {}),
+    ...(micro(n['saturated-fat_100g']) !== undefined ? { satFatG: micro(n['saturated-fat_100g']) } : {}),
+    ...(micro(n.salt_100g, 2) !== undefined ? { saltG: micro(n.salt_100g, 2) } : {}),
+    ...(micro(n.fiber_100g) !== undefined ? { fiberG: micro(n.fiber_100g) } : {}),
   };
 }
 
