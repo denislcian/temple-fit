@@ -312,6 +312,7 @@ La visión a largo plazo es una **plataforma fitness completa y diferenciada**: 
 | **v1.3 ✅** | Diario de calorías/macros, búsqueda de alimentos, generador de dietas y escáner por foto | **Open Food Facts** (sin key; nombre + código de barras, con caché local y mensajes que distinguen sin-conexión del rate limit) · dietas resolviendo gramos con sistema lineal 3×3 (−1,2% verificado) · **Gemini free tier** con clave del propio usuario guardada solo en su dispositivo | **Hecha.** Catálogo propio de ~70 alimentos en español como base offline |
 | **v1.4 ✅** | Comunidad: feed, publicar rutina/sesión, me gusta y comentarios | Modo local sobre IndexedDB con publicaciones de ejemplo; interfaz `SocialRepository` como contrato | **Hecha** en modo demostración: experiencia completa sin servidor |
 | **v1.5 ✅** | Herramientas premium del mercado: calculadora de discos y calentamiento, progresión sugerida, duración de sesión, medidas corporales con sync del perfil, rachas + heatmap, 12 logros derivados, hidratación y copiar-día | Todo dominio puro propio (`gymTools`, `consistency`) + DB v3; los logros se derivan de los datos reales (nada que desincronizar) | **Hecha.** Es exactamente lo que Hevy/Strong venden en premium, gratis y offline |
+| **v1.6 ✅** | Lo que destaca en Hevy y Cal AI (2026), investigado con fuentes: tipos de serie (calentamiento fuera del volumen/PR), RPE, reordenar y notas; en nutrición, descripción por texto/voz, foto de etiqueta, Nutri-Score (algoritmo 2023) y objetivo de peso con fecha | Dominio puro testeado (`nutriScore`, `weightGoal`, `isWorkingSet`); IA reutilizando Gemini; Web Speech API para la voz | **Hecha.** Reimplementa local-first las fórmulas que Cal AI/MacroFactor esconden, con el estándar público equivalente y auditable |
 | **v2.0** | Login seguro + comunidad compartida de verdad | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU, Realtime. Login con *magic link* y Google OAuth → cumple WCAG 3.3.8 | Pendiente (requiere crear la cuenta). El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. RLS en todas las tablas desde el día 1. Gracias al patrón repositorio, solo se escribe el adaptador: la UI no cambia |
 | **v2.1** | Proxy para el escáner IA | Supabase Edge Functions (500K invocaciones gratis/mes) | En la app personal actual la clave Gemini es del propio usuario y vive solo en su dispositivo (aceptable); en un despliegue multiusuario debe moverse a un proxy |
 | **v2.2** | Imágenes/ilustraciones de ejecución de ejercicios | Las 357 imágenes de wger (CC-BY-SA 4.0, atribución **por imagen** — verificado: solo 83 son de Everkinetic) o ilustraciones SVG propias | Nunca datasets scrapeados: hay DMCA confirmado (abr-2026) contra redistribuidores de ExerciseDB |
@@ -322,11 +323,38 @@ La visión a largo plazo es una **plataforma fitness completa y diferenciada**: 
 
 ---
 
-## 15. Fuentes principales
+## 15. Benchmarking competitivo: Hevy y Cal AI (2026)
+
+Antes de la fase 4 se hizo una investigación con fuentes de las dos apps de referencia del mercado para identificar qué funciones destacan y cuáles aún no tenía Temple. El criterio de selección fue **impacto/esfuerzo y valor demostrable en una entrevista**, priorizando lo que se puede implementar como función pura testeable.
+
+**De Hevy (registro de fuerza):**
+
+| Función | Qué aporta | Implementación en Temple |
+|---|---|---|
+| Tipos de serie (calentamiento/drop/fallo) | El calentamiento NO debe contar como volumen efectivo: contarlo da estadísticas mentirosas | `isWorkingSet()` excluye el calentamiento del volumen, los récords y las estadísticas. Campo opcional → retrocompatible |
+| RPE / RIR | Autorregulación moderna (progresar por esfuerzo, no solo por peso) | Campo opcional 6-10 por serie |
+| Reordenar / notas | Realismo de gimnasio (máquina ocupada, señales de técnica) | Botones ↑/↓ accesibles (WCAG 2.5.7) y nota por ejercicio |
+
+**De Cal AI / MacroFactor (nutrición con IA):**
+
+| Función | Qué aporta | Implementación en Temple |
+|---|---|---|
+| Describir comida por texto/voz | Registro en segundos sin foto ni búsqueda | Mismo Gemini que la foto con input de texto; voz con Web Speech API (gratis) |
+| Foto de etiqueta nutricional | Resuelve productos que no están en Open Food Facts | OCR estructurado con Gemini → valores por 100 g |
+| Health score | Feedback cualitativo ("¿esto es sano?") | **Nutri-Score oficial 2023** (público y auditable), no la fórmula opaca de Cal AI |
+| Objetivo de peso con fecha | "¿Cuándo llego a mi meta?" | `projectWeightGoal` con la constante estándar de 7700 kcal/kg |
+
+**Decisión transversal:** Cal AI y MacroFactor no publican sus fórmulas de health score ni de proyección. En lugar de inventar una caja negra, Temple implementa los **estándares públicos equivalentes** (Nutri-Score 2023, 7700 kcal/kg) como funciones puras testeadas — más honesto, auditable y defendible. Fuentes en la sección 16.
+
+---
+
+## 16. Fuentes principales
 
 **Mercado y competidores:** polarismarketresearch.com (fitness app market) · gymgod.app/blog/strong-vs-hevy · setgraph.app (Hevy vs Strong 2026) · github.com/wger-project/wger · github.com/LiamMorrow/LiftLog · github.com/brandonp2412/Flexify · news.ycombinator.com/item?id=38283760 · apps.apple.com (reviews Strong) · trustpilot.com/review/www.jefit.com
 
 **Datos y licencias:** github.com/yuhonas/free-exercise-db (issues #2, #12) · github.com/wrkout/exercises.json (issue #305) · github.com/github/dmca (2026-04-23-exercisedb.md) · docs.ascendapi.com (caching/ratelimiting) · wger.de/api/v2 (verificación en vivo) · world.openfoodfacts.org/data · api-ninjas.com/pricing · musclewiki.com/api-terms
+
+**Benchmarking Hevy/Cal AI (fase 4):** hevyapp.com/features (supersets, exercise-programming-options, sets-per-muscle-group) · help.hevyapp.com (smart superset scrolling) · calai.app · apps.apple.com (Cal AI) · snapcalorie.com · macrofactor.com/algorithm-accuracy (adaptive TDEE) · eclarion.com/nutriscore-calculator/methodology (Nutri-Score 2023) · eurofins.de (Nutri-Score update 2023) · myfitnesspal.com (target date) · wellness sobre 7700 kcal/kg
 
 **Stack y hosting:** developers.cloudflare.com/pages/platform/limits · vercel.com/docs/plans/hobby · vercel.com/docs/limits/fair-use-guidelines · docs.netlify.com (credit-based plans) · docs.github.com (Pages limits, Actions billing) · supabase.com/pricing · firebase.google.com/pricing · vite.dev/releases · vitest.dev · github.com/vite-pwa/vite-plugin-pwa · pkgpulse.com (Recharts vs Chart.js)
 

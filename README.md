@@ -71,6 +71,19 @@ Y desde la fase 3 (capas 9-11), las herramientas que el mercado cobra en premium
 - **Hidratación**: contador de vasos de agua por día.
 - **Copiar el día anterior** en el diario de nutrición (la fricción nº 1 del registro diario).
 
+Y desde la fase 4, las funciones que destacan en las apps de referencia del mercado (Hevy, Cal AI, MacroFactor), reimplementadas local-first tras investigar qué hacen exactamente:
+
+**Entrenamiento (estilo Hevy):**
+- **Tipos de serie**: marca cada serie como normal, **calentamiento**, drop set o al fallo. El calentamiento se **excluye del volumen y los récords** (contarlo daría estadísticas mentirosas) — distinción que Hevy hace y casi ninguna app gratuita.
+- **RPE** (esfuerzo percibido 6-10) opcional por serie.
+- **Reordenar** ejercicios durante la sesión (botones ↑/↓ accesibles) y **nota** por ejercicio.
+
+**Nutrición (estilo Cal AI / MacroFactor):**
+- **Describir la comida por texto o voz**: escribe o dicta "dos huevos y una tostada con aguacate" y la IA lo desglosa en macros.
+- **Foto de la etiqueta nutricional**: lee los valores por 100 g de un producto envasado (resuelve lo que no está en Open Food Facts).
+- **Nutri-Score** (A-E): puntuación de salud de cada alimento con el algoritmo oficial 2023 (Cal AI tiene un "health score" pero esconde su fórmula; aquí es auditable).
+- **Objetivo de peso con fecha estimada**: fija tu meta y un ritmo, y la app calcula cuándo llegarás y qué déficit/superávit implica.
+
 📸 *Capturas: ver [docs/capturas](docs/capturas/README.md).*
 
 ## 3. Cómo ejecutarlo
@@ -170,6 +183,14 @@ Cada capa se cerró con su código, sus tests en verde y su commit descriptivo (
 2. **Capa 10 — Cuerpo y constancia** (`feat(cuerpo)`): medidas corporales que sincronizan el perfil (y con él los objetivos de macros), racha semanal robusta (no se rompe un lunes por la mañana), heatmap de 12 semanas y 12 logros **derivados** de los datos — al ser funciones puras sobre el estado real, no hay nada que pueda desincronizarse. DB v3 y export v3 retrocompatible.
 3. **Capa 11 — Nutrición plus** (`feat(nutricion)`): hidratación diaria persistida y "copiar el día anterior".
 4. Bug real cazado por axe en esta fase (en el log de git): una `opacity` sobre los logros pendientes degradaba el contraste del texto a 3,98:1 — se corrigió atenuando solo lo decorativo. Las herramientas automáticas valen cuando se ejecutan sobre la UI real.
+
+### Capas 14-16 — Fase 4: lo mejor de Hevy y Cal AI, local-first
+
+Investigué con fuentes las features que destacan en Hevy y Cal AI en 2026 (informe técnico §16) y reimplementé las de mayor impacto, priorizando las que son **funciones puras testeables** (las que mejor se explican en una entrevista):
+
+1. **Capa 14 — Dominio** (`feat(dominio)`): `nutriScore.ts` (algoritmo Nutri-Score oficial 2023, validado con pollo→A, aceite→E, refresco→C) y `weightGoal.ts` (proyección de fecha con 7700 kcal/kg). 11 tests con valores de referencia. Cal AI y MacroFactor esconden estas fórmulas; aquí están implementadas con el estándar público equivalente.
+2. **Capa 15 — Fuerza** (`feat(fuerza)`): tipos de serie con `isWorkingSet` (el calentamiento sale del volumen/PR/estadísticas), RPE, reordenar y notas. Retrocompatible: todos los campos del modelo son opcionales, las sesiones antiguas siguen leyéndose.
+3. **Capa 16 — Nutrición** (`feat(nutricion)`): texto→IA y etiqueta→IA reutilizando el mismo cliente Gemini (refactor `callGemini`), voz con Web Speech API (mejora progresiva), Nutri-Score en la UI con badge accesible, y objetivo de peso con fecha.
 
 ### Capa 4 — PWA y auditoría (`feat(pwa): app instalable y 100% offline + auditoria a11y`)
 
