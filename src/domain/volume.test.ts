@@ -36,6 +36,21 @@ describe('volume', () => {
     expect(byExercise.has('plancha')).toBe(false); // volumen 0 no se lista
   });
 
+  it('las series de calentamiento no cuentan para el volumen', () => {
+    const s = session('2026-06-08T10:00:00.000Z', [
+      {
+        exerciseId: 'press-banca',
+        sets: [
+          { reps: 10, weightKg: 20, done: true, type: 'calentamiento' },
+          { reps: 8, weightKg: 60, done: true, type: 'normal' },
+          { reps: 6, weightKg: 60, done: true }, // sin type = normal
+        ],
+      },
+    ]);
+    // Solo cuentan las dos de trabajo: 8×60 + 6×60 = 840 (el calentamiento se excluye)
+    expect(sessionVolume(s)).toBe(840);
+  });
+
   it('weekStartOf devuelve el lunes de la semana (UTC)', () => {
     expect(weekStartOf('2026-06-10T18:00:00.000Z')).toBe('2026-06-08'); // miércoles → lunes
     expect(weekStartOf('2026-06-08T00:00:00.000Z')).toBe('2026-06-08'); // lunes → lunes

@@ -1,7 +1,7 @@
 // CAPA 2 · Dominio — Estadísticas y series para las gráficas de progreso.
 // También genera los datos de los RESÚMENES TEXTUALES accesibles: cada
 // gráfica de la app tiene una alternativa en texto y tabla (WCAG 1.1.1).
-import type { Session } from '../data/models';
+import { isWorkingSet, type Session } from '../data/models';
 import { estimate1RM } from './oneRepMax';
 import { sessionVolume } from './volume';
 
@@ -23,7 +23,7 @@ export function exerciseProgression(sessions: Session[], exerciseId: string): Pr
   for (const session of sessions) {
     const entry = session.entries.find((e) => e.exerciseId === exerciseId);
     if (!entry) continue;
-    const doneSets = entry.sets.filter((s) => s.done && s.reps >= 1);
+    const doneSets = entry.sets.filter((s) => isWorkingSet(s) && s.reps >= 1);
     if (doneSets.length === 0) continue;
 
     points.push({
@@ -74,7 +74,7 @@ export function totals(sessions: Session[]): Totals {
     result.volumeKg += sessionVolume(session);
     for (const entry of session.entries) {
       for (const set of entry.sets) {
-        if (!set.done) continue;
+        if (!isWorkingSet(set)) continue;
         result.sets += 1;
         result.reps += set.reps;
       }

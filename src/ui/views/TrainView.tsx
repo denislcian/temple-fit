@@ -4,7 +4,7 @@
 // - El borrador sobrevive a cierres de la app (localStorage)
 // - Detección de récords personales al terminar
 import { useCallback, useEffect, useState } from 'react';
-import type { Exercise, SessionEntry, WorkoutSet } from '../../data/models';
+import type { Exercise, SessionEntry, SetType, WorkoutSet } from '../../data/models';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllRoutines } from '../../data/repositories/routineRepo';
 import {
@@ -21,6 +21,7 @@ import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
 import { GymToolsDialog } from '../components/GymToolsDialog';
 import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
+import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { formatKg, parseReps, parseWeight } from '../utils/format';
@@ -31,11 +32,14 @@ interface DraftSet {
   reps: string;
   weight: string;
   done: boolean;
+  type?: SetType;
+  rpe?: number;
 }
 
 interface DraftEntry {
   exerciseId: string;
   sets: DraftSet[];
+  note?: string;
 }
 
 interface Draft {
@@ -73,6 +77,7 @@ export function TrainView() {
   const [finishedNotice, setFinishedNotice] = useState<string | null>(null);
   const [finishError, setFinishError] = useState<string | null>(null);
   const [gymTools, setGymTools] = useState<{ weight: string; exerciseName?: string } | null>(null);
+  const [setOptions, setSetOptions] = useState<{ entryIndex: number; setIndex: number } | null>(null);
   const [elapsedMin, setElapsedMin] = useState(0);
 
   // Cronómetro de la sesión (se actualiza cada medio minuto).
@@ -144,6 +149,25 @@ export function TrainView() {
     updateDraft((d) => ({ ...d, entries: d.entries.filter((_, i) => i !== index) }));
   }
 
+  /** Reordena un ejercicio (botones ↑/↓ accesibles: WCAG 2.5.7, sin arrastre). */
+  function moveExercise(index: number, dir: -1 | 1) {
+    updateDraft((d) => {
+      const target = index + dir;
+      if (target < 0 || target >= d.entries.length) return d;
+      const entries = [...d.entries];
+      const [moved] = entries.splice(index, 1);
+      entries.splice(target, 0, moved!);
+      return { ...d, entries };
+    });
+  }
+
+  function setNote(entryIndex: number, note: string) {
+    updateDraft((d) => ({
+      ...d,
+      entries: d.entries.map((entry, i) => (i === entryIndex ? { ...entry, note } : entry)),
+    }));
+  }
+
   function updateSet(entryIndex: number, setIndex: number, changes: Partial<DraftSet>) {
     setInvalidSets((prev) => {
       const next = new Set(prev);
@@ -166,8 +190,14 @@ export function TrainView() {
       const entries = d.entries.map((entry, i) => {
         if (i !== entryIndex) return entry;
         const previous = entry.sets[entry.sets.length - 1];
+        // Copia reps/peso/tipo de la anterior (3.3.7); el RPE es de cada serie.
         const next: DraftSet = previous
-          ? { reps: previous.reps, weight: previous.weight, done: false }
+          ? {
+              reps: previous.reps,
+              weight: previous.weight,
+              done: false,
+              ...(previous.type ? { type: previous.type } : {}),
+            }
           : { ...EMPTY_SET };
         return { ...entry, sets: [...entry.sets, next] };
       });
@@ -206,11 +236,16 @@ export function TrainView() {
     const entries: SessionEntry[] = draft.entries
       .map((entry) => ({
         exerciseId: entry.exerciseId,
+        ...(entry.note?.trim() ? { note: entry.note.trim() } : {}),
         sets: entry.sets
           .map((s) => {
             const reps = parseReps(s.reps);
             const weightKg = parseWeight(s.weight);
-            return reps !== null && weightKg !== null ? { reps, weightKg, done: s.done } : null;
+            if (reps === null || weightKg === null) return null;
+            const set: WorkoutSet = { reps, weightKg, done: s.done };
+            if (s.type && s.type !== 'normal') set.type = s.type;
+            if (s.rpe !== undefined) set.rpe = s.rpe;
+            return set;
           })
           .filter((s): s is WorkoutSet => s !== null),
       }))
@@ -328,13 +363,33 @@ export function TrainView() {
           <section key={entry.exerciseId} className="card" aria-label={exercise?.name}>
             <div className="btn-row" style={{ justifyContent: 'space-between' }}>
               <h2>{exercise?.name ?? entry.exerciseId}</h2>
-              <button
-                type="button"
-                className="btn btn--small btn--danger"
-                onClick={() => removeExercise(entryIndex)}
-              >
-                Quitar<span className="visually-hidden"> {exercise?.name}</span>
-              </button>
+              <div className="btn-row">
+                <button
+                  type="button"
+                  className="btn btn--small btn--ghost"
+                  disabled={entryIndex === 0}
+                  onClick={() => moveExercise(entryIndex, -1)}
+                >
+                  <span aria-hidden="true">↑</span>
+                  <span className="visually-hidden">Subir {exercise?.name}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--small btn--ghost"
+                  disabled={entryIndex === draft.entries.length - 1}
+                  onClick={() => moveExercise(entryIndex, 1)}
+                >
+                  <span aria-hidden="true">↓</span>
+                  <span className="visually-hidden">Bajar {exercise?.name}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--small btn--danger"
+                  onClick={() => removeExercise(entryIndex)}
+                >
+                  Quitar<span className="visually-hidden"> {exercise?.name}</span>
+                </button>
+              </div>
             </div>
 
             {last && last.length > 0 && (
@@ -377,13 +432,42 @@ export function TrainView() {
               </button>
             </div>
 
+            <div className="field" style={{ marginBottom: '0.5rem' }}>
+              <label htmlFor={`note-${entryIndex}`} className="visually-hidden">
+                Nota para {exercise?.name}
+              </label>
+              <input
+                id={`note-${entryIndex}`}
+                className="input note-input"
+                type="text"
+                placeholder="Nota (técnica, sensaciones, ajustes…)"
+                value={entry.note ?? ''}
+                onChange={(e) => setNote(entryIndex, e.target.value)}
+              />
+            </div>
+
             {entry.sets.map((set, setIndex) => {
               const invalid = invalidSets.has(`${entryIndex}-${setIndex}`);
+              const setType: SetType = set.type ?? 'normal';
               return (
-                <div className="set-row" key={setIndex}>
-                  <span className="set-index" aria-hidden="true">
-                    {setIndex + 1}
-                  </span>
+                <div className={`set-row set-row--${setType}`} key={setIndex}>
+                  <button
+                    type="button"
+                    className="set-index"
+                    onClick={() => setSetOptions({ entryIndex, setIndex })}
+                  >
+                    <span aria-hidden="true">{setTypeBadge(set.type, setIndex)}</span>
+                    {set.rpe !== undefined && (
+                      <span className="rpe-badge" aria-hidden="true">
+                        @{set.rpe}
+                      </span>
+                    )}
+                    <span className="visually-hidden">
+                      Opciones de la serie {setIndex + 1} de {exercise?.name}
+                      {set.type && set.type !== 'normal' ? `, tipo ${setType}` : ''}
+                      {set.rpe !== undefined ? `, RPE ${set.rpe}` : ''}
+                    </span>
+                  </button>
                   {/* Etiquetas cortas visibles (espacio de una mano en móvil) con
                       nombre accesible completo que EMPIEZA por el texto visible
                       (WCAG 2.5.3 Label in Name). */}
@@ -479,6 +563,28 @@ export function TrainView() {
           onClose={() => setGymTools(null)}
         />
       )}
+
+      {setOptions &&
+        (() => {
+          const { entryIndex, setIndex } = setOptions;
+          const entry = draft.entries[entryIndex];
+          const set = entry?.sets[setIndex];
+          if (!set) return null;
+          return (
+            <SetOptionsDialog
+              open
+              setNumber={setIndex + 1}
+              exerciseName={exerciseById.get(entry.exerciseId)?.name ?? entry.exerciseId}
+              type={set.type ?? 'normal'}
+              rpe={set.rpe}
+              onChangeType={(type) =>
+                updateSet(entryIndex, setIndex, { type: type === 'normal' ? undefined : type })
+              }
+              onChangeRpe={(rpe) => updateSet(entryIndex, setIndex, { rpe })}
+              onClose={() => setSetOptions(null)}
+            />
+          );
+        })()}
 
       <ConfirmDialog
         open={confirmDiscard}

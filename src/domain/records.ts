@@ -1,5 +1,5 @@
 // CAPA 2 · Dominio — Récords personales (PRs), calculados automáticamente.
-import type { Session } from '../data/models';
+import { isWorkingSet, type Session } from '../data/models';
 import { estimate1RM } from './oneRepMax';
 
 export interface RecordSet {
@@ -24,7 +24,7 @@ export function computeRecords(sessions: Session[]): Map<string, PersonalRecord>
   for (const session of sessions) {
     for (const entry of session.entries) {
       for (const set of entry.sets) {
-        if (!set.done || set.reps < 1) continue;
+        if (!isWorkingSet(set) || set.reps < 1) continue;
 
         const candidate: RecordSet = {
           weightKg: set.weightKg,

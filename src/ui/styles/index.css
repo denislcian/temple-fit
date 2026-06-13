@@ -667,10 +667,50 @@ legend {
   border-bottom: 1px dashed var(--border);
 }
 
+/* El índice de serie es un botón: abre las opciones (tipo y RPE). */
 .set-row .set-index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1px;
   font-family: var(--font-display);
   color: var(--text-muted);
-  padding-bottom: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 0.6rem;
+  min-height: var(--target);
+  border-radius: var(--radius-s);
+}
+
+.set-row .set-index:hover {
+  color: var(--text);
+}
+
+.set-row .rpe-badge {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent-text);
+  line-height: 1;
+}
+
+/* Color del índice según el tipo de serie. */
+.set-row--calentamiento .set-index {
+  color: var(--accent-2);
+}
+.set-row--drop .set-index {
+  color: var(--accent-text);
+}
+.set-row--fallo .set-index {
+  color: var(--danger);
+}
+
+.note-input {
+  font-size: 0.9rem;
+  min-height: 2.5rem;
+  background: var(--surface-2);
 }
 
 .set-row .field {

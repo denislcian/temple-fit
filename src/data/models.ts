@@ -51,18 +51,35 @@ export interface Exercise {
   createdAt: string;
 }
 
+/** Tipo de serie (estilo Hevy). Ausente = 'normal' (retrocompatible). */
+export type SetType = 'normal' | 'calentamiento' | 'drop' | 'fallo';
+
 /** Una serie: repeticiones realizadas con un peso. Peso 0 = peso corporal. */
 export interface WorkoutSet {
   reps: number;
   weightKg: number;
   /** Marcada al completarla durante el entrenamiento. */
   done: boolean;
+  /** Tipo de serie. Ausente = 'normal'. */
+  type?: SetType;
+  /** Esfuerzo percibido (RPE) de 6 a 10, opcional. */
+  rpe?: number;
+}
+
+/**
+ * ¿Es una serie de trabajo efectiva? Las de calentamiento no cuentan para
+ * el volumen ni para los récords (como en Hevy): inflarían las estadísticas.
+ */
+export function isWorkingSet(set: WorkoutSet): boolean {
+  return set.done && set.type !== 'calentamiento';
 }
 
 /** Las series de un ejercicio dentro de una sesión. */
 export interface SessionEntry {
   exerciseId: string;
   sets: WorkoutSet[];
+  /** Nota libre del usuario para este ejercicio en esta sesión. */
+  note?: string;
 }
 
 /** Una sesión de entrenamiento (un día de gimnasio). */
