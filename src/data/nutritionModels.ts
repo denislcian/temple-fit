@@ -55,13 +55,26 @@ export interface PostComment {
   createdAt: string;
 }
 
+/** Quién puede ver una publicación. */
+export type Visibility = 'publica' | 'seguidores' | 'privada';
+
+export const VISIBILITY_LABELS: Record<Visibility, string> = {
+  publica: 'Pública',
+  seguidores: 'Solo seguidores',
+  privada: 'Privada',
+};
+
 /** Publicación de la comunidad (rutina, sesión o texto). */
 export interface Post {
   id: string;
   author: string;
+  /** id de la cuenta autora (ausente en las publicaciones de ejemplo). */
+  authorId?: string;
   createdAt: string;
   text: string;
   kind: 'rutina' | 'sesion' | 'texto';
+  /** Quién puede verla. Ausente = pública (retrocompatible). */
+  visibility?: Visibility;
   /** Contenido estructurado: título + líneas (ejercicios, series...). */
   payload?: { title: string; lines: string[] };
   likes: number;
@@ -69,6 +82,14 @@ export interface Post {
   comments: PostComment[];
   /** true en las publicaciones de ejemplo del modo local. */
   isDemo?: boolean;
+}
+
+/** Relación de seguimiento: followerId sigue a followeeId. */
+export interface Follow {
+  id: string;
+  followerId: string;
+  followeeId: string;
+  createdAt: string;
 }
 
 export function macrosForGrams(per100: MacroAmounts, grams: number): MacroAmounts {

@@ -12,6 +12,7 @@ import { hasOnboarded } from '../data/profile';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
+import { AuthProvider } from './components/AuthContext';
 import { Onboarding } from './components/Onboarding';
 import {
   PRIMARY_ROUTES,
@@ -276,7 +277,9 @@ function AppShell() {
 export function App() {
   return (
     <AnnouncerProvider>
-      <AppShell />
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
     </AnnouncerProvider>
   );
 }

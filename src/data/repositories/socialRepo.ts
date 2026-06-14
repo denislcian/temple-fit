@@ -1,20 +1,21 @@
-// CAPA 1 · Datos — Repositorio de la comunidad.
+// CAPA 1 · Datos — Repositorio de la comunidad (modo local).
 //
-// MODO LOCAL: el feed vive en IndexedDB de este dispositivo, con
-// publicaciones de ejemplo para mostrar la experiencia completa.
-//
-// La interfaz SocialRepository es el contrato para la fase v2 del roadmap:
-// una implementación SupabaseSocialRepository (Postgres + RLS + Realtime)
-// sustituirá a esta sin tocar la UI — el mismo patrón repositorio que el
-// resto de la app.
+// El feed, el grafo de seguidores y las cuentas de ejemplo viven en IndexedDB
+// de este dispositivo. La interfaz SocialRepository es el contrato para la
+// fase nube: una implementación con Supabase (Postgres + RLS + Realtime)
+// sustituirá a esta sin tocar la UI. La privacidad se aplica aquí en el
+// cliente por conveniencia; en producción la fuerzan las políticas RLS.
+import type { Account } from '../authModels';
 import { db } from '../db';
 import { newId } from '../models';
-import type { Post } from '../nutritionModels';
+import type { Post, Visibility } from '../nutritionModels';
 
 export interface NewPost {
   author: string;
+  authorId?: string;
   text: string;
   kind: Post['kind'];
+  visibility?: Visibility;
   payload?: { title: string; lines: string[] };
 }
 
@@ -23,12 +24,20 @@ export interface SocialRepository {
   publish(input: NewPost): Promise<Post>;
   toggleLike(postId: string): Promise<Post | undefined>;
   addComment(postId: string, author: string, text: string): Promise<void>;
-  removeOwnPost(postId: string, author: string): Promise<void>;
+  removeOwnPost(postId: string, authorId: string): Promise<void>;
+  // Grafo social
+  getFollowing(followerId: string): Promise<string[]>;
+  isFollowing(followerId: string, followeeId: string): Promise<boolean>;
+  follow(followerId: string, followeeId: string): Promise<void>;
+  unfollow(followerId: string, followeeId: string): Promise<void>;
+  countFollowers(accountId: string): Promise<number>;
+  /** Otras cuentas a las que seguir (excluye al propio viewer). */
+  discoverAccounts(viewerId: string): Promise<Account[]>;
 }
 
 class LocalSocialRepository implements SocialRepository {
   async getFeed(): Promise<Post[]> {
-    await ensurePostsSeeded();
+    await ensureSeeded();
     return db.posts.orderBy('createdAt').reverse().toArray();
   }
 
@@ -36,9 +45,11 @@ class LocalSocialRepository implements SocialRepository {
     const post: Post = {
       id: newId(),
       author: input.author,
+      ...(input.authorId ? { authorId: input.authorId } : {}),
       createdAt: new Date().toISOString(),
       text: input.text,
       kind: input.kind,
+      visibility: input.visibility ?? 'publica',
       ...(input.payload ? { payload: input.payload } : {}),
       likes: 0,
       likedByMe: false,
@@ -67,22 +78,84 @@ class LocalSocialRepository implements SocialRepository {
     await db.posts.update(postId, { comments });
   }
 
-  async removeOwnPost(postId: string, author: string): Promise<void> {
+  async removeOwnPost(postId: string, authorId: string): Promise<void> {
     const post = await db.posts.get(postId);
     if (!post) return;
-    if (post.isDemo || post.author !== author) {
+    if (post.isDemo || post.authorId !== authorId) {
       throw new Error('Solo puedes eliminar tus propias publicaciones');
     }
     await db.posts.delete(postId);
   }
+
+  async getFollowing(followerId: string): Promise<string[]> {
+    const rows = await db.follows.where('followerId').equals(followerId).toArray();
+    return rows.map((f) => f.followeeId);
+  }
+
+  async isFollowing(followerId: string, followeeId: string): Promise<boolean> {
+    const row = await db.follows
+      .where('[followerId+followeeId]')
+      .equals([followerId, followeeId])
+      .first();
+    return row !== undefined;
+  }
+
+  async follow(followerId: string, followeeId: string): Promise<void> {
+    if (followerId === followeeId) return;
+    if (await this.isFollowing(followerId, followeeId)) return;
+    await db.follows.add({
+      id: newId(),
+      followerId,
+      followeeId,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  async unfollow(followerId: string, followeeId: string): Promise<void> {
+    const row = await db.follows
+      .where('[followerId+followeeId]')
+      .equals([followerId, followeeId])
+      .first();
+    if (row) await db.follows.delete(row.id);
+  }
+
+  async countFollowers(accountId: string): Promise<number> {
+    return db.follows.where('followeeId').equals(accountId).count();
+  }
+
+  async discoverAccounts(viewerId: string): Promise<Account[]> {
+    const all = await db.accounts.toArray();
+    return all.filter((a) => a.id !== viewerId);
+  }
 }
 
-/** Publicaciones de ejemplo del modo local (marcadas como demo). */
-async function ensurePostsSeeded(): Promise<void> {
-  const count = await db.posts.count();
-  if (count > 0) return;
-
+/** Cuentas y publicaciones de ejemplo del modo local (marcadas isDemo). */
+async function ensureSeeded(): Promise<void> {
   const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
+  const demoAccount = (id: string, username: string, displayName: string, bio: string): Account => ({
+    id,
+    username,
+    displayName,
+    bio,
+    passwordHash: '',
+    passwordSalt: '',
+    createdAt: hoursAgo(800),
+  });
+
+  // Cuentas de ejemplo (seguibles; no se puede iniciar sesión como ellas).
+  // Se siembran según su propia presencia, no según si la tabla está vacía:
+  // así aparecen aunque el usuario ya se haya registrado antes de abrir el feed.
+  const accounts: Account[] = [
+    demoAccount('demo-acc-marta', 'marta_r', 'Marta R.', 'Fuerza y paciencia. Pierna los lunes.'),
+    demoAccount('demo-acc-alex', 'alex_g', 'Álex G.', 'Empuje, tirón, pierna. A por los 100 en banca.'),
+  ];
+  const haveDemo = await db.accounts
+    .where('id')
+    .anyOf(accounts.map((a) => a.id))
+    .count();
+  if (haveDemo < accounts.length) await db.accounts.bulkPut(accounts);
+
+  if ((await db.posts.count()) > 0) return;
 
   const demoPosts: Post[] = [
     {
@@ -90,7 +163,8 @@ async function ensurePostsSeeded(): Promise<void> {
       author: 'Equipo Temple',
       createdAt: hoursAgo(50),
       kind: 'texto',
-      text: 'Bienvenido a la comunidad 👋 Esto es el modo local de demostración: las publicaciones y reacciones se guardan solo en tu dispositivo. Cuando actives la fase en la nube (ver roadmap), compartirás de verdad con otras personas — siempre de forma opcional y privada por defecto.',
+      visibility: 'publica',
+      text: 'Bienvenido a la comunidad 👋 Crea tu cuenta para publicar tus entrenamientos, seguir a otras personas y elegir quién ve cada publicación (pública, solo seguidores o privada). En este modo local todo vive en tu dispositivo; la versión en la nube lo hará compartido de verdad.',
       likes: 21,
       likedByMe: false,
       comments: [],
@@ -99,8 +173,10 @@ async function ensurePostsSeeded(): Promise<void> {
     {
       id: 'demo-marta',
       author: 'Marta R.',
+      authorId: 'demo-acc-marta',
       createdAt: hoursAgo(26),
       kind: 'rutina',
+      visibility: 'publica',
       text: 'Primera semana del bloque de fuerza. La sentadilla empieza a moverse sola 💪',
       payload: {
         title: 'Pierna del lunes',
@@ -115,26 +191,18 @@ async function ensurePostsSeeded(): Promise<void> {
       likes: 12,
       likedByMe: false,
       comments: [
-        {
-          id: 'demo-c1',
-          author: 'Álex G.',
-          text: '¡Ese hip thrust ya pesa más que el mío! 🔥',
-          createdAt: hoursAgo(24),
-        },
-        {
-          id: 'demo-c2',
-          author: 'Lucía M.',
-          text: 'Apuntada para el lunes que viene, gracias por compartirla.',
-          createdAt: hoursAgo(20),
-        },
+        { id: 'demo-c1', author: 'Álex G.', text: '¡Ese hip thrust ya pesa más que el mío! 🔥', createdAt: hoursAgo(24) },
+        { id: 'demo-c2', author: 'Lucía M.', text: 'Apuntada para el lunes que viene, gracias por compartirla.', createdAt: hoursAgo(20) },
       ],
       isDemo: true,
     },
     {
       id: 'demo-alex',
       author: 'Álex G.',
+      authorId: 'demo-acc-alex',
       createdAt: hoursAgo(5),
       kind: 'sesion',
+      visibility: 'publica',
       text: 'Día de empuje completado. El press de banca por fin pasa de los 80 kg 🎉',
       payload: {
         title: 'Empuje — sesión de hoy',
@@ -148,12 +216,7 @@ async function ensurePostsSeeded(): Promise<void> {
       likes: 8,
       likedByMe: false,
       comments: [
-        {
-          id: 'demo-c3',
-          author: 'Marta R.',
-          text: 'Enhorabuena por el PR, a por los 90 💪',
-          createdAt: hoursAgo(3),
-        },
+        { id: 'demo-c3', author: 'Marta R.', text: 'Enhorabuena por el PR, a por los 90 💪', createdAt: hoursAgo(3) },
       ],
       isDemo: true,
     },

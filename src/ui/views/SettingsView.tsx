@@ -6,6 +6,7 @@ import { exportBundle, importBundle, sessionsToCsv } from '../../data/exportImpo
 import { loadGeminiKey, saveGeminiKey } from '../../data/profile';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
+import { AccountCard } from '../components/AccountCard';
 import { useAnnounce } from '../components/Announcer';
 import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -71,6 +72,8 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       <h1 id="view-title" tabIndex={-1}>
         Ajustes
       </h1>
+
+      <AccountCard />
 
       <ProfileCard />
 

@@ -1,9 +1,10 @@
 // CAPA 1 · Datos — Base de datos local (IndexedDB vía Dexie).
 // Los datos viven en el dispositivo del usuario: sin cuentas, sin servidores.
 import Dexie, { type EntityTable } from 'dexie';
+import type { Account } from './authModels';
 import type { BodyMeasurement, WaterDay } from './bodyModels';
 import type { Exercise, Routine, Session } from './models';
-import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
+import type { DiaryEntry, FoodItem, Follow, Post } from './nutritionModels';
 
 export class TempleDB extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>;
@@ -14,6 +15,8 @@ export class TempleDB extends Dexie {
   posts!: EntityTable<Post, 'id'>;
   bodyMetrics!: EntityTable<BodyMeasurement, 'id'>;
   water!: EntityTable<WaterDay, 'date'>;
+  accounts!: EntityTable<Account, 'id'>;
+  follows!: EntityTable<Follow, 'id'>;
 
   constructor() {
     super('forjafit');
@@ -43,6 +46,20 @@ export class TempleDB extends Dexie {
       posts: 'id, createdAt',
       bodyMetrics: 'id, date',
       water: 'date',
+    });
+    // v4 (red social): cuentas y grafo de seguidores. Los posts ganan
+    // authorId y visibility (campos opcionales → datos previos válidos).
+    this.version(4).stores({
+      exercises: 'id, name, muscleGroup, isCustom',
+      routines: 'id, name, createdAt',
+      sessions: 'id, date',
+      foods: 'id, name, source, barcode',
+      diary: 'id, date, meal',
+      posts: 'id, createdAt, authorId',
+      bodyMetrics: 'id, date',
+      water: 'date',
+      accounts: 'id, &username', // &username = índice único
+      follows: 'id, followerId, followeeId, [followerId+followeeId]',
     });
   }
 }
