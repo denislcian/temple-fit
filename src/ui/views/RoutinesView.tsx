@@ -12,10 +12,20 @@ import {
 } from '../../data/repositories/routineRepo';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
+import { EmptyState } from '../components/EmptyState';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
 import { PlanGeneratorDialog } from '../components/PlanGeneratorDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
+
+const ROUTINE_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M5 6h14M5 12h14M5 18h9" strokeLinecap="round" />
+    <circle cx="3.2" cy="6" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="3.2" cy="12" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="3.2" cy="18" r="0.8" fill="currentColor" stroke="none" />
+  </svg>
+);
 
 interface EditorState {
   routineId: string | null; // null = nueva rutina
@@ -101,12 +111,19 @@ export function RoutinesView() {
       </div>
 
       {routines && routines.length === 0 && (
-        <div className="card">
-          <p>
-            Una rutina es una plantilla: la lista de ejercicios de tu día de empuje, pierna, full
-            body... Al empezar un entrenamiento desde una rutina, los ejercicios ya están listos.
-          </p>
-        </div>
+        <EmptyState
+          icon={ROUTINE_ICON}
+          title="Crea tu primera rutina"
+          action={
+            <button type="button" className="btn btn--primary" onClick={() => setGeneratorOpen(true)}>
+              ✦ Generar plan según tu objetivo
+            </button>
+          }
+        >
+          Una rutina es una plantilla: la lista de ejercicios de tu día de empuje, pierna, full
+          body… Al empezar un entrenamiento desde una rutina, los ejercicios ya están listos. ¿No
+          sabes por dónde empezar? Genera un plan según tu objetivo.
+        </EmptyState>
       )}
 
       <ul className="item-list">

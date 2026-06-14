@@ -8,9 +8,11 @@ import '@fontsource/archivo/600.css';
 import '@fontsource/archivo/700.css';
 import '@fontsource/archivo-black/400.css';
 import { requestPersistentStorage } from '../data/db';
+import { hasOnboarded } from '../data/profile';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
+import { Onboarding } from './components/Onboarding';
 import {
   PRIMARY_ROUTES,
   ROUTE_LABELS,
@@ -142,6 +144,7 @@ function AppShell() {
   const { theme, setTheme } = useTheme();
   const announce = useAnnounce();
   const [ready, setReady] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => !hasOnboarded());
   const prevRoute = useRef<Route | null>(null);
 
   // Primer arranque: sembrar los catálogos y pedir almacenamiento persistente.
@@ -264,6 +267,8 @@ function AppShell() {
           </>
         )}
       </main>
+
+      {ready && showWelcome && <Onboarding onDone={() => setShowWelcome(false)} />}
     </div>
   );
 }

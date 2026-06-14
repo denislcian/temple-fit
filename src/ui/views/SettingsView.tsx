@@ -9,6 +9,7 @@ import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { useAnnounce } from '../components/Announcer';
 import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import type { Theme } from '../hooks/useTheme';
 
 interface SettingsViewProps {
@@ -34,6 +35,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
     null,
   );
   const { data: sessions } = useAsyncData(useCallback(() => getAllSessions(), []));
+  const install = useInstallPrompt();
 
   async function exportJson() {
     const bundle = await exportBundle();
@@ -71,6 +73,45 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       </h1>
 
       <ProfileCard />
+
+      {install.state !== 'instalada' && (
+        <section className="card card--accent" aria-labelledby="install-heading">
+          <h2 id="install-heading">Instalar Temple</h2>
+          {install.state === 'instalable' && (
+            <>
+              <p className="muted">
+                Instálala como app: se abre a pantalla completa, arranca al instante y funciona sin
+                conexión, igual que una app del store.
+              </p>
+              <div className="btn-row">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => {
+                    install.promptInstall();
+                    announce('Abriendo el diálogo de instalación');
+                  }}
+                >
+                  ⬇ Instalar la app
+                </button>
+              </div>
+            </>
+          )}
+          {install.state === 'ios' && (
+            <p className="muted">
+              En iPhone/iPad: toca el botón <strong>Compartir</strong> de Safari y elige{' '}
+              <strong>«Añadir a pantalla de inicio»</strong>. Temple se abrirá como una app
+              independiente.
+            </p>
+          )}
+          {install.state === 'no-disponible' && (
+            <p className="muted">
+              Tu navegador instalará Temple desde su menú (busca «Instalar app» o «Añadir a pantalla
+              de inicio»). En el móvil es donde más brilla.
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="card" aria-labelledby="theme-heading">
         <h2 id="theme-heading">Tema</h2>

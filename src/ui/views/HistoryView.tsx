@@ -6,8 +6,16 @@ import { getAllSessions, removeSession } from '../../data/repositories/sessionRe
 import { sessionVolume } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
+import { EmptyState } from '../components/EmptyState';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, formatKg } from '../utils/format';
+
+const HISTORY_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" strokeLinecap="round" />
+  </svg>
+);
 
 export function HistoryView() {
   const announce = useAnnounce();
@@ -25,12 +33,18 @@ export function HistoryView() {
       </h1>
 
       {sessions && sessions.length === 0 && (
-        <div className="card">
-          <p>
-            Todavía no hay entrenamientos guardados. Cuando termines tu primera sesión en{' '}
-            <strong>Entrenar</strong>, aparecerá aquí.
-          </p>
-        </div>
+        <EmptyState
+          icon={HISTORY_ICON}
+          title="Aún no hay historial"
+          action={
+            <a className="btn btn--primary" href="#/entrenar">
+              Empezar a entrenar
+            </a>
+          }
+        >
+          Cuando termines tu primera sesión en Entrenar, aparecerá aquí con su volumen, duración y
+          el detalle de cada serie.
+        </EmptyState>
       )}
 
       {(sessions ?? []).map((session) => {

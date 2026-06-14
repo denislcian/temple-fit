@@ -35,6 +35,17 @@ export function saveProfile(profile: UserProfile): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 }
 
+/** Marca de que el usuario ya vio la bienvenida (no volver a mostrarla). */
+const ONBOARDED_KEY = 'forjafit-onboarded';
+
+export function hasOnboarded(): boolean {
+  return localStorage.getItem(ONBOARDED_KEY) === '1';
+}
+
+export function markOnboarded(): void {
+  localStorage.setItem(ONBOARDED_KEY, '1');
+}
+
 /** Objetivo de peso: peso meta + ritmo deseado (kg/semana). Solo local. */
 export interface WeightGoal {
   targetKg: number;

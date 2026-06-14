@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { markOnboarded } from '../data/profile';
 import { resetDb } from '../test/dbTestUtils';
 import { App } from './App';
 
@@ -9,6 +10,9 @@ describe('App', () => {
     await resetDb();
     window.location.hash = '';
     localStorage.clear();
+    // Estas pruebas verifican la app ya en uso, no la bienvenida del primer
+    // arranque (que se prueba aparte).
+    markOnboarded();
   });
 
   it('muestra la vista Entrenar por defecto con el catálogo sembrado', async () => {
@@ -17,6 +21,17 @@ describe('App', () => {
       await screen.findByRole('heading', { level: 1, name: /entrenar/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /entrenamiento libre/i })).toBeInTheDocument();
+  });
+
+  it('muestra la bienvenida en el primer arranque y la cierra al empezar', async () => {
+    localStorage.removeItem('forjafit-onboarded');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: /bienvenido a temple/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
+    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /empezar a entrenar/i }));
+    expect(screen.queryByRole('heading', { name: /bienvenido a temple/i })).not.toBeInTheDocument();
+    expect(localStorage.getItem('forjafit-onboarded')).toBe('1');
   });
 
   it('tiene navegación principal con todas las vistas y skip link', async () => {

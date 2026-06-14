@@ -28,12 +28,16 @@ export function AppDialog({ open, title, onClose, children }: AppDialogProps) {
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    // showModal/close pueden no existir (jsdom en tests, navegadores muy
+    // antiguos): se degrada a mostrar/ocultar el diálogo sin romper.
     if (open && !dialog.open) {
       triggerRef.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      dialog.showModal();
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
     } else if (!open && dialog.open) {
-      dialog.close();
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
       restoreFocus();
     }
   }, [open]);
