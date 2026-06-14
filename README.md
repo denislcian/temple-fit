@@ -58,7 +58,7 @@ Y desde la fase 2 (capas 6-8):
 - **Perfil y objetivos**: tus datos corporales calculan tus objetivos de calorías y macros (fórmula de Mifflin-St Jeor) — todo en tu dispositivo.
 - **Nutrición**: diario de calorías/macros por comidas con barras de progreso; catálogo de ~70 alimentos en español; **búsqueda real en Open Food Facts** por nombre y código de barras (gratis, sin API key); **generador de dietas** que compone un día completo con alimentos reales resolviendo los gramos con un sistema lineal 3×3 por comida.
 - **Escáner de macros por foto (IA)**: haz una foto del plato y Gemini estima alimentos, gramos y macros. Usa **tu propia clave gratuita** de [Google AI Studio](https://aistudio.google.com/apikey) (se guarda solo en tu dispositivo, nunca en el código); sin clave o sin red, la app degrada al registro manual.
-- **Comunidad**: publica tu rutina o tu última sesión, recibe me gusta y comentarios. En **modo local de demostración** (todo en tu dispositivo, con publicaciones de ejemplo): la interfaz `SocialRepository` está lista para enchufar Supabase en la fase de nube sin tocar la UI.
+- **Comunidad (red social de fitness)**: crea tu cuenta, inicia sesión y publica tu rutina o tu última sesión eligiendo **quién puede verla** (pública / solo seguidores / privada); sigue a otras personas y recibe me gusta y comentarios. La gestión de cuenta (editar perfil, perfil privado, cambiar contraseña y **borrar la cuenta — derecho al olvido, RGPD**) vive en Ajustes. Todo en **modo local de demostración** (cuentas y feed en tu dispositivo), pero **documentando con honestidad que la seguridad real llega con el servidor**: las interfaces `AuthService` y `SocialRepository` están listas para enchufar Supabase (Auth + Postgres con Row Level Security) sin tocar la UI. El diseño de seguridad y privacidad de producción está en [docs/SECURITY.md](docs/SECURITY.md).
 
 Y desde la fase 3 (capas 9-11), las herramientas que el mercado cobra en premium:
 
@@ -192,6 +192,17 @@ Investigué con fuentes las features que destacan en Hevy y Cal AI en 2026 (info
 2. **Capa 15 — Fuerza** (`feat(fuerza)`): tipos de serie con `isWorkingSet` (el calentamiento sale del volumen/PR/estadísticas), RPE, reordenar y notas. Retrocompatible: todos los campos del modelo son opcionales, las sesiones antiguas siguen leyéndose.
 3. **Capa 16 — Nutrición** (`feat(nutricion)`): texto→IA y etiqueta→IA reutilizando el mismo cliente Gemini (refactor `callGemini`), voz con Web Speech API (mejora progresiva), Nutri-Score en la UI con badge accesible, y objetivo de peso con fecha.
 
+### Capa 21 — Red social con cuentas, privacidad y seguridad
+
+El usuario pidió convertir la Comunidad en una **red social de fitness con cuentas y todo lo que conlleva (privacidad, seguridad)**. Lo construí en modo local **sin fingir que es seguro**, separando el contrato (estable) de la implementación (local hoy, Supabase mañana):
+
+1. **Cuentas** (`feat(comunidad)`): `AuthService` como interfaz; `LocalAuthService` con registro, login, logout y sesión. Contraseña con **PBKDF2-SHA256 + sal** (Web Crypto), con el aviso explícito de que el hash en cliente **no es seguridad real**. Anti-enumeración de usuarios: error genérico + hash de coste constante en la rama "no existe".
+2. **Privacidad por publicación**: visibilidad pública / solo seguidores / privada. El feed se filtra con `visiblePosts()` — **función de dominio pura y testeada** — que mañana se replica línea por línea en una política RLS de Postgres (la del cliente es UX; la del servidor es la que de verdad protege).
+3. **Grafo social**: seguir/dejar de seguir, descubrir personas, cuentas de ejemplo seguibles sin contraseña.
+4. **RGPD**: gestión de cuenta en Ajustes con editar perfil, perfil privado, cambiar contraseña y **borrar la cuenta (derecho al olvido)** en una transacción. Más export de datos (portabilidad) ya existente.
+5. **Diseño de la nube**: [docs/SECURITY.md](docs/SECURITY.md) documenta Supabase Auth (JWT + bcrypt), el esquema Postgres con **Row Level Security** (políticas de ejemplo), el modelo de amenazas **OWASP** y el cumplimiento del **RGPD**, con la regla de oro de que la `service_role` key nunca toca el cliente.
+6. Bug real cazado al verificar en navegador (en el log de git): las cuentas de ejemplo se sembraban solo si la tabla de cuentas estaba vacía, así que registrarse antes de abrir el feed dejaba "Descubrir personas" vacío. Se corrigió sembrándolas según su propia presencia, con test de regresión. **122 tests en verde; axe sin violaciones en Comunidad y Ajustes.**
+
 ### Capa 4 — PWA y auditoría (`feat(pwa): app instalable y 100% offline + auditoria a11y`)
 
 1. `vite-plugin-pwa` (Workbox): manifest en español + precache completa → offline real tras la primera visita. Iconos generados por script propio ([scripts/generate-icons.py](scripts/generate-icons.py)).
@@ -270,7 +281,8 @@ La visión completa (con herramientas gratuitas verificadas y riesgos) está en 
 - ✅ **v1.2** — Perfil + objetivos de macros (Mifflin-St Jeor).
 - ✅ **v1.3** — Nutrición completa: diario, Open Food Facts, generador de dietas y escáner por foto (Gemini con clave propia).
 - ✅ **v1.4** — Comunidad en modo local: feed, likes y comentarios con publicaciones de ejemplo.
-- **v2.0** — La nube (requiere crear cuenta gratuita de Supabase): login accesible (magic link / Google), y que la Comunidad sea compartida de verdad — la interfaz `SocialRepository` ya existe, solo falta el adaptador. Recordatorio: keep-alive semanal en GitHub Actions (Supabase Free se pausa a los 7 días) y Row Level Security desde el día 1.
+- ✅ **v1.5** — Red social con cuentas: registro/login, sesión, **privacidad por publicación** (pública / seguidores / privada), grafo de seguidores, gestión de cuenta y **RGPD** (export, borrado al olvido). En modo local, tras interfaces listas para la nube. Diseño de seguridad de producción documentado en [docs/SECURITY.md](docs/SECURITY.md).
+- **v2.0** — La nube (requiere crear cuenta gratuita de Supabase): autenticación real con **Supabase Auth** (email+contraseña con bcrypt en servidor / Google), y que la Comunidad sea compartida de verdad con la privacidad **impuesta por Row Level Security** en Postgres — las interfaces `AuthService` y `SocialRepository` ya existen, solo falta el adaptador. Recordatorio: keep-alive semanal en GitHub Actions (Supabase Free se pausa a los 7 días) y RLS desde el día 1 (la `service_role` key nunca en el cliente).
 - **v2.1** — Mover la llamada a Gemini detrás de un proxy en Supabase Edge Functions (en producción multiusuario la clave no debe viajar desde el cliente; en la app personal actual es la clave del propio usuario y vive solo en su dispositivo).
 - **v2.2** — Imágenes de ejecución de ejercicios con licencia limpia (wger CC-BY-SA o ilustración propia).
 
@@ -294,6 +306,7 @@ La visión completa (con herramientas gratuitas verificadas y riesgos) está en 
 | [docs/INFORME_TECNICO.md](docs/INFORME_TECNICO.md) | Investigación de mercado con fuentes verificadas, matriz de decisiones, arquitectura, riesgos, roadmap |
 | [docs/INFORME_TECNICO.pdf](docs/INFORME_TECNICO.pdf) | El mismo informe en PDF, listo para adjuntar o imprimir |
 | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) | Declaración de accesibilidad y auditoría WCAG 2.2 completa |
+| [docs/SECURITY.md](docs/SECURITY.md) | Seguridad y privacidad: honestidad del modo local, diseño de la nube (Supabase Auth + Postgres RLS), modelo de amenazas OWASP y cumplimiento del RGPD |
 | `git log` | El paso a paso real del desarrollo, capa a capa |
 
 ## Licencia

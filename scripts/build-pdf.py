@@ -52,8 +52,8 @@ COVER = """
   <p class="subtitle">Informe t&eacute;cnico &mdash; Registro de entrenamientos de fuerza<br>
   PWA local-first y accesible (WCAG 2.2 AA)</p>
   <p class="meta">
-    <strong>Autor:</strong> Denis Lucian &middot; <strong>Fecha:</strong> 11 de junio de 2026 &middot;
-    <strong>Versi&oacute;n:</strong> 1.1<br>
+    <strong>Autor:</strong> Denis Lucian &middot; <strong>Fecha:</strong> 14 de junio de 2026 &middot;
+    <strong>Versi&oacute;n:</strong> 1.3<br>
     Proyecto personal de portfolio &middot; Coste total: 0&nbsp;&euro; (herramientas 100% gratuitas)
   </p>
 </div>

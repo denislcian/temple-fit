@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | **Autor** | Denis Lucian (denislucianwork@protonmail.com) |
-| **Fecha** | 11 de junio de 2026 |
-| **Versión** | 1.2 (fase 2 implementada en modo local: perfil, nutrición, escáner IA y comunidad — ver sección 14) |
+| **Fecha** | 14 de junio de 2026 |
+| **Versión** | 1.3 (red social con cuentas, privacidad por publicación y RGPD en modo local; diseño de seguridad de producción en sección 17 y `docs/SECURITY.md`) |
 | **Repositorio** | `forjafit` (proyecto personal de portfolio) |
 | **Coste total del proyecto** | 0 € (todas las herramientas son gratuitas) |
 
@@ -131,8 +131,8 @@ Persona que entrena fuerza en gimnasio o en casa y quiere registrar su progreso 
 
 - ✅ Perfil local y objetivos de calorías/macros (Mifflin-St Jeor).
 - ✅ Nutrición: diario por comidas, Open Food Facts (nombre + código de barras), generador de dietas y escáner de macros por foto (Gemini, clave del usuario).
-- ✅ Comunidad (likes/comentarios) en modo local de demostración, con la interfaz lista para Supabase.
-- Pendiente de cuenta externa: nube real (Supabase: login + social compartido). Imágenes de ejercicios: cuando haya fuente con licencia limpia.
+- ✅ Comunidad como **red social con cuentas**: registro/login/sesión, privacidad por publicación (pública/seguidores/privada), grafo de seguidores, gestión de cuenta y RGPD (export + borrado al olvido). En modo local de demostración, tras las interfaces `AuthService` y `SocialRepository` listas para Supabase, **documentando con honestidad que la seguridad real es del servidor** (ver sección 17 y `docs/SECURITY.md`).
+- Pendiente de cuenta externa: nube real (Supabase Auth + Postgres con Row Level Security: identidad y privacidad impuestas en el servidor). Imágenes de ejercicios: cuando haya fuente con licencia limpia.
 
 La regla sigue siendo anti-*scope creep*: **cada fase se construye solo cuando la anterior está terminada, testeada y verificada**, y el núcleo debe seguir funcionando 100% offline aunque las capas de red fallen.
 
@@ -313,7 +313,8 @@ La visión a largo plazo es una **plataforma fitness completa y diferenciada**: 
 | **v1.4 ✅** | Comunidad: feed, publicar rutina/sesión, me gusta y comentarios | Modo local sobre IndexedDB con publicaciones de ejemplo; interfaz `SocialRepository` como contrato | **Hecha** en modo demostración: experiencia completa sin servidor |
 | **v1.5 ✅** | Herramientas premium del mercado: calculadora de discos y calentamiento, progresión sugerida, duración de sesión, medidas corporales con sync del perfil, rachas + heatmap, 12 logros derivados, hidratación y copiar-día | Todo dominio puro propio (`gymTools`, `consistency`) + DB v3; los logros se derivan de los datos reales (nada que desincronizar) | **Hecha.** Es exactamente lo que Hevy/Strong venden en premium, gratis y offline |
 | **v1.6 ✅** | Lo que destaca en Hevy y Cal AI (2026), investigado con fuentes: tipos de serie (calentamiento fuera del volumen/PR), RPE, reordenar y notas; en nutrición, descripción por texto/voz, foto de etiqueta, Nutri-Score (algoritmo 2023) y objetivo de peso con fecha | Dominio puro testeado (`nutriScore`, `weightGoal`, `isWorkingSet`); IA reutilizando Gemini; Web Speech API para la voz | **Hecha.** Reimplementa local-first las fórmulas que Cal AI/MacroFactor esconden, con el estándar público equivalente y auditable |
-| **v2.0** | Login seguro + comunidad compartida de verdad | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU, Realtime. Login con *magic link* y Google OAuth → cumple WCAG 3.3.8 | Pendiente (requiere crear la cuenta). El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. RLS en todas las tablas desde el día 1. Gracias al patrón repositorio, solo se escribe el adaptador: la UI no cambia |
+| **v1.7 ✅** | Red social con cuentas: registro/login/sesión, **privacidad por publicación** (pública/seguidores/privada), grafo de seguidores, gestión de cuenta y **RGPD** (export + borrado al olvido) | Modo local sobre IndexedDB (DB v4) tras las interfaces `AuthService` y `SocialRepository`; hash PBKDF2-SHA256 (Web Crypto); filtro de feed como función de dominio pura (`visiblePosts`) | **Hecha** en modo demostración, **documentando con honestidad que no es seguridad real** (el hash y el filtro viven en el cliente). Diseño de producción en [SECURITY.md](SECURITY.md) |
+| **v2.0** | Autenticación real + comunidad compartida con privacidad impuesta por el servidor | **Supabase Free**: Postgres 500 MB, Auth 50.000 MAU, Realtime. **Supabase Auth** (email+contraseña con bcrypt en servidor, Google OAuth → cumple WCAG 3.3.8) y **Row Level Security** en Postgres replicando `visiblePosts` por fila | Pendiente (requiere crear la cuenta). El free tier **se pausa tras 7 días de inactividad** → cron semanal de keep-alive en GitHub Actions. RLS en todas las tablas desde el día 1; la `service_role` key **nunca** en el cliente. Gracias al patrón repositorio, solo se escribe el adaptador: la UI no cambia. Modelo de amenazas OWASP y checklist en [SECURITY.md](SECURITY.md) |
 | **v2.1** | Proxy para el escáner IA | Supabase Edge Functions (500K invocaciones gratis/mes) | En la app personal actual la clave Gemini es del propio usuario y vive solo en su dispositivo (aceptable); en un despliegue multiusuario debe moverse a un proxy |
 | **v2.2** | Imágenes/ilustraciones de ejecución de ejercicios | Las 357 imágenes de wger (CC-BY-SA 4.0, atribución **por imagen** — verificado: solo 83 son de Everkinetic) o ilustraciones SVG propias | Nunca datasets scrapeados: hay DMCA confirmado (abr-2026) contra redistribuidores de ExerciseDB |
 
@@ -361,6 +362,29 @@ Antes de la fase 4 se hizo una investigación con fuentes de las dos apps de ref
 **CV y mercado laboral:** stateofjs.com (2025) · infoq.com (State of JS survey) · tecnoempleo.com (informe junio 2026) · webportfolios.dev (junior portfolio guide) · getmanfred.com · dev.to (recruiters 2025-26) · a11yjobs.com
 
 **Accesibilidad:** w3.org/WAI (new-in-22, Understanding 2.5.8/2.5.7/3.3.7) · technology.blog.gov.uk (input type number) · accessibility.blog.gov.uk (text descriptions for data visualisations) · deque.com (interactive charts, EAA) · gatsbyjs.com (accessible client routing) · commission.europa.eu (EAA) · github.com/recharts/recharts/wiki (accessibility)
+
+**Seguridad y privacidad:** owasp.org/Top10 · supabase.com/docs/guides/auth · supabase.com/docs/guides/database/postgres/row-level-security · cheatsheetseries.owasp.org (Password Storage, Authentication) · gdpr.eu (arts. 5, 9, 15, 16, 17, 20, 25)
+
+---
+
+## 17. Seguridad y privacidad: del modo local a la nube
+
+La capa de comunidad convierte Temple en una **red social de fitness con cuentas**. El reto de hacerlo en un proyecto local-first es la **honestidad**: una app sin servidor no puede ofrecer seguridad real entre usuarios, y fingir lo contrario sería un error de criterio delatable en una entrevista. La decisión de diseño es separar el **contrato** (estable) de la **implementación** (local hoy, Supabase mañana) y documentar dónde está exactamente la frontera cliente/servidor.
+
+**Lo que está implementado (modo local), con sus límites declarados:**
+
+- **Cuentas tras la interfaz `AuthService`** (`LocalAuthService`): registro, login, logout y sesión. Contraseña derivada con **PBKDF2-SHA256 + sal** (Web Crypto). Se documenta explícitamente que **un hash en cliente no es seguridad real** (las DevTools dan acceso total a IndexedDB): solo evita guardar la contraseña en claro. Incluye **anti-enumeración de usuarios** (mensaje genérico + hash de coste constante en la rama "el usuario no existe").
+- **Privacidad por publicación** (pública / solo seguidores / privada) resuelta por `visiblePosts()`, **función de dominio pura y testeada**. En el cliente sirve para no pedir lo que no se podrá ver; en producción **se replica línea por línea en una política RLS** que es la que de verdad protege.
+- **Grafo social** (seguir/dejar de seguir) y **gestión de cuenta en Ajustes**: editar perfil, perfil privado, cambiar contraseña y **borrar la cuenta (derecho al olvido, RGPD)** en una transacción.
+
+**Lo que diseña la fase nube (en `docs/SECURITY.md`):**
+
+- **Supabase Auth** (JWT firmado + bcrypt en servidor, email+contraseña y Google OAuth) como única autoridad de autenticación.
+- **Postgres con Row Level Security**: cada tabla con datos de usuario lleva `enable row level security` y políticas *deny-by-default*; la lectura de publicaciones reproduce `visiblePosts` con `auth.uid()` evaluado por fila. La `service_role` key **nunca** toca el cliente.
+- **Modelo de amenazas OWASP Top 10** (control de acceso roto, inyección, fallos de autenticación, mala configuración…) con mitigaciones concretas, y **cumplimiento del RGPD** (minimización, datos de salud que no salen del dispositivo, acceso/portabilidad/supresión/rectificación, privacidad desde el diseño).
+- **Accesibilidad de la autenticación** (WCAG 2.2 — 3.3.8): `autocomplete`, se permite pegar la contraseña y sin CAPTCHA de puzzles como requisito de entrada.
+
+**Argumento de entrevista:** el valor no está en aparentar seguridad, sino en **saber dónde está la frontera entre cliente y servidor y construir la app para cruzarla sin reescribir la UI**. El detalle completo —esquema SQL, políticas RLS, checklist de paso a producción— está en `docs/SECURITY.md`.
 
 ---
 
