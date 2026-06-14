@@ -7,14 +7,16 @@
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
   /* Tema oscuro por defecto: la app se usa en el gimnasio.
-     Fondo gris hierro (no negro puro: evita halation). */
+     Fondo gris hierro (no negro puro: evita halation).
+     Superficies en escala de elevación de 3 niveles. */
   --bg: #14161a;
   --bg-glow: rgba(249, 115, 22, 0.07);
-  --surface: #1d2026;
-  --surface-2: #262a31;
+  --surface: #181b21; /* nivel 1: tarjetas */
+  --surface-2: #21252d; /* nivel 2: elementos sobre tarjeta (stat, nota) */
+  --surface-3: #2b313b; /* nivel 3: hover / control activo */
   --border: #3a404b;
   --text: #edeef0;
-  --text-muted: #a9b0bb;
+  --text-muted: #aab1bc;
   --accent: #f97316; /* brasa */
   --accent-text: #fb923c; /* texto naranja sobre fondo oscuro: ~7.9:1 */
   --on-accent: #1c1006;
@@ -29,10 +31,38 @@
   --font-display: 'Archivo Black', 'Arial Black', sans-serif;
   --font-body: 'Archivo', system-ui, sans-serif;
 
+  --radius-xs: 4px;
   --radius-s: 6px;
-  --radius-m: 10px;
+  --radius-m: 12px;
   --radius-l: 16px;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --radius-xl: 22px;
+
+  /* Sombras en capas (contacto + ambiental): dan peso físico. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.28), 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.55);
+  --shadow: var(--shadow-lg); /* alias retrocompatible */
+  --glow-accent: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 6px 20px color-mix(in srgb, var(--accent) 24%, transparent);
+
+  /* Escala de espaciado 4/8. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Escala de microtipografía (texto secundario). */
+  --fs-sm: 0.8125rem;
+  --fs-xs: 0.75rem;
+
+  /* Movimiento: curvas y duraciones comunes. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-1: 120ms; /* press / toggles */
+  --dur-2: 180ms; /* hover de tarjetas y botones */
+  --dur-3: 260ms; /* aparición de elementos */
 
   /* WCAG 2.5.8: tamaño mínimo de objetivo. Usamos el recomendado móvil. */
   --target: 44px;
@@ -47,7 +77,8 @@
   --bg: #f6f3ed;
   --bg-glow: rgba(194, 65, 12, 0.06);
   --surface: #fffdf8;
-  --surface-2: #ede8df;
+  --surface-2: #efe9df;
+  --surface-3: #e4ddd0;
   --border: #c9c2b4;
   --text: #211d18;
   --text-muted: #5d564a;
@@ -61,7 +92,10 @@
   --success: #166534;
   --on-success: #f0fdf4;
   --focus: #9a3412;
-  --shadow: 0 8px 24px rgba(60, 40, 20, 0.12);
+  --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.1);
+  --shadow-md: 0 2px 6px rgba(60, 40, 20, 0.1), 0 12px 28px -8px rgba(60, 40, 20, 0.16);
+  --shadow-lg: 0 4px 10px rgba(60, 40, 20, 0.12), 0 24px 48px -12px rgba(60, 40, 20, 0.2);
+  --shadow: var(--shadow-lg);
 
   color-scheme: light;
 }
@@ -113,22 +147,28 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
   margin: 0 0 0.5em;
 }
 
 h1 {
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  /* Tracking negativo: Archivo Black gana rotundidad editorial al ampliar. */
+  letter-spacing: -0.02em;
+  line-height: 1.08;
   /* Receptor del foco al cambiar de vista (gestión de foco en SPA). */
   outline: none;
 }
 
 h2 {
-  font-size: 1.15rem;
+  font-size: 1.375rem;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
 }
+
 h3 {
-  font-size: 1rem;
+  font-size: 1.125rem;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 p {
@@ -153,6 +193,95 @@ p {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Movimiento (keyframes compartidos) ─────────────────────
+   Todo queda neutralizado por el bloque reduced-motion de arriba. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes setPop {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes prPop {
+  0% {
+    transform: scale(0.6) rotate(-6deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tabIn {
+  from {
+    transform: scaleX(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
   }
 }
 
@@ -189,9 +318,10 @@ p {
 
 .kicker {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.14em;
+  line-height: 1.3;
   text-transform: uppercase;
   color: var(--accent-text);
   margin-bottom: 0.35rem;
@@ -314,11 +444,22 @@ p {
   font-weight: 600;
   letter-spacing: 0.02em;
   border-radius: var(--radius-m);
+  transition:
+    color var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
 }
 
 .main-nav a:hover {
   color: var(--text);
   background: var(--surface-2);
+}
+
+.main-nav a svg {
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.main-nav a[aria-current='page'] svg {
+  transform: translateY(-1px);
 }
 
 .main-nav a[aria-current='page'] {
@@ -348,7 +489,7 @@ p {
   height: 1.35rem;
 }
 
-/* Indicador de pestaña activa: barra superior de brasa. */
+/* Indicador de pestaña activa: barra superior de brasa que crece al entrar. */
 .nav-tabs a[aria-current='page']::before {
   content: '';
   position: absolute;
@@ -358,6 +499,8 @@ p {
   height: 3px;
   border-radius: 0 0 3px 3px;
   background: linear-gradient(90deg, var(--accent), #fbbf24);
+  transform-origin: center;
+  animation: tabIn var(--dur-3) var(--ease-spring);
 }
 
 @media (max-width: 47.9rem) {
@@ -488,15 +631,51 @@ p {
 
 /* ── Tarjetas y secciones ───────────────────────────────── */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  position: relative;
+  background: linear-gradient(180deg, color-mix(in srgb, #fff 2%, var(--surface)), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: var(--radius-l);
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: var(--space-4) 1.125rem;
+  margin-bottom: var(--space-3);
+  /* Sombra ambiental + canto superior luminoso (luz cenital simulada). */
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
 }
 
+[data-theme='light'] .card {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Micro-elevación al pasar el ratón (solo en dispositivos con hover real). */
+@media (hover: hover) {
+  .card:hover {
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+  }
+}
+
+/* Tarjeta destacada: borde de brasa + lavado cálido de marca. */
 .card--accent {
   border-left: 4px solid var(--accent);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--accent) 7%, var(--surface)),
+    var(--surface) 40%
+  );
+}
+
+/* Variante fría (teal), complemento de card--accent. */
+.card--steel {
+  border-left: 4px solid var(--accent-2);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--accent-2) 6%, var(--surface)),
+    var(--surface) 40%
+  );
 }
 
 .stat-grid {
@@ -513,16 +692,22 @@ p {
   padding: 0.75rem;
 }
 
+.stat {
+  background: var(--surface-2);
+}
+
 .stat .value {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
   color: var(--accent-text);
   font-variant-numeric: tabular-nums;
 }
 
 .stat .label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
+  line-height: 1.3;
   color: var(--text-muted);
 }
 
@@ -543,24 +728,37 @@ p {
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out),
+    filter var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
 }
 
 .btn:hover {
   border-color: var(--accent);
+  background: var(--surface-3);
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.985);
 }
 
+/* Primario: relleno con gradiente brasa, canto luminoso y sombra de color. */
 .btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: linear-gradient(180deg, var(--accent), #ea580c);
+  border-color: transparent;
   color: var(--on-accent);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 4px 12px -4px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .btn--primary:hover {
-  filter: brightness(1.08);
+  background: linear-gradient(180deg, #fb8534, #ea580c);
+  box-shadow: var(--glow-accent);
 }
 
 .btn--danger {
@@ -571,15 +769,39 @@ p {
 
 .btn--danger:hover {
   border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
+/* Terciario: sin caja, claramente por debajo de secundario. */
 .btn--ghost {
   background: transparent;
+  border-color: transparent;
+  color: var(--accent-text);
+}
+
+.btn--ghost:hover {
+  background: var(--surface-2);
+  border-color: transparent;
 }
 
 .btn--small {
   font-size: 0.85rem;
   padding: 0.25rem 0.7rem;
+}
+
+/* Botón solo-icono cuadrado (reordenar, eliminar): 44px accesible. */
+.btn--icon {
+  width: var(--target);
+  height: var(--target);
+  min-width: var(--target);
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+}
+
+/* Empuja una acción (p. ej. destructiva) al extremo de su fila. */
+.btn--push {
+  margin-left: auto;
 }
 
 .btn[disabled] {
@@ -592,6 +814,77 @@ p {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* Cabecera de tarjeta: título + controles sin romper en móvil. */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.card-head h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-head .controls {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Control segmentado (pestañas tipo iOS): píldora con item activo elevado. */
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  margin-bottom: var(--space-3);
+}
+
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--target) - 8px);
+  padding: 0.3rem 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: calc(var(--radius-m) - 3px);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--accent-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.segmented button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+@media (max-width: 25rem) {
+  .segmented button {
+    font-size: 0.8rem;
+  }
 }
 
 /* ── Formularios ────────────────────────────────────────── */
@@ -623,16 +916,56 @@ textarea.input {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+/* Select: se quita la flecha nativa y se pinta un chevron propio (sigue
+   siendo un <select> nativo → picker móvil y accesibilidad intactos). */
+select.input {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aab1bc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+}
+
+[data-theme='light'] select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235d564a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+select.input::-ms-expand {
+  display: none;
+}
+
+.input:hover:not(:focus-visible) {
+  border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
 }
 
 .input:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 1px;
+  border-color: var(--accent);
+  /* Halo de marca sutil además del outline accesible. */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .input[aria-invalid='true'] {
   border-color: var(--danger);
   border-width: 2px;
+}
+
+/* iOS hace zoom al enfocar inputs < 16px: forzamos 16px en móvil. */
+@media (max-width: 47.9rem) {
+  .input,
+  select.input,
+  textarea.input {
+    font-size: 16px;
+  }
 }
 
 .field .error {
@@ -648,12 +981,17 @@ textarea.input {
 fieldset {
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
   padding: 0.75rem;
   margin: 0 0 1rem;
 }
 
 legend {
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   padding: 0 0.4rem;
 }
 
@@ -749,12 +1087,22 @@ legend {
   color: transparent;
   cursor: pointer;
   font-size: 1.2rem;
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-spring);
 }
 
+.set-done:active {
+  transform: scale(0.9);
+}
+
+/* Marcar una serie es el gesto central del entrenamiento: lo celebramos. */
 .set-done[aria-pressed='true'] {
   background: var(--success);
   border-color: var(--success);
   color: var(--on-success);
+  animation: setPop var(--dur-2) var(--ease-spring);
 }
 
 .pr-badge {
@@ -764,11 +1112,13 @@ legend {
   background: linear-gradient(135deg, var(--accent), #d97706);
   color: var(--on-accent);
   font-weight: 800;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
   text-transform: uppercase;
+  /* El récord personal entra con una pequeña fanfarria. */
+  animation: prPop var(--dur-3) var(--ease-spring) both;
 }
 
 /* Variante acero (teal): etiquetas informativas, p. ej. ejercicio "propio". */
@@ -778,9 +1128,10 @@ legend {
 }
 
 .last-time {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
   color: var(--text-muted);
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--accent-2) 8%, var(--surface-2));
   border-left: 3px solid var(--accent-2);
   border-radius: var(--radius-s);
   padding: 0.35rem 0.6rem;
@@ -805,6 +1156,8 @@ legend {
 
 .timer .display.running {
   color: var(--accent-text);
+  /* Pulso de opacidad sincronizado con el segundero (sensación de tiempo). */
+  animation: tick 1s steps(1, end) infinite;
 }
 
 .auto-rest {
@@ -880,6 +1233,31 @@ legend {
   gap: 0.75rem;
   padding: 0.7rem 0.25rem;
   border-bottom: 1px solid var(--border);
+  /* Aparición escalonada de listas (el stagger lo dan los nth-child). */
+  animation: riseIn var(--dur-3) var(--ease-out) both;
+}
+
+/* Cascada sutil: las primeras filas entran con retardo creciente. */
+.item-list > li:nth-child(1) {
+  animation-delay: 0ms;
+}
+.item-list > li:nth-child(2) {
+  animation-delay: 35ms;
+}
+.item-list > li:nth-child(3) {
+  animation-delay: 70ms;
+}
+.item-list > li:nth-child(4) {
+  animation-delay: 105ms;
+}
+.item-list > li:nth-child(5) {
+  animation-delay: 140ms;
+}
+.item-list > li:nth-child(6) {
+  animation-delay: 175ms;
+}
+.item-list > li:nth-child(n + 7) {
+  animation-delay: 210ms;
 }
 
 .item-list .title {
@@ -887,8 +1265,10 @@ legend {
 }
 
 .item-list .meta {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
+  line-height: 1.35;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Tablas (alternativa accesible a las gráficas) ──────── */
@@ -912,7 +1292,7 @@ legend {
 }
 
 .table th {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -929,7 +1309,12 @@ dialog {
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Entrada del diálogo en escritorio: aparece con un leve ascenso. */
+dialog[open] {
+  animation: popIn var(--dur-3) var(--ease-out);
 }
 
 /* En móvil los diálogos son hojas inferiores: contenido en la zona del
@@ -942,13 +1327,20 @@ dialog {
     max-height: 88dvh;
     border-radius: var(--radius-l) var(--radius-l) 0 0;
     border-bottom: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
+
+  /* La hoja desliza desde abajo, como un bottom-sheet nativo. */
+  dialog[open] {
+    animation: sheetUp var(--dur-3) var(--ease-out);
   }
 }
 
 dialog::backdrop {
   background: rgba(8, 9, 11, 0.65);
   backdrop-filter: blur(2px);
+  animation: backdropIn var(--dur-2) var(--ease-out);
 }
 
 /* ── Avisos de estado ───────────────────────────────────── */
@@ -1041,7 +1433,7 @@ dialog::backdrop {
 }
 
 .achievements .meta {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -1052,8 +1444,9 @@ dialog::backdrop {
 
 .macro-label {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   margin-bottom: 0.2rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .macro-bar {
@@ -1068,7 +1461,9 @@ dialog::backdrop {
   height: 100%;
   background: linear-gradient(90deg, var(--accent-2), var(--accent));
   border-radius: 999px;
-  transition: width 300ms ease-out;
+  transition:
+    width var(--dur-3) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
 }
 
 .macro-bar .fill.over {
@@ -1123,7 +1518,7 @@ dialog::backdrop {
 
 /* ── Objetivo de peso ───────────────────────────────────── */
 .weight-goal-result {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--accent-2) 9%, var(--surface-2));
   border-left: 3px solid var(--accent-2);
   border-radius: var(--radius-s);
   padding: 0.6rem 0.9rem;
@@ -1143,10 +1538,15 @@ dialog::backdrop {
 
 .water-cups .cup {
   filter: grayscale(1) opacity(0.35);
+  transition:
+    filter var(--dur-2) var(--ease-out),
+    transform var(--dur-1) var(--ease-spring);
 }
 
 .water-cups .cup.full {
   filter: none;
+  /* Pequeña recompensa al "rellenar" un vaso (reutiliza el pop del check). */
+  animation: setPop var(--dur-2) var(--ease-spring);
 }
 
 /* ── Gráficas ───────────────────────────────────────────── */

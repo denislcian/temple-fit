@@ -327,7 +327,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
 
   return (
     <AppDialog open={open} title={`Añadir a ${MEAL_LABELS[meal].toLowerCase()}`} onClose={close}>
-      <div className="btn-row" role="group" aria-label="Forma de añadir el alimento">
+      <div className="segmented" role="group" aria-label="Forma de añadir el alimento">
         {(
           [
             ['buscar', 'Buscar'],
@@ -339,7 +339,6 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
           <button
             key={value}
             type="button"
-            className={`btn btn--small ${mode === value ? 'btn--primary' : ''}`}
             aria-pressed={mode === value}
             onClick={() => switchMode(value)}
           >
