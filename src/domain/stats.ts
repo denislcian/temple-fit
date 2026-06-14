@@ -82,3 +82,32 @@ export function totals(sessions: Session[]): Totals {
   }
   return result;
 }
+
+export interface ExerciseStats {
+  /** Nº de sesiones en las que se entrenó (con al menos una serie efectiva). */
+  sessionCount: number;
+  /** Series de trabajo efectivas acumuladas. */
+  setCount: number;
+  /** Volumen total movido en este ejercicio. */
+  totalVolumeKg: number;
+  /** Fecha ISO de la última vez que se entrenó, o null. */
+  lastDate: string | null;
+}
+
+/** Resumen histórico de un ejercicio concreto (para su ficha de progreso). */
+export function exerciseStats(sessions: Session[], exerciseId: string): ExerciseStats {
+  const result: ExerciseStats = { sessionCount: 0, setCount: 0, totalVolumeKg: 0, lastDate: null };
+  for (const session of sessions) {
+    const entry = session.entries.find((e) => e.exerciseId === exerciseId);
+    if (!entry) continue;
+    const working = entry.sets.filter(isWorkingSet);
+    if (working.length === 0) continue;
+    result.sessionCount += 1;
+    result.setCount += working.length;
+    result.totalVolumeKg += working.reduce((acc, s) => acc + s.reps * s.weightKg, 0);
+    if (!result.lastDate || session.date > result.lastDate) {
+      result.lastDate = session.date;
+    }
+  }
+  return result;
+}

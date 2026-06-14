@@ -10,6 +10,7 @@ import {
 } from '../../data/repositories/exerciseRepo';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
+import { ExerciseHistoryDialog } from '../components/ExerciseHistoryDialog';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -32,6 +33,7 @@ export function ExercisesView() {
   const [group, setGroup] = useState('');
   const [creating, setCreating] = useState(false);
   const [detail, setDetail] = useState<Exercise | null>(null);
+  const [history, setHistory] = useState<Exercise | null>(null);
   const [form, setForm] = useState({ name: '', muscleGroup: 'pecho', equipment: 'barra', instructions: '' });
   const [formError, setFormError] = useState<string | undefined>();
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -106,15 +108,24 @@ export function ExercisesView() {
               <span className="meta">
                 {exercise.muscleGroup} · {exercise.equipment}
               </span>
-              {exercise.instructions && (
+              <div className="btn-row" style={{ gap: '0.25rem' }}>
+                {exercise.instructions && (
+                  <button
+                    type="button"
+                    className="btn btn--small btn--ghost"
+                    onClick={() => setDetail(exercise)}
+                  >
+                    Cómo se hace<span className="visually-hidden">: {exercise.name}</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn--small btn--ghost"
-                  onClick={() => setDetail(exercise)}
+                  onClick={() => setHistory(exercise)}
                 >
-                  Cómo se hace<span className="visually-hidden">: {exercise.name}</span>
+                  Mi progreso<span className="visually-hidden"> en {exercise.name}</span>
                 </button>
-              )}
+              </div>
             </div>
             {exercise.isCustom && (
               <button
@@ -144,12 +155,32 @@ export function ExercisesView() {
             </p>
             <p className="instructions">{detail.instructions}</p>
             <div className="btn-row">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => {
+                  const ex = detail;
+                  setDetail(null);
+                  setHistory(ex);
+                }}
+              >
+                Ver mi progreso
+              </button>
               <button type="button" className="btn" onClick={() => setDetail(null)}>
                 Cerrar
               </button>
             </div>
           </div>
         </AppDialog>
+      )}
+
+      {history && (
+        <ExerciseHistoryDialog
+          open={history !== null}
+          exerciseId={history.id}
+          exerciseName={history.name}
+          onClose={() => setHistory(null)}
+        />
       )}
 
       <AppDialog open={creating} title="Nuevo ejercicio personalizado" onClose={() => setCreating(false)}>

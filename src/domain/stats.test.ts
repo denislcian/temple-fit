@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Session } from '../data/models';
-import { exerciseProgression, summarizeProgress, totals } from './stats';
+import { exerciseProgression, exerciseStats, summarizeProgress, totals } from './stats';
 
 const sessions: Session[] = [
   {
@@ -63,5 +63,18 @@ describe('stats', () => {
       reps: 22,
       volumeKg: 8 * 65 + 8 * 60 + 6 * 62.5,
     });
+  });
+
+  it('resume el historial de un ejercicio concreto', () => {
+    const stats = exerciseStats(sessions, 'press-banca');
+    expect(stats.sessionCount).toBe(2);
+    expect(stats.setCount).toBe(3);
+    expect(stats.totalVolumeKg).toBe(8 * 65 + 8 * 60 + 6 * 62.5);
+    expect(stats.lastDate).toBe('2026-06-08T10:00:00.000Z');
+  });
+
+  it('exerciseStats ignora ejercicios sin series efectivas', () => {
+    expect(exerciseStats(sessions, 'plancha').sessionCount).toBe(0);
+    expect(exerciseStats(sessions, 'inexistente').lastDate).toBeNull();
   });
 });

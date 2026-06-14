@@ -1263,6 +1263,31 @@ legend {
   background: var(--accent);
 }
 
+/* ── Sparkline (mini-gráfica SVG) ───────────────────────── */
+.sparkline {
+  display: block;
+  margin: 0.25rem 0 0.75rem;
+  overflow: visible;
+}
+
+.sparkline-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkline-area {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke: none;
+}
+
+.sparkline-dot {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
 /* ── Estado vacío ───────────────────────────────────────── */
 .empty-state {
   text-align: center;
