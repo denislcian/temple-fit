@@ -19,7 +19,7 @@ import { sessionVolume, weeklyVolume, weekStartOf } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
-import { TextField } from '../components/Field';
+import { TextAreaField, TextField } from '../components/Field';
 import { GymToolsDialog } from '../components/GymToolsDialog';
 import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
@@ -242,6 +242,7 @@ export function TrainView() {
     const session = await addSession({
       date: draft.startedAt,
       ...(draft.routineId ? { routineId: draft.routineId } : {}),
+      ...(draft.notes?.trim() ? { notes: draft.notes.trim() } : {}),
       entries,
       durationMin,
     });
@@ -560,6 +561,15 @@ export function TrainView() {
       </div>
 
       <RestTimer />
+
+      <div className="card">
+        <TextAreaField
+          label="Notas de la sesión"
+          value={draft.notes ?? ''}
+          onChange={(notes) => updateDraft((d) => ({ ...d, notes }))}
+          hint="Cómo te sentiste, contexto del día, lo que quieras recordar (opcional)."
+        />
+      </div>
 
       {finishError && (
         <p className="notice notice--error" role="alert">

@@ -24,6 +24,8 @@ export interface Draft {
   startedAt: string;
   routineId?: string;
   entries: DraftEntry[];
+  /** Nota libre de toda la sesión (cómo te sentiste, contexto…). */
+  notes?: string;
 }
 
 export const EMPTY_SET: DraftSet = { reps: '', weight: '', done: false };
