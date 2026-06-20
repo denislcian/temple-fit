@@ -26,7 +26,7 @@ export function PlateCalculator({ initialWeight = '' }: PlateCalculatorProps) {
         mode="decimal"
         value={weight}
         onChange={setWeight}
-        hint="Discos estándar por lado: 25 / 20 / 15 / 10 / 5 / 2,5 / 1,25"
+        hint="Discos estándar por lado: 25 · 20 · 15 · 10 · 5 · 2,5 · 1,25"
       />
       <SelectField label="Barra" value={bar} onChange={setBar}>
         <option value="20">Olímpica · 20 kg</option>

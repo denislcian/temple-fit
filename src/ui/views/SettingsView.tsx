@@ -12,6 +12,7 @@ import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import type { Theme } from '../hooks/useTheme';
+import { loadWeeklyGoal, MAX_GOAL, MIN_GOAL, saveWeeklyGoal } from '../weeklyGoal';
 
 interface SettingsViewProps {
   theme: Theme;
@@ -32,6 +33,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   const announce = useAnnounce();
   const fileInput = useRef<HTMLInputElement>(null);
   const [geminiKey, setGeminiKey] = useState(loadGeminiKey);
+  const [weeklyGoal, setWeeklyGoalState] = useState(loadWeeklyGoal);
   const [importMessage, setImportMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(
     null,
   );
@@ -81,6 +83,45 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       <AccountCard />
 
       <ProfileCard />
+
+      <section className="card" aria-labelledby="goal-heading">
+        <h2 id="goal-heading">Objetivo semanal</h2>
+        <p className="muted">
+          Cuántos entrenamientos a la semana te propones. Verás tu progreso en la pantalla de
+          Entrenar.
+        </p>
+        <div className="stepper" role="group" aria-label="Entrenamientos por semana">
+          <button
+            type="button"
+            className="btn btn--small water-btn"
+            disabled={weeklyGoal <= MIN_GOAL}
+            aria-label="Reducir el objetivo semanal"
+            onClick={() => {
+              const next = saveWeeklyGoal(weeklyGoal - 1);
+              setWeeklyGoalState(next);
+              announce(`Objetivo: ${next} entrenamientos por semana`);
+            }}
+          >
+            −
+          </button>
+          <span className="num stepper-value">
+            <strong>{weeklyGoal}</strong> {weeklyGoal === 1 ? 'día' : 'días'} / semana
+          </span>
+          <button
+            type="button"
+            className="btn btn--small water-btn water-btn--add"
+            disabled={weeklyGoal >= MAX_GOAL}
+            aria-label="Aumentar el objetivo semanal"
+            onClick={() => {
+              const next = saveWeeklyGoal(weeklyGoal + 1);
+              setWeeklyGoalState(next);
+              announce(`Objetivo: ${next} entrenamientos por semana`);
+            }}
+          >
+            +
+          </button>
+        </div>
+      </section>
 
       {install.state !== 'instalada' && (
         <section className="card card--accent" aria-labelledby="install-heading">

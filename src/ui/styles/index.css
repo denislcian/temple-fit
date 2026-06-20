@@ -423,22 +423,10 @@ p {
   }
 }
 
-/* Transición de entrada al navegar entre vistas (key={route} en App.tsx).
-   Queda neutralizada por el bloque global de prefers-reduced-motion. */
-.app-view {
-  animation: viewIn var(--dur-3) var(--ease-out) both;
-}
-
-@keyframes viewIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+/* La transición de entrada entre vistas se dispara con la Web Animations API
+   en App.tsx (efecto de navegación), no con una animación CSS: así no hace
+   falta remontar el árbol y cada vista conserva su estado. La WAAPI ya respeta
+   prefers-reduced-motion (se omite en el efecto). */
 
 /* Indicador global de "entrenamiento en curso": visible al salir de Entrenar
    con una sesión a medias. Sticky bajo la cabecera (móvil) o arriba (escritorio). */
@@ -765,6 +753,58 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+/* Stepper +/- (objetivo semanal en Ajustes). */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.stepper-value {
+  font-size: 1.05rem;
+}
+
+/* Progreso del objetivo semanal (home de Entrenar). */
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.goal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.goal-title {
+  font-weight: 600;
+}
+
+.goal-head .num {
+  font-size: 1.15rem;
+}
+
+.goal-bar {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.goal-bar .fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width var(--dur-3) var(--ease-out);
+}
+
+.goal-bar .fill.met {
+  background: var(--success);
 }
 
 /* Dos campos lado a lado (peso + reps en las calculadoras). */

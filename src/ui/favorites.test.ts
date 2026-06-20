@@ -4,16 +4,16 @@ import { loadFavorites, saveFavorites, sortByFavorite, toggleFavorite } from './
 describe('favorites', () => {
   beforeEach(() => localStorage.clear());
 
-  it('alterna un favorito de forma inmutable y persistente', () => {
+  it('alterna un favorito de forma inmutable y pura (sin tocar localStorage)', () => {
     const empty = new Set<string>();
     const withA = toggleFavorite(empty, 'press-banca');
     expect(empty.has('press-banca')).toBe(false); // no muta el original
     expect(withA.has('press-banca')).toBe(true);
-    expect(loadFavorites().has('press-banca')).toBe(true); // persistido
+    // toggleFavorite es puro: no persiste por sí mismo.
+    expect(loadFavorites().has('press-banca')).toBe(false);
 
     const without = toggleFavorite(withA, 'press-banca');
     expect(without.has('press-banca')).toBe(false);
-    expect(loadFavorites().has('press-banca')).toBe(false);
   });
 
   it('carga vacío y guarda/recupera el conjunto', () => {

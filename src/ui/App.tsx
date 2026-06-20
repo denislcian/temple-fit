@@ -178,14 +178,28 @@ function AppShell() {
     document.title = `${ROUTE_LABELS[route]} — Temple`;
   }, [route]);
 
-  // Gestión de foco al navegar (no en la carga inicial). Se compara con la
-  // ruta anterior en lugar de usar un flag: así sobrevive al doble efecto
-  // de StrictMode en desarrollo.
+  // Gestión de foco + transición + anuncio al navegar (no en la carga inicial).
+  // Se compara con la ruta anterior en lugar de usar un flag: así sobrevive al
+  // doble efecto de StrictMode en desarrollo.
   useEffect(() => {
     if (prevRoute.current !== null && prevRoute.current !== route) {
       requestAnimationFrame(() => {
         document.getElementById('view-title')?.focus();
       });
+      // Transición de entrada vía Web Animations API en lugar de remontar el
+      // contenedor con key={route}: el mecanismo es explícito y respeta
+      // prefers-reduced-motion sin depender del bloque CSS global.
+      const view = document.querySelector('.app-view');
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (view && !reduce && typeof view.animate === 'function') {
+        view.animate(
+          [
+            { opacity: 0, transform: 'translateY(8px)' },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        );
+      }
       announce(`Navegado a ${ROUTE_LABELS[route]}`);
     }
     prevRoute.current = route;
@@ -270,9 +284,10 @@ function AppShell() {
             Preparando tu cuaderno de gimnasio…
           </p>
         ) : (
-          // key={route}: cada vista se monta de nuevo al navegar, lo que dispara
-          // una transición sutil de entrada (neutralizada en prefers-reduced-motion).
-          <div className="app-view" key={route}>
+          // La transición de entrada se dispara con la Web Animations API en el
+          // efecto de navegación (arriba). Cada vista sigue montándose/desmontándose
+          // por ruta (render condicional), igual que antes.
+          <div className="app-view">
             {route === 'entrenar' && <TrainView />}
             {route === 'nutricion' && <NutritionView />}
             {route === 'social' && <SocialView />}

@@ -1,6 +1,6 @@
 // CAPA 3 · Interfaz — Progreso: la analítica que los comerciales cobran.
 // Cada gráfica sigue el patrón accesible de tres capas (ver ChartBlock).
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { db } from '../../data/db';
 import { getAllMeasurements } from '../../data/repositories/bodyRepo';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
@@ -41,6 +41,13 @@ export default function ProgressView() {
   );
   const [selectedExercise, setSelectedExercise] = useState('');
   const [measuring, setMeasuring] = useState(false);
+
+  // Progreso es lazy (Suspense): en la primera visita el efecto de foco de
+  // App.tsx corre contra el fallback (sin #view-title). La vista reclama el
+  // foco al montar para no perderlo en esa primera carga.
+  useEffect(() => {
+    document.getElementById('view-title')?.focus();
+  }, []);
 
   const trainedExercises = useMemo(() => {
     if (!sessions || !exercises) return [];
@@ -197,7 +204,8 @@ export default function ProgressView() {
       {allRecords.length > 0 && (
         <section className="card" aria-labelledby="records-heading">
           <h2 id="records-heading">
-            Tus récords <span className="muted num">· {allRecords.length}</span>
+            {allRecords.length === 1 ? 'Tu récord' : 'Tus récords'}{' '}
+            <span className="muted num">· {allRecords.length}</span>
           </h2>
           <p className="chart-summary">
             Tu mejor marca en cada ejercicio. El 1RM se estima con las fórmulas de Epley y Brzycki.

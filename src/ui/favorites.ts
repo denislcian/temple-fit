@@ -16,7 +16,8 @@ export function saveFavorites(favorites: Set<string>): void {
   localStorage.setItem(KEY, JSON.stringify([...favorites]));
 }
 
-/** Devuelve un nuevo Set con el id alternado (inmutable, para React state). */
+/** Devuelve un nuevo Set con el id alternado (función pura: la persistencia se
+ *  hace aparte vía saveFavorites, para no tener efectos en un updater de React). */
 export function toggleFavorite(favorites: Set<string>, id: string): Set<string> {
   const next = new Set(favorites);
   if (next.has(id)) {
@@ -24,7 +25,6 @@ export function toggleFavorite(favorites: Set<string>, id: string): Set<string> 
   } else {
     next.add(id);
   }
-  saveFavorites(next);
   return next;
 }
 

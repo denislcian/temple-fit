@@ -41,7 +41,9 @@ describe('HistoryView', () => {
     // El resumen depende de la carga async de sesiones: esperarlo.
     expect(await screen.findByText(/kg movidos en total/i)).toBeInTheDocument();
     // 1 sesión → etiqueta de la estadística en singular (no el rótulo de nav).
-    expect(screen.getByText('entrenamiento', { selector: '.stat .label' })).toBeInTheDocument();
+    expect(
+      screen.getByText('entrenamiento en total', { selector: '.stat .label' }),
+    ).toBeInTheDocument();
   });
 
   it('sin sesiones muestra el estado vacío con CTA a Entrenar', async () => {

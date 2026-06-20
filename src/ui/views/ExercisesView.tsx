@@ -1,6 +1,6 @@
 // CAPA 3 · Interfaz — Biblioteca de ejercicios: catálogo propio en español
 // + ejercicios personalizados sin límite (Strong: 3, Hevy: 7).
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Equipment, Exercise, MuscleGroup } from '../../data/models';
 import { MUSCLE_GROUPS } from '../../data/models';
 import {
@@ -13,7 +13,7 @@ import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { ExerciseHistoryDialog } from '../components/ExerciseHistoryDialog';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
-import { loadFavorites, sortByFavorite, toggleFavorite } from '../favorites';
+import { loadFavorites, saveFavorites, sortByFavorite, toggleFavorite } from '../favorites';
 import { useAsyncData } from '../hooks/useAsyncData';
 
 const EQUIPMENT: Equipment[] = [
@@ -51,6 +51,11 @@ export function ExercisesView() {
     );
     return sortByFavorite(matches, favorites);
   }, [exercises, query, group, onlyFavorites, favorites]);
+
+  // Persistencia separada del updater (que es puro): una sola escritura por cambio.
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
 
   function onToggleFavorite(exercise: Exercise) {
     const wasFavorite = favorites.has(exercise.id);

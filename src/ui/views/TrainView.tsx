@@ -33,6 +33,7 @@ import {
   type DraftEntry,
   type DraftSet,
 } from '../trainDraft';
+import { loadWeeklyGoal } from '../weeklyGoal';
 import { formatKg, formatShortDate, localDateISO, parseReps, parseWeight } from '../utils/format';
 
 export function TrainView() {
@@ -277,12 +278,20 @@ export function TrainView() {
     const today = localDateISO();
     const hasHistory = !!sessions && sessions.length > 0;
     const streak = hasHistory ? weeklyStreak(sessions, today) : null;
-    const thisWeek = weekStartOf(`${today}T12:00:00.000Z`);
+    // Misma referencia UTC que weekStartOf(session.date), para que una sesión
+    // recién guardada caiga siempre en el bucket de "esta semana".
+    const thisWeek = weekStartOf(new Date().toISOString());
     const thisWeekVolume = hasHistory
       ? (weeklyVolume(sessions).find((w) => w.weekStart === thisWeek)?.volumeKg ?? 0)
       : 0;
     const lastSession = hasHistory ? sessions[0] : undefined;
     const lastExerciseCount = lastSession?.entries.length ?? 0;
+    const thisWeekSessions = hasHistory
+      ? sessions.filter((s) => weekStartOf(s.date) === thisWeek).length
+      : 0;
+    const weeklyGoal = loadWeeklyGoal();
+    const goalPct = Math.min(100, Math.round((thisWeekSessions / weeklyGoal) * 100));
+    const goalMet = thisWeekSessions >= weeklyGoal;
 
     return (
       <>
@@ -314,8 +323,29 @@ export function TrainView() {
             <div className="stat">
               <span className="value num">{sessions.length}</span>
               <span className="label">
-                {sessions.length === 1 ? 'entrenamiento' : 'entrenamientos en total'}
+                {sessions.length === 1 ? 'entrenamiento en total' : 'entrenamientos en total'}
               </span>
+            </div>
+          </div>
+        )}
+
+        {hasHistory && (
+          <div className="card goal-card">
+            <div className="goal-head">
+              <span className="goal-title">
+                {goalMet ? '🔥 Objetivo de la semana cumplido' : 'Tu semana'}
+              </span>
+              <span className="num">
+                <strong>{thisWeekSessions}</strong>
+                <span className="muted"> / {weeklyGoal}</span>
+              </span>
+            </div>
+            <div
+              className="goal-bar"
+              role="img"
+              aria-label={`${thisWeekSessions} de ${weeklyGoal} entrenamientos esta semana`}
+            >
+              <div className={`fill ${goalMet ? 'met' : ''}`} style={{ width: `${goalPct}%` }} />
             </div>
           </div>
         )}

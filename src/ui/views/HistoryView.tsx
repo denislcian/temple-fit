@@ -91,7 +91,7 @@ export function HistoryView() {
             <div className="stat">
               <span className="value num">{total.sessions}</span>
               <span className="label">
-                {total.sessions === 1 ? 'entrenamiento' : 'entrenamientos'}
+                {total.sessions === 1 ? 'entrenamiento en total' : 'entrenamientos en total'}
               </span>
             </div>
             <div className="stat">
@@ -141,7 +141,7 @@ export function HistoryView() {
       )}
 
       {sessions && sessions.length > 0 && visibleSessions.length === 0 && (
-        <p className="muted">
+        <p className="muted" role="status">
           No hay sesiones con {nameById.get(filterExercise) ?? 'ese ejercicio'} en el historial.
         </p>
       )}

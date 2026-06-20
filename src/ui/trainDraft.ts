@@ -58,8 +58,9 @@ function numToInput(value: number): string {
 
 /**
  * Construye un borrador nuevo a partir de una sesión pasada, para "repetirla":
- * copia ejercicios, repeticiones, pesos, tipo de serie y notas; reinicia el
- * estado "completada" (vas a volver a hacerla) y descarta el RPE (es de cada día).
+ * copia ejercicios, repeticiones, pesos, tipo de serie y la nota de cada
+ * ejercicio. Reinicia el estado "completada" (vas a volver a hacerla) y descarta
+ * el RPE y la nota global de la sesión (son del día concreto, no se repiten).
  */
 export function draftFromSession(session: Session, startedAtISO: string): Draft {
   return {
