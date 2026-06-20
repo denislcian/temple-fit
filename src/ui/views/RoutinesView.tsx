@@ -55,6 +55,12 @@ export function RoutinesView() {
     setNameError(undefined);
   }
 
+  async function duplicate(routine: Routine) {
+    await addRoutine({ name: `${routine.name} (copia)`, exerciseIds: [...routine.exerciseIds] });
+    await reload();
+    announce(`Rutina ${routine.name} duplicada`);
+  }
+
   function move(index: number, delta: -1 | 1) {
     setEditor((prev) => {
       if (!prev) return prev;
@@ -141,6 +147,13 @@ export function RoutinesView() {
             <div className="btn-row">
               <button type="button" className="btn btn--small" onClick={() => openEdit(routine)}>
                 Editar<span className="visually-hidden"> {routine.name}</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn--small btn--ghost"
+                onClick={() => duplicate(routine)}
+              >
+                Duplicar<span className="visually-hidden"> {routine.name}</span>
               </button>
               <button
                 type="button"

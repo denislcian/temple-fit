@@ -32,6 +32,7 @@ export function ExercisesView() {
   const { data: exercises, reload } = useAsyncData(useCallback(() => getAllExercises(), []));
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
+  const [equipment, setEquipment] = useState('');
   const [favorites, setFavorites] = useState(loadFavorites);
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -46,11 +47,12 @@ export function ExercisesView() {
     const matches = (exercises ?? []).filter(
       (e) =>
         (!group || e.muscleGroup === (group as MuscleGroup)) &&
+        (!equipment || e.equipment === (equipment as Equipment)) &&
         (!onlyFavorites || favorites.has(e.id)) &&
         (!q || e.name.toLocaleLowerCase('es').includes(q)),
     );
     return sortByFavorite(matches, favorites);
-  }, [exercises, query, group, onlyFavorites, favorites]);
+  }, [exercises, query, group, equipment, onlyFavorites, favorites]);
 
   // Persistencia separada del updater (que es puro): una sola escritura por cambio.
   useEffect(() => {
@@ -94,14 +96,24 @@ export function ExercisesView() {
 
       <div className="card">
         <TextField label="Buscar por nombre" value={query} onChange={setQuery} />
-        <SelectField label="Filtrar por grupo muscular" value={group} onChange={setGroup}>
-          <option value="">Todos los grupos</option>
-          {MUSCLE_GROUPS.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </SelectField>
+        <div className="field-row">
+          <SelectField label="Grupo muscular" value={group} onChange={setGroup}>
+            <option value="">Todos los grupos</option>
+            {MUSCLE_GROUPS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label="Equipamiento" value={equipment} onChange={setEquipment}>
+            <option value="">Todo el material</option>
+            {EQUIPMENT.map((eq) => (
+              <option key={eq} value={eq}>
+                {eq}
+              </option>
+            ))}
+          </SelectField>
+        </div>
         <div className="btn-row">
           <button
             type="button"
