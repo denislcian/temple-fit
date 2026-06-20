@@ -13,6 +13,7 @@ import {
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
+import { CopyIcon, EditIcon, TrashIcon } from '../components/icons';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextField } from '../components/Field';
 import { PlanGeneratorDialog } from '../components/PlanGeneratorDialog';
@@ -26,6 +27,7 @@ const ROUTINE_ICON = (
     <circle cx="3.2" cy="18" r="0.8" fill="currentColor" stroke="none" />
   </svg>
 );
+
 
 interface EditorState {
   routineId: string | null; // null = nueva rutina
@@ -144,23 +146,33 @@ export function RoutinesView() {
                   : 'Sin ejercicios todavía'}
               </span>
             </div>
-            <div className="btn-row">
-              <button type="button" className="btn btn--small" onClick={() => openEdit(routine)}>
-                Editar<span className="visually-hidden"> {routine.name}</span>
+            <div className="row-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => openEdit(routine)}
+                title="Editar"
+                aria-label={`Editar ${routine.name}`}
+              >
+                {EditIcon}
               </button>
               <button
                 type="button"
-                className="btn btn--small btn--ghost"
+                className="icon-btn"
                 onClick={() => duplicate(routine)}
+                title="Duplicar"
+                aria-label={`Duplicar ${routine.name}`}
               >
-                Duplicar<span className="visually-hidden"> {routine.name}</span>
+                {CopyIcon}
               </button>
               <button
                 type="button"
-                className="btn btn--small btn--danger"
+                className="icon-btn icon-btn--danger"
                 onClick={() => setToDelete(routine)}
+                title="Eliminar"
+                aria-label={`Eliminar ${routine.name}`}
               >
-                Eliminar<span className="visually-hidden"> {routine.name}</span>
+                {TrashIcon}
               </button>
             </div>
           </li>

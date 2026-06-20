@@ -1339,6 +1339,18 @@ legend {
   object-fit: cover;
 }
 
+/* En móviles estrechos, la miniatura encoge y los iconos se juntan un poco
+   para que el nombre del ejercicio no se parta en tantas líneas. */
+@media (max-width: 26rem) {
+  .item-list .muscle-img {
+    width: 44px;
+    height: 44px;
+  }
+  .row-actions {
+    gap: 0.3rem;
+  }
+}
+
 /* Popup "Cómo se hace": ilustración grande + instrucciones. */
 .exercise-detail {
   text-align: center;
@@ -1501,6 +1513,60 @@ legend {
 .empty-state p {
   max-width: 32rem;
   margin: 0 auto 1rem;
+}
+
+/* Acciones de fila (Editar/Duplicar/Eliminar) como iconos compactos: sobrios
+   por defecto, el color aparece solo al pasar/enfocar. Nunca se parten de línea. */
+.row-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: center;
+}
+
+.icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color var(--dur-2) var(--ease-out),
+    background var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-1) var(--ease-spring);
+}
+
+.icon-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* Acciones no destructivas: realce en teal "acero templado". */
+.icon-btn:hover {
+  color: var(--accent-2);
+  background: var(--surface-3);
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border));
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* Acción destructiva: realce en rojo solo al interactuar. */
+.icon-btn--danger:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
 }
 
 /* Botón de favorito (estrella) en la lista de ejercicios. */

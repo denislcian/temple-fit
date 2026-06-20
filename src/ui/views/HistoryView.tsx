@@ -10,6 +10,7 @@ import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
 import { SelectField } from '../components/Field';
+import { RepeatIcon, TrashIcon } from '../components/icons';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { draftFromSession, hasActiveDraft, saveDraft } from '../trainDraft';
 import { formatDate, formatKg, formatMonthYear } from '../utils/format';
@@ -186,22 +187,24 @@ export function HistoryView() {
                   </ul>
                   {session.notes && <p className="muted">Notas: {session.notes}</p>}
                 </details>
-                <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                <div className="row-actions" style={{ marginTop: '0.5rem' }}>
                   <button
                     type="button"
-                    className="btn btn--small btn--primary"
+                    className="icon-btn"
                     onClick={() => repeatSession(session)}
+                    title="Repetir"
+                    aria-label={`Repetir la sesión del ${formatDate(session.date)}`}
                   >
-                    ↺ Repetir
-                    <span className="visually-hidden"> la sesión del {formatDate(session.date)}</span>
+                    {RepeatIcon}
                   </button>
                   <button
                     type="button"
-                    className="btn btn--small btn--danger"
+                    className="icon-btn icon-btn--danger"
                     onClick={() => setToDelete(session.id)}
+                    title="Eliminar"
+                    aria-label={`Eliminar la sesión del ${formatDate(session.date)}`}
                   >
-                    Eliminar
-                    <span className="visually-hidden"> sesión del {formatDate(session.date)}</span>
+                    {TrashIcon}
                   </button>
                 </div>
               </article>

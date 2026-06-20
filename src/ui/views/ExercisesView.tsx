@@ -13,6 +13,7 @@ import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { ExerciseHistoryDialog } from '../components/ExerciseHistoryDialog';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
+import { HowToIcon, ProgressIcon, TrashIcon } from '../components/icons';
 import { loadFavorites, saveFavorites, sortByFavorite, toggleFavorite } from '../favorites';
 import { useAsyncData } from '../hooks/useAsyncData';
 
@@ -163,34 +164,40 @@ export function ExercisesView() {
               <span className="meta">
                 {exercise.muscleGroup} · {exercise.equipment}
               </span>
-              <div className="btn-row" style={{ gap: '0.25rem' }}>
-                {exercise.instructions && (
-                  <button
-                    type="button"
-                    className="btn btn--small btn--ghost"
-                    onClick={() => setDetail(exercise)}
-                  >
-                    Cómo se hace<span className="visually-hidden">: {exercise.name}</span>
-                  </button>
-                )}
+            </div>
+            <div className="row-actions">
+              {exercise.instructions && (
                 <button
                   type="button"
-                  className="btn btn--small btn--ghost"
-                  onClick={() => setHistory(exercise)}
+                  className="icon-btn"
+                  onClick={() => setDetail(exercise)}
+                  title="Cómo se hace"
+                  aria-label={`Cómo se hace: ${exercise.name}`}
                 >
-                  Mi progreso<span className="visually-hidden"> en {exercise.name}</span>
+                  {HowToIcon}
                 </button>
-              </div>
-            </div>
-            {exercise.isCustom && (
+              )}
               <button
                 type="button"
-                className="btn btn--small btn--danger"
-                onClick={() => setToDelete({ id: exercise.id, name: exercise.name })}
+                className="icon-btn"
+                onClick={() => setHistory(exercise)}
+                title="Mi progreso"
+                aria-label={`Mi progreso en ${exercise.name}`}
               >
-                Eliminar<span className="visually-hidden"> {exercise.name}</span>
+                {ProgressIcon}
               </button>
-            )}
+              {exercise.isCustom && (
+                <button
+                  type="button"
+                  className="icon-btn icon-btn--danger"
+                  onClick={() => setToDelete({ id: exercise.id, name: exercise.name })}
+                  title="Eliminar"
+                  aria-label={`Eliminar ${exercise.name}`}
+                >
+                  {TrashIcon}
+                </button>
+              )}
+            </div>
           </li>
         ))}
         {filtered.length === 0 && (
