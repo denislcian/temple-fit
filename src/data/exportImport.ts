@@ -4,7 +4,7 @@
 import type { BodyMeasurement, WaterDay } from './bodyModels';
 import { db } from './db';
 import type { Exercise, ExportBundle, Routine, Session } from './models';
-import type { DiaryEntry, FoodItem, Post } from './nutritionModels';
+import { MEAL_LABELS, type DiaryEntry, type FoodItem, type Post } from './nutritionModels';
 
 /** Exporta toda la base de datos a un paquete JSON versionado. */
 export async function exportBundle(): Promise<ExportBundle> {
@@ -148,6 +148,34 @@ export function sessionsToCsv(sessions: Session[], exercises: Exercise[]): strin
         );
       });
     }
+  }
+  return rows.join('\r\n');
+}
+
+/**
+ * Exporta el diario de nutrición a CSV (una fila por alimento registrado),
+ * apto para Excel, Google Sheets o análisis propio.
+ */
+export function diaryToCsv(entries: DiaryEntry[]): string {
+  const header = 'fecha,comida,alimento,gramos,kcal,proteina_g,carbohidratos_g,grasa_g';
+  const rows: string[] = [header];
+
+  const sorted = [...entries].sort(
+    (a, b) => a.date.localeCompare(b.date) || a.meal.localeCompare(b.meal),
+  );
+  for (const e of sorted) {
+    rows.push(
+      [
+        e.date,
+        csvField(MEAL_LABELS[e.meal] ?? e.meal),
+        csvField(e.foodName),
+        e.grams,
+        e.kcal,
+        e.proteinG,
+        e.carbsG,
+        e.fatG,
+      ].join(','),
+    );
   }
   return rows.join('\r\n');
 }

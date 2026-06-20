@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { resetDb } from '../test/dbTestUtils';
-import { exportBundle, importBundle, sessionsToCsv } from './exportImport';
+import { diaryToCsv, exportBundle, importBundle, sessionsToCsv } from './exportImport';
+import type { DiaryEntry } from './nutritionModels';
 import type { Exercise, Session } from './models';
 import { addRoutine } from './repositories/routineRepo';
 import { addSession } from './repositories/sessionRepo';
@@ -104,5 +105,42 @@ describe('exportImport', () => {
     expect(lines[1]).toContain('"Press ""pesado"", inclinado"');
     expect(lines[1]).toContain('8,60,sí');
     expect(lines[2]).toContain('6,65,no');
+  });
+
+  it('exporta el diario de nutrición a CSV ordenado por fecha y comida', () => {
+    const diary: DiaryEntry[] = [
+      {
+        id: 'd2',
+        date: '2026-06-16',
+        meal: 'comida',
+        foodName: 'Arroz',
+        grams: 200,
+        kcal: 260,
+        proteinG: 5,
+        carbsG: 56,
+        fatG: 1,
+      },
+      {
+        id: 'd1',
+        date: '2026-06-15',
+        meal: 'desayuno',
+        foodName: 'Avena',
+        grams: 80,
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 6,
+      },
+    ];
+
+    const csv = diaryToCsv(diary);
+    const lines = csv.split('\r\n');
+    expect(lines[0]).toBe('fecha,comida,alimento,gramos,kcal,proteina_g,carbohidratos_g,grasa_g');
+    expect(lines).toHaveLength(3);
+    // Ordenado por fecha ascendente: 15 antes que 16.
+    expect(lines[1]).toContain('2026-06-15');
+    expect(lines[1]).toContain('Avena');
+    expect(lines[1]).toContain('Desayuno');
+    expect(lines[2]).toContain('2026-06-16');
   });
 });

@@ -2,7 +2,8 @@
 // Export/import sin paywall: la queja nº 2 de los usuarios de apps
 // comerciales es el secuestro de sus datos.
 import { useCallback, useRef, useState } from 'react';
-import { exportBundle, importBundle, sessionsToCsv } from '../../data/exportImport';
+import { diaryToCsv, exportBundle, importBundle, sessionsToCsv } from '../../data/exportImport';
+import { db } from '../../data/db';
 import { loadGeminiKey, saveGeminiKey } from '../../data/profile';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
@@ -52,6 +53,17 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
     const date = new Date().toISOString().slice(0, 10);
     download(`temple-historial-${date}.csv`, sessionsToCsv(allSessions, exercises), 'text/csv');
     announce('Historial CSV descargado');
+  }
+
+  async function exportNutritionCsv() {
+    const diary = await db.diary.toArray();
+    if (diary.length === 0) {
+      announce('Tu diario de nutrición está vacío todavía');
+      return;
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    download(`temple-nutricion-${date}.csv`, diaryToCsv(diary), 'text/csv');
+    announce('Diario de nutrición CSV descargado');
   }
 
   async function onImportFile(file: File) {
@@ -197,6 +209,9 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
           </button>
           <button type="button" className="btn" onClick={exportCsv}>
             Exportar historial (CSV)
+          </button>
+          <button type="button" className="btn" onClick={exportNutritionCsv}>
+            Exportar nutrición (CSV)
           </button>
           <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
             Importar copia (JSON)
