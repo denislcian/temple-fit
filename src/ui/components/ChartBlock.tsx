@@ -25,9 +25,7 @@ export function ChartBlock({ title, summary, tableHeaders, tableRows, children }
       <p className="chart-summary">{summary}</p>
 
       {!showTable && (
-        <div className="chart-frame" aria-hidden="false">
-          {children}
-        </div>
+        <div className="chart-frame">{children}</div>
       )}
 
       {showTable && (

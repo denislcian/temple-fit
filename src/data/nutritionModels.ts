@@ -93,7 +93,10 @@ export interface Follow {
 }
 
 export function macrosForGrams(per100: MacroAmounts, grams: number): MacroAmounts {
-  const f = grams / 100;
+  // Blindaje: gramos negativos o no finitos producirían macros negativos/NaN
+  // que corromperían los totales del diario. Se tratan como 0.
+  const safeGrams = Number.isFinite(grams) && grams > 0 ? grams : 0;
+  const f = safeGrams / 100;
   return {
     kcal: Math.round(per100.kcal * f),
     proteinG: Math.round(per100.proteinG * f * 10) / 10,

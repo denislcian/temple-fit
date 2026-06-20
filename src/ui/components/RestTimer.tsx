@@ -83,7 +83,14 @@ export function RestTimer() {
     <section className="card" aria-label="Temporizador de descanso">
       <h2>Descanso</h2>
       <div className="timer">
-        <span className={`display num ${running ? 'running' : ''}`} aria-hidden="true">
+        {/* role="timer" expone el tiempo restante a lectores de pantalla cuando
+            lo consultan, sin auto-anunciarlo cada segundo (eso lo hace el
+            Announcer solo en los hitos). */}
+        <span
+          className={`display num ${running ? 'running' : ''}`}
+          role="timer"
+          aria-label={`Descanso: ${formatClock(remaining ?? duration)} restante`}
+        >
           {formatClock(remaining ?? duration)}
         </span>
         <div className="btn-row">

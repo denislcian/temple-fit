@@ -138,7 +138,12 @@ export function ExercisesView() {
             )}
           </li>
         ))}
-        {filtered.length === 0 && <li>No hay ejercicios que coincidan con la búsqueda.</li>}
+        {filtered.length === 0 && (
+          <li className="muted">
+            Ningún ejercicio coincide. Prueba con otro nombre o grupo muscular, o crea el tuyo con
+            «+ Nuevo ejercicio personalizado».
+          </li>
+        )}
       </ul>
 
       {detail && (

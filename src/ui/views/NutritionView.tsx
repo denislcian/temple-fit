@@ -152,7 +152,7 @@ export function NutritionView() {
         <div className="water" role="group" aria-label="Hidratación del día">
           <button
             type="button"
-            className="btn btn--small"
+            className="btn btn--small water-btn"
             onClick={() => changeWater(-1)}
             disabled={(waterGlasses ?? 0) === 0}
             aria-label="Quitar un vaso de agua"
@@ -172,7 +172,7 @@ export function NutritionView() {
           </span>
           <button
             type="button"
-            className="btn btn--small"
+            className="btn btn--small water-btn water-btn--add"
             onClick={() => changeWater(1)}
             aria-label="Añadir un vaso de agua"
           >

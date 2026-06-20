@@ -16,8 +16,11 @@ export function AccountCard() {
       <section className="card" aria-labelledby="account-heading">
         <h2 id="account-heading">Tu cuenta</h2>
         <p className="muted">
-          Aún no has iniciado sesión. Crea tu cuenta en <a href="#/social">Comunidad</a> para
-          publicar y seguir a otras personas.
+          Aún no has iniciado sesión. Crea tu cuenta en{' '}
+          <a className="link" href="#/social">
+            Comunidad
+          </a>{' '}
+          para publicar y seguir a otras personas.
         </p>
       </section>
     );

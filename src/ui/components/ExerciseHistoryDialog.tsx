@@ -59,11 +59,13 @@ export function ExerciseHistoryDialog({
           <div className="stat-grid">
             <div className="stat">
               <span className="value num">{stats.sessionCount}</span>
-              <span className="label">veces entrenado</span>
+              <span className="label">{stats.sessionCount === 1 ? 'vez entrenado' : 'veces entrenado'}</span>
             </div>
             <div className="stat">
               <span className="value num">{stats.setCount}</span>
-              <span className="label">series de trabajo</span>
+              <span className="label">
+                {stats.setCount === 1 ? 'serie de trabajo' : 'series de trabajo'}
+              </span>
             </div>
             {record && (
               <>

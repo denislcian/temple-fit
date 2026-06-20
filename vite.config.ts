@@ -13,14 +13,19 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
+        id: './',
+        scope: './',
+        start_url: './',
         name: 'Temple — Cuaderno de gimnasio',
         short_name: 'Temple',
         description:
           'Registro de entrenamientos de fuerza. Gratis, sin cuentas, 100% offline y accesible.',
         lang: 'es',
+        dir: 'ltr',
         display: 'standalone',
         background_color: '#14161a',
         theme_color: '#14161a',
+        categories: ['health', 'fitness', 'sports', 'lifestyle'],
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
@@ -29,6 +34,21 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
+          },
+        ],
+        // Accesos directos desde el icono instalado (long-press / clic derecho).
+        shortcuts: [
+          {
+            name: 'Empezar a entrenar',
+            short_name: 'Entrenar',
+            url: './#/entrenar',
+            icons: [{ src: 'pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Diario de nutrición',
+            short_name: 'Nutrición',
+            url: './#/nutricion',
+            icons: [{ src: 'pwa-192.png', sizes: '192x192', type: 'image/png' }],
           },
         ],
       },

@@ -29,7 +29,7 @@ import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
-import { TrainView } from './views/TrainView';
+import { DRAFT_KEY, TrainView } from './views/TrainView';
 
 // Recharts solo se descarga si el usuario entra en Progreso (code splitting).
 const ProgressView = lazy(() => import('./views/ProgressView'));
@@ -146,7 +146,14 @@ function AppShell() {
   const announce = useAnnounce();
   const [ready, setReady] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() => !hasOnboarded());
+  const [draftActive, setDraftActive] = useState(false);
   const prevRoute = useRef<Route | null>(null);
+
+  // Hay un entrenamiento a medias guardado en localStorage. Se reevalúa al
+  // navegar (basta: empezar/descartar/guardar ocurren dentro de "Entrenar").
+  useEffect(() => {
+    setDraftActive(!!localStorage.getItem(DRAFT_KEY));
+  }, [route]);
 
   // Primer arranque: sembrar los catálogos y pedir almacenamiento persistente.
   useEffect(() => {
@@ -240,12 +247,22 @@ function AppShell() {
       </nav>
 
       <main className="app-main" id="main">
+        {ready && draftActive && route !== 'entrenar' && (
+          <a className="active-session" href="#/entrenar">
+            <span className="dot" aria-hidden="true" />
+            <span>
+              Entrenamiento en curso · <strong>volver para continuar</strong>
+            </span>
+          </a>
+        )}
         {!ready ? (
           <p className="muted" role="status">
             Preparando tu cuaderno de gimnasio…
           </p>
         ) : (
-          <>
+          // key={route}: cada vista se monta de nuevo al navegar, lo que dispara
+          // una transición sutil de entrada (neutralizada en prefers-reduced-motion).
+          <div className="app-view" key={route}>
             {route === 'entrenar' && <TrainView />}
             {route === 'nutricion' && <NutritionView />}
             {route === 'social' && <SocialView />}
@@ -265,7 +282,7 @@ function AppShell() {
               </Suspense>
             )}
             {route === 'ajustes' && <SettingsView theme={theme} setTheme={setTheme} />}
-          </>
+          </div>
         )}
       </main>
 

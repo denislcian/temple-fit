@@ -56,7 +56,12 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
     try {
       const text = await file.text();
       const result = await importBundle(text);
-      const text2 = `Importación completada: ${result.sessions} sesiones, ${result.routines} rutinas y ${result.exercises} ejercicios nuevos.`;
+      const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+      const text2 = `Importación completada: ${plural(result.sessions, 'sesión', 'sesiones')}, ${plural(
+        result.routines,
+        'rutina',
+        'rutinas',
+      )} y ${plural(result.exercises, 'ejercicio nuevo', 'ejercicios nuevos')}.`;
       setImportMessage({ kind: 'success', text: text2 });
       announce(text2);
     } catch (error) {

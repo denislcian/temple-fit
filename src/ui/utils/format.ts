@@ -8,6 +8,7 @@ const dateFormat = new Intl.DateTimeFormat('es-ES', {
   year: 'numeric',
 });
 const shortDateFormat = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' });
+const monthYearFormat = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
 
 export function formatKg(value: number): string {
   return `${kgFormat.format(value)} kg`;
@@ -19,6 +20,11 @@ export function formatDate(iso: string): string {
 
 export function formatShortDate(iso: string): string {
   return shortDateFormat.format(new Date(iso));
+}
+
+/** "junio de 2026" — para las subcabeceras de meses en el historial. */
+export function formatMonthYear(iso: string): string {
+  return monthYearFormat.format(new Date(iso));
 }
 
 /** Fecha local en formato YYYY-MM-DD (para las claves del diario). */

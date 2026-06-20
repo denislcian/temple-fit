@@ -12,9 +12,10 @@ import {
   getAllSessions,
   getLastSetsForExercise,
 } from '../../data/repositories/sessionRepo';
+import { weeklyStreak } from '../../domain/consistency';
 import { suggestProgression } from '../../domain/gymTools';
 import { beatsRecord, computeRecords } from '../../domain/records';
-import { sessionVolume } from '../../domain/volume';
+import { sessionVolume, weeklyVolume, weekStartOf } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
@@ -24,9 +25,9 @@ import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useWakeLock } from '../hooks/useWakeLock';
-import { formatKg, parseReps, parseWeight } from '../utils/format';
+import { formatKg, formatShortDate, localDateISO, parseReps, parseWeight } from '../utils/format';
 
-const DRAFT_KEY = 'forjafit-draft';
+export const DRAFT_KEY = 'forjafit-draft';
 
 interface DraftSet {
   reps: string;
@@ -95,6 +96,10 @@ export function TrainView() {
 
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const { data: routines } = useAsyncData(useCallback(() => getAllRoutines(), []));
+  // Resumen del home (panel): se recarga al terminar un entrenamiento.
+  const { data: sessions, reload: reloadSessions } = useAsyncData(
+    useCallback(() => getAllSessions(), []),
+  );
 
   // Pantalla siempre encendida mientras hay entrenamiento en curso.
   const screenAwake = useWakeLock(draft !== null);
@@ -288,17 +293,29 @@ export function TrainView() {
       prExercises.size > 0
         ? ` ¡Récord personal en ${[...prExercises].join(', ')}!`
         : '';
-    const message = `Entrenamiento guardado: ${doneSets.length} series, ${volume} de volumen en ${durationMin} min.${prText}`;
+    const setsLabel = doneSets.length === 1 ? '1 serie' : `${doneSets.length} series`;
+    const message = `Entrenamiento guardado: ${setsLabel}, ${volume} de volumen en ${durationMin} min.${prText}`;
 
     setDraft(null);
     setLastSets(new Map());
     setFinishedNotice(message);
+    void reloadSessions();
     announce(message);
   }
 
   // ── Render ──────────────────────────────────────────────
 
   if (!draft) {
+    const today = localDateISO();
+    const hasHistory = !!sessions && sessions.length > 0;
+    const streak = hasHistory ? weeklyStreak(sessions, today) : null;
+    const thisWeek = weekStartOf(`${today}T12:00:00.000Z`);
+    const thisWeekVolume = hasHistory
+      ? (weeklyVolume(sessions).find((w) => w.weekStart === thisWeek)?.volumeKg ?? 0)
+      : 0;
+    const lastSession = hasHistory ? sessions[0] : undefined;
+    const lastExerciseCount = lastSession?.entries.length ?? 0;
+
     return (
       <>
         <span className="kicker">Hoy toca</span>
@@ -312,14 +329,58 @@ export function TrainView() {
           </p>
         )}
 
-        <div className="card card--accent">
-          <h2>Empezar entrenamiento</h2>
-          <p className="muted">Registra series, repeticiones y peso. Todo queda en tu dispositivo.</p>
-          <div className="btn-row">
-            <button type="button" className="btn btn--primary" onClick={() => startWorkout()}>
-              Entrenamiento libre
-            </button>
+        {hasHistory && streak && (
+          <div className="stat-grid" aria-label="Resumen de tu actividad">
+            <div className="stat">
+              <span className="value num">{streak.currentWeeks}</span>
+              <span className="label">
+                {streak.currentWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}
+              </span>
+            </div>
+            <div className="stat">
+              <span className="value num">
+                {Math.round(thisWeekVolume).toLocaleString('es-ES')}
+              </span>
+              <span className="label">kg movidos esta semana</span>
+            </div>
+            <div className="stat">
+              <span className="value num">{sessions.length}</span>
+              <span className="label">
+                {sessions.length === 1 ? 'entrenamiento' : 'entrenamientos en total'}
+              </span>
+            </div>
           </div>
+        )}
+
+        <div className={lastSession ? 'home-cards' : undefined}>
+          <div className="card card--accent">
+            <h2>Empezar entrenamiento</h2>
+            <p className="muted">
+              Registra series, repeticiones y peso. Todo queda en tu dispositivo.
+            </p>
+            <div className="btn-row">
+              <button type="button" className="btn btn--primary" onClick={() => startWorkout()}>
+                Entrenamiento libre
+              </button>
+            </div>
+          </div>
+
+          {lastSession && (
+            <div className="card">
+              <h2>Tu última sesión</h2>
+              <p className="muted num">
+                {formatShortDate(lastSession.date)} · {lastExerciseCount}{' '}
+                {lastExerciseCount === 1 ? 'ejercicio' : 'ejercicios'} ·{' '}
+                {formatKg(sessionVolume(lastSession))}
+                {lastSession.durationMin ? ` · ${lastSession.durationMin} min` : ''}
+              </p>
+              <div className="btn-row">
+                <a className="btn btn--small btn--ghost" href="#/historial">
+                  Ver historial completo
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {routines && routines.length > 0 && (

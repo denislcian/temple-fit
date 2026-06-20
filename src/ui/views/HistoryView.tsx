@@ -1,14 +1,16 @@
 // CAPA 3 · Interfaz — Historial completo de sesiones, sin límite temporal
 // (Hevy gratis lo recorta a ~3 meses; aquí tus datos son tuyos).
 import { useCallback, useState } from 'react';
+import type { Session } from '../../data/models';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions, removeSession } from '../../data/repositories/sessionRepo';
+import { totals } from '../../domain/stats';
 import { sessionVolume } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
 import { useAsyncData } from '../hooks/useAsyncData';
-import { formatDate, formatKg } from '../utils/format';
+import { formatDate, formatKg, formatMonthYear } from '../utils/format';
 
 const HISTORY_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -16,6 +18,32 @@ const HISTORY_ICON = (
     <path d="M12 7.5V12l3 2" strokeLinecap="round" />
   </svg>
 );
+
+interface MonthGroup {
+  key: string;
+  label: string;
+  sessions: Session[];
+}
+
+/** Agrupa sesiones (ya ordenadas de más reciente a más antigua) por mes. */
+function groupByMonth(sessions: Session[]): MonthGroup[] {
+  const groups: MonthGroup[] = [];
+  for (const session of sessions) {
+    const key = session.date.slice(0, 7); // YYYY-MM
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) {
+      last.sessions.push(session);
+    } else {
+      const label = formatMonthYear(session.date);
+      groups.push({
+        key,
+        label: label.charAt(0).toUpperCase() + label.slice(1),
+        sessions: [session],
+      });
+    }
+  }
+  return groups;
+}
 
 export function HistoryView() {
   const announce = useAnnounce();
@@ -32,6 +60,33 @@ export function HistoryView() {
         Historial
       </h1>
 
+      {sessions && sessions.length > 0 && (() => {
+        const total = totals(sessions);
+        const totalMin = sessions.reduce((acc, s) => acc + (s.durationMin ?? 0), 0);
+        const timeLabel =
+          totalMin >= 60 ? `${Math.round(totalMin / 60)} h` : `${totalMin} min`;
+        return (
+          <div className="stat-grid" aria-label="Resumen de tu historial">
+            <div className="stat">
+              <span className="value num">{total.sessions}</span>
+              <span className="label">
+                {total.sessions === 1 ? 'entrenamiento' : 'entrenamientos'}
+              </span>
+            </div>
+            <div className="stat">
+              <span className="value num">
+                {Math.round(total.volumeKg).toLocaleString('es-ES')}
+              </span>
+              <span className="label">kg movidos en total</span>
+            </div>
+            <div className="stat">
+              <span className="value num">{timeLabel}</span>
+              <span className="label">entrenando</span>
+            </div>
+          </div>
+        );
+      })()}
+
       {sessions && sessions.length === 0 && (
         <EmptyState
           icon={HISTORY_ICON}
@@ -47,49 +102,61 @@ export function HistoryView() {
         </EmptyState>
       )}
 
-      {(sessions ?? []).map((session) => {
-        const totalSets = session.entries.reduce(
-          (acc, e) => acc + e.sets.filter((s) => s.done).length,
-          0,
-        );
-        return (
-          <article key={session.id} className="card">
-            <h2>{formatDate(session.date)}</h2>
-            <p className="muted num">
-              {totalSets} series completadas · {formatKg(sessionVolume(session))} de volumen
-              {session.durationMin ? ` · ${session.durationMin} min` : ''}
-            </p>
-            <details>
-              <summary className="btn btn--small btn--ghost">Ver detalle</summary>
-              <ul className="item-list">
-                {session.entries.map((entry) => (
-                  <li key={entry.exerciseId}>
-                    <div>
-                      <span className="title">{nameById.get(entry.exerciseId) ?? entry.exerciseId}</span>
-                      <br />
-                      <span className="meta num">
-                        {entry.sets
-                          .map((s) => `${s.reps}×${formatKg(s.weightKg)}${s.done ? '' : ' (no completada)'}`)
-                          .join(' · ')}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {session.notes && <p className="muted">Notas: {session.notes}</p>}
-            </details>
-            <div className="btn-row" style={{ marginTop: '0.5rem' }}>
-              <button
-                type="button"
-                className="btn btn--small btn--danger"
-                onClick={() => setToDelete(session.id)}
-              >
-                Eliminar<span className="visually-hidden"> sesión del {formatDate(session.date)}</span>
-              </button>
-            </div>
-          </article>
-        );
-      })}
+      {groupByMonth(sessions ?? []).map((group) => (
+        <section key={group.key} className="history-month" aria-label={group.label}>
+          <h2 className="month-heading">{group.label}</h2>
+          {group.sessions.map((session) => {
+            const totalSets = session.entries.reduce(
+              (acc, e) => acc + e.sets.filter((s) => s.done).length,
+              0,
+            );
+            return (
+              <article key={session.id} className="card">
+                <h3>{formatDate(session.date)}</h3>
+                <p className="muted num">
+                  {totalSets} {totalSets === 1 ? 'serie completada' : 'series completadas'} ·{' '}
+                  {formatKg(sessionVolume(session))} de volumen
+                  {session.durationMin ? ` · ${session.durationMin} min` : ''}
+                </p>
+                <details>
+                  <summary className="btn btn--small btn--ghost">Ver detalle</summary>
+                  <ul className="item-list">
+                    {session.entries.map((entry) => (
+                      <li key={entry.exerciseId}>
+                        <div>
+                          <span className="title">
+                            {nameById.get(entry.exerciseId) ?? entry.exerciseId}
+                          </span>
+                          <br />
+                          <span className="meta num">
+                            {entry.sets
+                              .map(
+                                (s) =>
+                                  `${s.reps}×${formatKg(s.weightKg)}${s.done ? '' : ' (no completada)'}`,
+                              )
+                              .join(' · ')}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {session.notes && <p className="muted">Notas: {session.notes}</p>}
+                </details>
+                <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn--small btn--danger"
+                    onClick={() => setToDelete(session.id)}
+                  >
+                    Eliminar
+                    <span className="visually-hidden"> sesión del {formatDate(session.date)}</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      ))}
 
       <ConfirmDialog
         open={toDelete !== null}

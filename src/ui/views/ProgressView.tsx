@@ -10,6 +10,7 @@ import { computeRecords } from '../../domain/records';
 import { exerciseProgression, summarizeProgress, totals } from '../../domain/stats';
 import { weeklyVolume } from '../../domain/volume';
 import { BodyMeasureDialog } from '../components/BodyMeasureDialog';
+import { EmptyState } from '../components/EmptyState';
 import { WeightGoalCard } from '../components/WeightGoalCard';
 import { ChartBlock } from '../components/ChartBlock';
 import { BodyWeightChart } from '../components/charts/BodyWeightChart';
@@ -18,6 +19,13 @@ import { VolumeChart } from '../components/charts/VolumeChart';
 import { SelectField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg, formatShortDate, localDateISO } from '../utils/format';
+
+const PROGRESS_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 20V4M4 20h16" strokeLinecap="round" />
+    <path d="m7 14 4-4 3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 export default function ProgressView() {
   const { data: sessions } = useAsyncData(useCallback(() => getAllSessions(), []));
@@ -65,12 +73,18 @@ export default function ProgressView() {
         <h1 id="view-title" tabIndex={-1}>
           Progreso
         </h1>
-        <div className="card">
-          <p>
-            Aquí verás tu volumen semanal, tus récords personales y la evolución de tu 1RM estimado
-            en cada ejercicio. Guarda tu primer entrenamiento para empezar.
-          </p>
-        </div>
+        <EmptyState
+          icon={PROGRESS_ICON}
+          title="Aún no hay números que mostrar"
+          action={
+            <a className="btn btn--primary" href="#/entrenar">
+              Empezar a entrenar
+            </a>
+          }
+        >
+          Aquí verás tu volumen semanal, tus récords personales y la evolución de tu 1RM estimado en
+          cada ejercicio. Guarda tu primer entrenamiento para empezar.
+        </EmptyState>
       </>
     );
   }

@@ -7,9 +7,31 @@
       name="description"
       content="Temple — registro de entrenamientos de fuerza. Gratis, sin cuentas, 100% offline y accesible. Tus datos son tuyos."
     />
-    <meta name="theme-color" content="#14161a" />
+    <meta name="color-scheme" content="dark light" />
+    <!-- theme-color por esquema: gris hierro en oscuro, papel cálido en claro. -->
+    <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f3ed" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="./favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+
+    <!-- Open Graph / Twitter: vista previa al compartir el enlace. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Temple" />
+    <meta property="og:title" content="Temple — Tu cuaderno de gimnasio" />
+    <meta
+      property="og:description"
+      content="Registro de entrenamientos de fuerza: gratis, sin cuentas, 100% offline y accesible. Tus datos son tuyos."
+    />
+    <meta property="og:image" content="./pwa-512.png" />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Temple — Tu cuaderno de gimnasio" />
+    <meta
+      name="twitter:description"
+      content="Registro de entrenamientos de fuerza: gratis, sin cuentas, 100% offline y accesible."
+    />
+    <meta name="twitter:image" content="./pwa-512.png" />
+
     <title>Temple — Tu cuaderno de gimnasio</title>
   </head>
   <body>

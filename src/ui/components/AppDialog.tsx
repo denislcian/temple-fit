@@ -50,7 +50,7 @@ export function AppDialog({ open, title, onClose, children }: AppDialogProps) {
   }, []);
 
   return (
-    <dialog ref={ref} onClose={onClose} aria-labelledby={undefined} aria-label={title}>
+    <dialog ref={ref} onClose={onClose} aria-label={title}>
       {open && (
         <>
           <h2>{title}</h2>
