@@ -12,6 +12,7 @@ export const ROUTES = [
   'historial',
   'rutinas',
   'ejercicios',
+  'herramientas',
   'ajustes',
   'mas',
 ] as const;
@@ -26,6 +27,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   historial: 'Historial',
   rutinas: 'Rutinas',
   ejercicios: 'Ejercicios',
+  herramientas: 'Herramientas',
   ajustes: 'Ajustes',
   mas: 'Más',
 };
@@ -33,7 +35,13 @@ export const ROUTE_LABELS: Record<Route, string> = {
 /** Pestañas principales (siempre visibles). */
 export const PRIMARY_ROUTES: readonly Route[] = ['entrenar', 'nutricion', 'social', 'progreso'];
 /** Solo en la cabecera de escritorio; en móvil viven dentro de "Más". */
-export const SECONDARY_ROUTES: readonly Route[] = ['historial', 'rutinas', 'ejercicios', 'ajustes'];
+export const SECONDARY_ROUTES: readonly Route[] = [
+  'historial',
+  'rutinas',
+  'ejercicios',
+  'herramientas',
+  'ajustes',
+];
 
 function parseHash(): Route {
   const raw = window.location.hash.replace(/^#\/?/, '');

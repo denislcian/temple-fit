@@ -17,6 +17,7 @@ const VIEWS: Array<{ hash: string; heading: RegExp }> = [
   { hash: '#/historial', heading: /^historial$/i },
   { hash: '#/rutinas', heading: /^rutinas$/i },
   { hash: '#/ejercicios', heading: /^ejercicios$/i },
+  { hash: '#/herramientas', heading: /^herramientas$/i },
   { hash: '#/ajustes', heading: /^ajustes$/i },
   { hash: '#/mas', heading: /^más$/i },
 ];

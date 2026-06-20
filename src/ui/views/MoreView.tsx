@@ -7,6 +7,7 @@ const DESCRIPTIONS: Record<string, string> = {
   historial: 'Todas tus sesiones guardadas, sin límite temporal',
   rutinas: 'Tus plantillas y el generador de planes por objetivo',
   ejercicios: 'La biblioteca de movimientos en español',
+  herramientas: 'Calculadoras de 1RM y de discos en la barra',
   ajustes: 'Perfil, tema, copias de seguridad y ayuda',
 };
 

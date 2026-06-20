@@ -767,6 +767,18 @@ p {
   margin-bottom: 1rem;
 }
 
+/* Dos campos lado a lado (peso + reps en las calculadoras). */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* Utilidad: texto en color de acento (cumple AA en ambos temas). */
+.text-accent {
+  color: var(--accent-text);
+}
+
 /* Home: en escritorio, "Empezar" y "Tu última sesión" lado a lado para
    aprovechar el ancho; en móvil se apilan. */
 .home-cards {
