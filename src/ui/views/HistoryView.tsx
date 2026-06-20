@@ -10,6 +10,7 @@ import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { draftFromSession, hasActiveDraft, saveDraft } from '../trainDraft';
 import { formatDate, formatKg, formatMonthYear } from '../utils/format';
 
 const HISTORY_ICON = (
@@ -52,6 +53,16 @@ export function HistoryView() {
   const [toDelete, setToDelete] = useState<string | null>(null);
 
   const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
+
+  function repeatSession(session: Session) {
+    if (hasActiveDraft()) {
+      announce('Ya tienes un entrenamiento en curso. Termínalo o descártalo antes de repetir otro.');
+      return;
+    }
+    saveDraft(draftFromSession(session, new Date().toISOString()));
+    announce('Entrenamiento preparado con los ejercicios de esa sesión.');
+    window.location.hash = '#/entrenar';
+  }
 
   return (
     <>
@@ -143,6 +154,14 @@ export function HistoryView() {
                   {session.notes && <p className="muted">Notas: {session.notes}</p>}
                 </details>
                 <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn--small btn--primary"
+                    onClick={() => repeatSession(session)}
+                  >
+                    ↺ Repetir
+                    <span className="visually-hidden"> la sesión del {formatDate(session.date)}</span>
+                  </button>
                   <button
                     type="button"
                     className="btn btn--small btn--danger"

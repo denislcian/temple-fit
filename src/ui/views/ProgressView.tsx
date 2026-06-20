@@ -107,6 +107,12 @@ export default function ProgressView() {
   const rmSummary = summarizeProgress(progression.map((p) => p.best1RM));
   const record = records.get(exerciseId);
 
+  // Récords de todos los ejercicios, ordenados por mejor 1RM estimado.
+  const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
+  const allRecords = [...records.values()].sort(
+    (a, b) => b.best1RM.estimated1RM - a.best1RM.estimated1RM,
+  );
+
   return (
     <>
       <span className="kicker">Los números de tu esfuerzo</span>
@@ -181,6 +187,34 @@ export default function ProgressView() {
                   <span className="visually-hidden">
                     {badge.achieved ? '. Conseguido' : '. Pendiente'}
                   </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {allRecords.length > 0 && (
+        <section className="card" aria-labelledby="records-heading">
+          <h2 id="records-heading">
+            Tus récords <span className="muted num">· {allRecords.length}</span>
+          </h2>
+          <p className="chart-summary">
+            Tu mejor marca en cada ejercicio. El 1RM se estima con las fórmulas de Epley y Brzycki.
+          </p>
+          <ul className="item-list">
+            {allRecords.map((r) => (
+              <li key={r.exerciseId}>
+                <div style={{ flex: 1 }}>
+                  <span className="title">{nameById.get(r.exerciseId) ?? r.exerciseId}</span>
+                  <br />
+                  <span className="meta num">
+                    Mejor serie {r.bestWeight.reps}×{formatKg(r.bestWeight.weightKg)} · 1RM{' '}
+                    {formatKg(r.best1RM.estimated1RM)}
+                  </span>
+                </div>
+                <span className="pr-badge" aria-hidden="true">
+                  🏆
                 </span>
               </li>
             ))}

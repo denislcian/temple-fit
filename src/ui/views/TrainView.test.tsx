@@ -6,7 +6,7 @@ import { markOnboarded } from '../../data/profile';
 import { addSession } from '../../data/repositories/sessionRepo';
 import { resetDb } from '../../test/dbTestUtils';
 import { App } from '../App';
-import { DRAFT_KEY } from './TrainView';
+import { DRAFT_KEY } from '../trainDraft';
 
 describe('Home de Entrenar', () => {
   beforeEach(async () => {

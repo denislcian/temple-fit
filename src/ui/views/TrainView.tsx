@@ -25,48 +25,15 @@ import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useWakeLock } from '../hooks/useWakeLock';
+import {
+  EMPTY_SET,
+  loadDraft,
+  saveDraft,
+  type Draft,
+  type DraftEntry,
+  type DraftSet,
+} from '../trainDraft';
 import { formatKg, formatShortDate, localDateISO, parseReps, parseWeight } from '../utils/format';
-
-export const DRAFT_KEY = 'forjafit-draft';
-
-interface DraftSet {
-  reps: string;
-  weight: string;
-  done: boolean;
-  type?: SetType;
-  rpe?: number;
-}
-
-interface DraftEntry {
-  exerciseId: string;
-  sets: DraftSet[];
-  note?: string;
-}
-
-interface Draft {
-  startedAt: string;
-  routineId?: string;
-  entries: DraftEntry[];
-}
-
-function loadDraft(): Draft | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    return raw ? (JSON.parse(raw) as Draft) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveDraft(draft: Draft | null): void {
-  if (draft === null) {
-    localStorage.removeItem(DRAFT_KEY);
-  } else {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }
-}
-
-const EMPTY_SET: DraftSet = { reps: '', weight: '', done: false };
 
 export function TrainView() {
   const announce = useAnnounce();

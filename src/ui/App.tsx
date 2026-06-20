@@ -29,7 +29,8 @@ import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
-import { DRAFT_KEY, TrainView } from './views/TrainView';
+import { TrainView } from './views/TrainView';
+import { DRAFT_KEY } from './trainDraft';
 
 // Recharts solo se descarga si el usuario entra en Progreso (code splitting).
 const ProgressView = lazy(() => import('./views/ProgressView'));
