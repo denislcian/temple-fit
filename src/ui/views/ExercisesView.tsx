@@ -13,6 +13,7 @@ import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { ExerciseHistoryDialog } from '../components/ExerciseHistoryDialog';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
+import { loadFavorites, sortByFavorite, toggleFavorite } from '../favorites';
 import { useAsyncData } from '../hooks/useAsyncData';
 
 const EQUIPMENT: Equipment[] = [
@@ -31,6 +32,8 @@ export function ExercisesView() {
   const { data: exercises, reload } = useAsyncData(useCallback(() => getAllExercises(), []));
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
+  const [favorites, setFavorites] = useState(loadFavorites);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [creating, setCreating] = useState(false);
   const [detail, setDetail] = useState<Exercise | null>(null);
   const [history, setHistory] = useState<Exercise | null>(null);
@@ -40,12 +43,24 @@ export function ExercisesView() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('es');
-    return (exercises ?? []).filter(
+    const matches = (exercises ?? []).filter(
       (e) =>
         (!group || e.muscleGroup === (group as MuscleGroup)) &&
+        (!onlyFavorites || favorites.has(e.id)) &&
         (!q || e.name.toLocaleLowerCase('es').includes(q)),
     );
-  }, [exercises, query, group]);
+    return sortByFavorite(matches, favorites);
+  }, [exercises, query, group, onlyFavorites, favorites]);
+
+  function onToggleFavorite(exercise: Exercise) {
+    const wasFavorite = favorites.has(exercise.id);
+    setFavorites((prev) => toggleFavorite(prev, exercise.id));
+    announce(
+      wasFavorite
+        ? `${exercise.name} quitado de favoritos`
+        : `${exercise.name} añadido a favoritos`,
+    );
+  }
 
   async function createExercise() {
     const name = form.name.trim();
@@ -82,9 +97,19 @@ export function ExercisesView() {
             </option>
           ))}
         </SelectField>
-        <button type="button" className="btn btn--primary" onClick={() => setCreating(true)}>
-          + Nuevo ejercicio personalizado
-        </button>
+        <div className="btn-row">
+          <button
+            type="button"
+            className={`btn btn--small ${onlyFavorites ? 'btn--primary' : 'btn--ghost'}`}
+            aria-pressed={onlyFavorites}
+            onClick={() => setOnlyFavorites((v) => !v)}
+          >
+            ★ Solo favoritos
+          </button>
+          <button type="button" className="btn btn--primary" onClick={() => setCreating(true)}>
+            + Nuevo ejercicio personalizado
+          </button>
+        </div>
       </div>
 
       <p className="visually-hidden" aria-live="polite">
@@ -94,6 +119,19 @@ export function ExercisesView() {
       <ul className="item-list">
         {filtered.map((exercise) => (
           <li key={exercise.id}>
+            <button
+              type="button"
+              className={`fav-toggle ${favorites.has(exercise.id) ? 'is-fav' : ''}`}
+              aria-pressed={favorites.has(exercise.id)}
+              aria-label={
+                favorites.has(exercise.id)
+                  ? `Quitar ${exercise.name} de favoritos`
+                  : `Marcar ${exercise.name} como favorito`
+              }
+              onClick={() => onToggleFavorite(exercise)}
+            >
+              <span aria-hidden="true">{favorites.has(exercise.id) ? '★' : '☆'}</span>
+            </button>
             <ExerciseImage exerciseId={exercise.id} />
             <div style={{ flex: 1 }}>
               <span className="title">

@@ -1463,6 +1463,41 @@ legend {
   margin: 0 auto 1rem;
 }
 
+/* Botón de favorito (estrella) en la lista de ejercicios. */
+.fav-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  min-width: var(--target);
+  height: var(--target);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-2) var(--ease-out),
+    transform var(--dur-1) var(--ease-spring),
+    background var(--dur-2) var(--ease-out);
+}
+
+.fav-toggle:hover {
+  background: var(--surface-3);
+}
+
+.fav-toggle.is-fav {
+  color: var(--accent-text);
+}
+
+.fav-toggle.is-fav span {
+  animation: setPop var(--dur-2) var(--ease-spring);
+}
+
 /* ── Historial por mes ──────────────────────────────────── */
 .history-month + .history-month {
   margin-top: var(--space-5);

@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import type { Exercise, MuscleGroup } from '../../data/models';
 import { MUSCLE_GROUPS } from '../../data/models';
+import { loadFavorites, sortByFavorite } from '../favorites';
 import { AppDialog } from './AppDialog';
 import { ExerciseImage } from './ExerciseImage';
 import { SelectField, TextField } from './Field';
@@ -17,14 +18,18 @@ export function ExercisePicker({ open, exercises, onPick, onClose }: ExercisePic
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState('');
 
+  // Las preferencias de favoritos solo se leen al abrir el selector.
+  const favorites = useMemo(() => (open ? loadFavorites() : new Set<string>()), [open]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('es');
-    return exercises.filter(
+    const matches = exercises.filter(
       (e) =>
         (!group || e.muscleGroup === (group as MuscleGroup)) &&
         (!q || e.name.toLocaleLowerCase('es').includes(q)),
     );
-  }, [exercises, query, group]);
+    return sortByFavorite(matches, favorites);
+  }, [exercises, query, group, favorites]);
 
   return (
     <AppDialog open={open} title="Elegir ejercicio" onClose={onClose}>
