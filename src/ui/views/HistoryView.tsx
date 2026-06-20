@@ -9,6 +9,7 @@ import { sessionVolume } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
+import { SelectField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { draftFromSession, hasActiveDraft, saveDraft } from '../trainDraft';
 import { formatDate, formatKg, formatMonthYear } from '../utils/format';
@@ -51,8 +52,17 @@ export function HistoryView() {
   const { data: sessions, reload } = useAsyncData(useCallback(() => getAllSessions(), []));
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const [toDelete, setToDelete] = useState<string | null>(null);
+  const [filterExercise, setFilterExercise] = useState('');
 
   const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
+
+  // Ejercicios que aparecen en el historial (para el desplegable de filtro).
+  const trainedIds = new Set((sessions ?? []).flatMap((s) => s.entries.map((e) => e.exerciseId)));
+  const trainedExercises = (exercises ?? []).filter((e) => trainedIds.has(e.id));
+
+  const visibleSessions = (sessions ?? []).filter(
+    (s) => !filterExercise || s.entries.some((e) => e.exerciseId === filterExercise),
+  );
 
   function repeatSession(session: Session) {
     if (hasActiveDraft()) {
@@ -113,7 +123,30 @@ export function HistoryView() {
         </EmptyState>
       )}
 
-      {groupByMonth(sessions ?? []).map((group) => (
+      {trainedExercises.length > 1 && (
+        <div className="card">
+          <SelectField
+            label="Filtrar por ejercicio"
+            value={filterExercise}
+            onChange={setFilterExercise}
+          >
+            <option value="">Todos los ejercicios</option>
+            {trainedExercises.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      )}
+
+      {sessions && sessions.length > 0 && visibleSessions.length === 0 && (
+        <p className="muted">
+          No hay sesiones con {nameById.get(filterExercise) ?? 'ese ejercicio'} en el historial.
+        </p>
+      )}
+
+      {groupByMonth(visibleSessions).map((group) => (
         <section key={group.key} className="history-month" aria-label={group.label}>
           <h2 className="month-heading">{group.label}</h2>
           {group.sessions.map((session) => {
