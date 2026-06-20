@@ -84,6 +84,17 @@ Y desde la fase 4, las funciones que destacan en las apps de referencia del merc
 - **Nutri-Score** (A-E): puntuación de salud de cada alimento con el algoritmo oficial 2023 (Cal AI tiene un "health score" pero esconde su fórmula; aquí es auditable).
 - **Objetivo de peso con fecha estimada**: fija tu meta y un ritmo, y la app calcula cuándo llegarás y qué déficit/superávit implica.
 
+Y desde la fase 5, una vuelta de perfeccionamiento (UX viva, más herramientas y comodidades del día a día):
+
+- **Inicio "vivo"**: al abrir Entrenar ves de un vistazo tu racha, el volumen y los entrenamientos de la semana, tu **objetivo semanal** con barra de progreso y tu **última sesión**. Si te vas a otra pestaña con un entreno a medias, un indicador global te lleva de vuelta.
+- **Repetir sesión**: desde el historial, recrea un entrenamiento pasado con un toque (ejercicios, pesos y reps precargados; el progresor sugiere si toca subir).
+- **Herramientas** (nueva sección): **calculadora de 1RM** con tabla de pesos por porcentaje y **calculadora de discos** + calentamiento, disponibles en cualquier momento.
+- **Tus récords**: lista consolidada de tu mejor marca en cada ejercicio, ordenada por 1RM estimado.
+- **Favoritos**: marca tus ejercicios habituales con una estrella; suben al principio de la lista y del selector. Filtra la biblioteca por **grupo muscular + material** o solo favoritos.
+- **Historial por meses** con subcabeceras, resumen de totales y **filtro por ejercicio**.
+- **Notas de sesión**, **objetivo semanal configurable**, **duplicar rutinas** y **export del diario de nutrición a CSV** (además del historial).
+- **Accesibilidad reforzada**: cola de anuncios para lectores de pantalla (no se pisan), foco resiliente a la carga diferida y auditoría axe automática en las 9 vistas.
+
 📸 *Capturas: ver [docs/capturas](docs/capturas/README.md).*
 
 ## 3. Cómo ejecutarlo

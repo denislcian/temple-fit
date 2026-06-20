@@ -1,6 +1,6 @@
 // CAPA 3 · Interfaz — Pruebas de la vista Historial: resumen de cabecera y
 // agrupación de sesiones por mes.
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { markOnboarded } from '../../data/profile';
 import { addSession } from '../../data/repositories/sessionRepo';
@@ -50,5 +50,24 @@ describe('HistoryView', () => {
     render(<App />);
     expect(await screen.findByRole('heading', { name: /aún no hay historial/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /empezar a entrenar/i })).toBeInTheDocument();
+  });
+
+  it('"Repetir" precarga un borrador desde la sesión y lleva a Entrenar', async () => {
+    await addSession({
+      date: '2026-06-15T10:00:00.000Z',
+      entries: [{ exerciseId: 'press-banca', sets: [{ reps: 8, weightKg: 60, done: true }] }],
+      durationMin: 40,
+    });
+
+    render(<App />);
+    const repeat = await screen.findByRole('button', { name: /repetir/i });
+    fireEvent.click(repeat);
+
+    // Se crea el borrador con los datos de la sesión y se navega a Entrenar.
+    const draft = JSON.parse(localStorage.getItem('forjafit-draft') ?? '{}');
+    expect(draft.entries).toHaveLength(1);
+    expect(draft.entries[0].exerciseId).toBe('press-banca');
+    expect(draft.entries[0].sets[0]).toMatchObject({ reps: '8', weight: '60', done: false });
+    expect(window.location.hash).toBe('#/entrenar');
   });
 });
