@@ -23,8 +23,8 @@ export default defineConfig({
         lang: 'es',
         dir: 'ltr',
         display: 'standalone',
-        background_color: '#14161a',
-        theme_color: '#14161a',
+        background_color: '#f4f8f5',
+        theme_color: '#f4f8f5',
         categories: ['health', 'fitness', 'sports', 'lifestyle'],
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },

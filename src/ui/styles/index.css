@@ -6,27 +6,27 @@
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  /* Tema oscuro por defecto: la app se usa en el gimnasio.
-     Fondo gris hierro (no negro puro: evita halation).
-     Superficies en escala de elevación de 3 niveles. */
-  --bg: #14161a;
-  --bg-glow: rgba(249, 115, 22, 0.07);
-  --surface: #181b21; /* nivel 1: tarjetas */
-  --surface-2: #21252d; /* nivel 2: elementos sobre tarjeta (stat, nota) */
-  --surface-3: #2b313b; /* nivel 3: hover / control activo */
-  --border: #3a404b;
-  --text: #edeef0;
-  --text-muted: #aab1bc;
-  --accent: #f97316; /* brasa */
-  --accent-text: #fb923c; /* texto naranja sobre fondo oscuro: ~7.9:1 */
-  --on-accent: #1c1006;
-  --accent-2: #2dd4bf; /* acero templado (teal complementario): ~9.7:1 sobre --bg */
-  --on-accent-2: #042f2a;
-  --danger: #f87171;
-  --danger-strong: #dc2626;
-  --success: #4ade80;
-  --on-success: #06270f;
-  --focus: #ffb454;
+  /* Tema claro por defecto: base blanca con acento esmeralda y toque ámbar.
+     Contrastes verificados AA (4.5:1 texto, 3:1 UI). El oscuro "gimnasio" vive
+     en [data-theme='dark']. */
+  --bg: #f4f8f5; /* blanco con un punto de verde */
+  --bg-glow: rgba(5, 150, 105, 0.05);
+  --surface: #ffffff; /* nivel 1: tarjetas, blanco puro */
+  --surface-2: #eef3f0; /* nivel 2: stat, nota */
+  --surface-3: #e3ebe6; /* nivel 3: hover / control activo */
+  --border: #d4e0d9;
+  --text: #14201a;
+  --text-muted: #55655d; /* ~5.6:1 sobre --bg */
+  --accent: #047857; /* esmeralda; blanco encima ~5.5:1 */
+  --accent-text: #047857; /* ~5.1:1 sobre --bg */
+  --on-accent: #ffffff;
+  --accent-2: #b45309; /* ámbar complementario; ~4.7:1 sobre --bg */
+  --on-accent-2: #fffbeb;
+  --danger: #b91c1c;
+  --danger-strong: #b91c1c;
+  --success: #15803d;
+  --on-success: #f0fdf4;
+  --focus: #047857;
 
   --font-display: 'Archivo Black', 'Arial Black', sans-serif;
   --font-body: 'Archivo', system-ui, sans-serif;
@@ -38,9 +38,9 @@
   --radius-xl: 22px;
 
   /* Sombras en capas (contacto + ambiental): dan peso físico. */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.28), 0 8px 24px -6px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(16, 40, 30, 0.08);
+  --shadow-md: 0 2px 6px rgba(16, 40, 30, 0.08), 0 12px 28px -8px rgba(16, 40, 30, 0.12);
+  --shadow-lg: 0 4px 10px rgba(16, 40, 30, 0.1), 0 24px 48px -12px rgba(16, 40, 30, 0.16);
   --shadow: var(--shadow-lg); /* alias retrocompatible */
   --glow-accent: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
     0 6px 20px color-mix(in srgb, var(--accent) 24%, transparent);
@@ -69,35 +69,36 @@
 
   --header-h: 3.5rem;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-[data-theme='light'] {
-  /* Papel cálido: un cuaderno de gimnasio, no un formulario clínico. */
-  --bg: #f6f3ed;
-  --bg-glow: rgba(194, 65, 12, 0.06);
-  --surface: #fffdf8;
-  --surface-2: #efe9df;
-  --surface-3: #e4ddd0;
-  --border: #c9c2b4;
-  --text: #211d18;
-  --text-muted: #5d564a;
-  --accent: #c2410c;
-  --accent-text: #b03c0a; /* ~5.2:1 sobre --bg */
-  --on-accent: #fff7ed;
-  --accent-2: #0f766e; /* teal profundo: ~5.3:1 sobre --bg claro */
-  --on-accent-2: #f0fdfa;
-  --danger: #b91c1c;
-  --danger-strong: #b91c1c;
-  --success: #166534;
-  --on-success: #f0fdf4;
-  --focus: #9a3412;
-  --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.1);
-  --shadow-md: 0 2px 6px rgba(60, 40, 20, 0.1), 0 12px 28px -8px rgba(60, 40, 20, 0.16);
-  --shadow-lg: 0 4px 10px rgba(60, 40, 20, 0.12), 0 24px 48px -12px rgba(60, 40, 20, 0.2);
+[data-theme='dark'] {
+  /* Tema oscuro "gimnasio": fondo gris hierro (no negro puro: evita halation),
+     brasa naranja y acero templado. Disponible con el botón sol/luna. */
+  --bg: #14161a;
+  --bg-glow: rgba(249, 115, 22, 0.07);
+  --surface: #181b21;
+  --surface-2: #21252d;
+  --surface-3: #2b313b;
+  --border: #3a404b;
+  --text: #edeef0;
+  --text-muted: #aab1bc;
+  --accent: #f97316; /* brasa */
+  --accent-text: #fb923c; /* ~7.9:1 sobre --bg oscuro */
+  --on-accent: #1c1006;
+  --accent-2: #2dd4bf; /* acero templado (teal): ~9.7:1 sobre --bg */
+  --on-accent-2: #042f2a;
+  --danger: #f87171;
+  --danger-strong: #dc2626;
+  --success: #4ade80;
+  --on-success: #06270f;
+  --focus: #ffb454;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.28), 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.55);
   --shadow: var(--shadow-lg);
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* ── Base ───────────────────────────────────────────────── */
@@ -898,9 +899,13 @@ p {
   transform: translateY(1px) scale(0.985);
 }
 
-/* Primario: relleno con gradiente brasa, canto luminoso y sombra de color. */
+/* Primario: relleno con gradiente del acento, canto luminoso y sombra de color. */
 .btn--primary {
-  background: linear-gradient(180deg, var(--accent), #ea580c);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 90%, white),
+    var(--accent)
+  );
   border-color: transparent;
   color: var(--on-accent);
   font-weight: 700;
@@ -910,7 +915,11 @@ p {
 }
 
 .btn--primary:hover {
-  background: linear-gradient(180deg, #fb8534, #ea580c);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 78%, white),
+    var(--accent)
+  );
   box-shadow: var(--glow-accent);
 }
 
