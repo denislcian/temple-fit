@@ -260,35 +260,6 @@ p {
   }
 }
 
-@keyframes sheetUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes backdropIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes tick {
   0%,
   100% {
@@ -1730,37 +1701,73 @@ dialog {
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
+
+  /* Motion de ENTRADA y SALIDA con transiciones (no animation), para que el
+     cierre no sea abrupto. Solo transform/opacity (compositor); allow-discrete
+     retrasa el display:none del <dialog> nativo hasta acabar la transición.
+     Estado cerrado/base = punto de partida de la entrada y destino de la salida. */
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out),
+    overlay var(--dur-2) var(--ease-out) allow-discrete,
+    display var(--dur-2) var(--ease-out) allow-discrete;
 }
 
-/* Entrada del diálogo en escritorio: aparece con un leve ascenso. */
 dialog[open] {
-  animation: popIn var(--dur-3) var(--ease-out);
+  opacity: 1;
+  transform: none;
+}
+
+/* Punto de partida de la animación de entrada (al pasar a [open]). */
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
 }
 
 /* En móvil los diálogos son hojas inferiores: contenido en la zona del
-   pulgar y gesto mental conocido de las apps nativas. */
+   pulgar y gesto mental conocido de las apps nativas. Entran y salen
+   deslizando desde/hacia abajo. */
 @media (max-width: 47.9rem) {
   dialog {
     margin: auto 0 0;
     max-width: 100vw;
     width: 100vw;
     max-height: 88dvh;
-    border-radius: var(--radius-l) var(--radius-l) 0 0;
     border-bottom: none;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    transform: translateY(100%);
   }
 
-  /* La hoja desliza desde abajo, como un bottom-sheet nativo. */
-  dialog[open] {
-    animation: sheetUp var(--dur-3) var(--ease-out);
+  @starting-style {
+    dialog[open] {
+      transform: translateY(100%);
+    }
   }
 }
 
 dialog::backdrop {
-  background: rgba(8, 9, 11, 0.65);
+  background: rgba(8, 9, 11, 0.55);
   backdrop-filter: blur(2px);
-  animation: backdropIn var(--dur-2) var(--ease-out);
+  opacity: 0;
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    overlay var(--dur-2) var(--ease-out) allow-discrete,
+    display var(--dur-2) var(--ease-out) allow-discrete;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
 }
 
 /* ── Avisos de estado ───────────────────────────────────── */
