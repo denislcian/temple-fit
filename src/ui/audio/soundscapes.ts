@@ -22,6 +22,28 @@ export const SOUNDSCAPES: Soundscape[] = [
   { id: 'viento', label: 'Viento', hint: '🍃', description: 'Brisa suave entre los árboles.' },
 ];
 
+/** Reproduce una vez un timbre de alarma suave (3 notas ascendentes). */
+export function playAlarmChime(): void {
+  if (typeof window === 'undefined' || !('AudioContext' in window)) return;
+  const ctx = new AudioContext();
+  const notes = [523.25, 659.25, 783.99]; // do, mi, sol
+  const t0 = ctx.currentTime + 0.02;
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const start = t0 + i * 0.18;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(0.25, start + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 0.55);
+  });
+  setTimeout(() => void ctx.close(), 1200);
+}
+
 type NoiseType = 'white' | 'pink' | 'brown';
 
 /** Genera 4 s de ruido en un buffer apto para reproducir en bucle. */

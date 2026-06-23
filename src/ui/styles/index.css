@@ -1898,6 +1898,85 @@ dialog[open]::backdrop {
   color: var(--text-muted);
 }
 
+/* Seguimiento del sueño — la pantalla de noche es siempre oscura (menos luz
+   en la mesilla), independientemente del tema. */
+.sleep-night {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 2rem 1rem;
+  border-radius: var(--radius-l);
+  background: #0d0f13;
+  border: 1px solid #262b33;
+  color: #e7eaef;
+  text-align: center;
+}
+
+.sleep-clock {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sleep-night .muted {
+  color: #8b93a1;
+}
+
+.sleep-wake {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fb923c;
+  margin: 0;
+}
+
+.sleep-meter {
+  width: min(20rem, 100%);
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #1d2430;
+  overflow: hidden;
+}
+
+.sleep-meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2dd4bf, #fb923c);
+  transition: width 0.12s linear;
+}
+
+.sleep-live {
+  font-size: var(--fs-sm);
+  color: #aab1bc;
+}
+
+.noise-graph {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 4rem;
+  margin: 0.75rem 0;
+  padding: 0.25rem;
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+}
+
+.noise-bar {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 2px 2px 0 0;
+  background: color-mix(in srgb, var(--accent) 60%, var(--surface-3));
+}
+
+.night-row {
+  margin-bottom: 0.5rem;
+}
+
+.night-row > summary {
+  width: 100%;
+}
+
 /* ── Avisos de estado ───────────────────────────────────── */
 .notice {
   border-radius: var(--radius-m);

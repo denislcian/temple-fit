@@ -1,11 +1,16 @@
 // CAPA 3 · Interfaz — Descanso: sonidos para dormir (Web Audio procedural) y
 // respiración guiada. Sin ficheros, sin red: todo se genera en el dispositivo.
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { SOUNDSCAPES } from '../audio/soundscapes';
 import { BREATH_PATTERNS } from '../../domain/breathing';
 import { BreathingGuide } from '../components/BreathingGuide';
 import { SelectField } from '../components/Field';
+import { SleepReport } from '../components/SleepReport';
+import { SleepTracker } from '../components/SleepTracker';
+import { useAsyncData } from '../hooks/useAsyncData';
 import { useSoundscape } from '../hooks/useSoundscape';
+import { formatShortDate } from '../utils/format';
 
 const SLEEP_TIMERS = [15, 30, 60];
 const SESSION_MINUTES = [1, 3, 5, 10];
@@ -15,6 +20,9 @@ export function DescansoView() {
   const [patternId, setPatternId] = useState(BREATH_PATTERNS[0]!.id);
   const [sessionMin, setSessionMin] = useState(3);
   const pattern = BREATH_PATTERNS.find((p) => p.id === patternId) ?? BREATH_PATTERNS[0]!;
+  const { data: nights, reload: reloadNights } = useAsyncData(
+    useCallback(() => getAllSleepSessions(), []),
+  );
 
   return (
     <>
@@ -22,6 +30,29 @@ export function DescansoView() {
       <h1 id="view-title" tabIndex={-1}>
         Descanso
       </h1>
+
+      <section className="card" aria-labelledby="sleep-heading">
+        <h2 id="sleep-heading">Seguimiento del sueño</h2>
+        <p className="muted">
+          Un reloj de noche con alarma que, además, escucha y detecta tus ruidos y ronquidos.
+        </p>
+        <SleepTracker onSaved={reloadNights} />
+
+        {nights && nights.length > 0 && (
+          <div style={{ marginTop: '1rem' }}>
+            <h3>Tus noches</h3>
+            {nights.map((n) => (
+              <details key={n.id} className="night-row">
+                <summary className="btn btn--small btn--ghost">
+                  {formatShortDate(n.startedAt)} · {Math.floor(n.durationMin / 60)}h{' '}
+                  {n.durationMin % 60}m · {n.snoreCount} ronquidos
+                </summary>
+                <SleepReport session={n} />
+              </details>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="card" aria-labelledby="sounds-heading">
         <h2 id="sounds-heading">Sonidos para dormir</h2>
