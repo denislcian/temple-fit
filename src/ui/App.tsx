@@ -30,6 +30,7 @@ import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
 import { DescansoView } from './views/DescansoView';
+import { RecipesView } from './views/RecipesView';
 import { ToolsView } from './views/ToolsView';
 import { TrainView } from './views/TrainView';
 import { DRAFT_KEY } from './trainDraft';
@@ -102,6 +103,13 @@ const ICONS: Record<Route, ReactNode> = {
       <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" strokeLinejoin="round" />
     </svg>
   ),
+  recetas: (
+    // Plato y cubiertos
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="13" r="6" />
+      <path d="M5 3v5M19 3v5M19 3v18M5 8c0 1.5 1 2 1.5 2" strokeLinecap="round" />
+    </svg>
+  ),
   progreso: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M4 20V4M4 20h16" strokeLinecap="round" />
@@ -119,7 +127,7 @@ const ICONS: Record<Route, ReactNode> = {
 // Agrupación de la barra lateral de escritorio (en móvil: 5 pestañas + Más).
 const NAV_GROUPS: Array<{ label: string; routes: Route[] }> = [
   { label: 'Entrenamiento', routes: ['entrenar', 'rutinas', 'ejercicios', 'herramientas', 'historial'] },
-  { label: 'Seguimiento', routes: ['progreso', 'nutricion'] },
+  { label: 'Seguimiento', routes: ['progreso', 'nutricion', 'recetas'] },
   { label: 'Bienestar', routes: ['descanso'] },
   { label: 'Comunidad', routes: ['social'] },
 ];
@@ -305,6 +313,7 @@ function AppShell() {
             {route === 'ejercicios' && <ExercisesView />}
             {route === 'herramientas' && <ToolsView />}
             {route === 'descanso' && <DescansoView />}
+            {route === 'recetas' && <RecipesView />}
             {route === 'progreso' && (
               <Suspense
                 fallback={

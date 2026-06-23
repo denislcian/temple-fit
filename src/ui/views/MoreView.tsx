@@ -9,6 +9,7 @@ const DESCRIPTIONS: Record<string, string> = {
   ejercicios: 'La biblioteca de movimientos en español',
   herramientas: 'Calculadoras de 1RM y de discos en la barra',
   descanso: 'Sonidos para dormir y respiración guiada',
+  recetas: 'Recetas saludables con macros, filtrables',
   ajustes: 'Perfil, tema, copias de seguridad y ayuda',
 };
 
