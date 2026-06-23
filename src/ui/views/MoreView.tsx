@@ -8,6 +8,7 @@ const DESCRIPTIONS: Record<string, string> = {
   rutinas: 'Tus plantillas y el generador de planes por objetivo',
   ejercicios: 'La biblioteca de movimientos en español',
   herramientas: 'Calculadoras de 1RM y de discos en la barra',
+  descanso: 'Sonidos para dormir y respiración guiada',
   ajustes: 'Perfil, tema, copias de seguridad y ayuda',
 };
 

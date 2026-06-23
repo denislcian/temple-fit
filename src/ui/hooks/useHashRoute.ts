@@ -13,6 +13,7 @@ export const ROUTES = [
   'rutinas',
   'ejercicios',
   'herramientas',
+  'descanso',
   'ajustes',
   'mas',
 ] as const;
@@ -28,6 +29,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   rutinas: 'Rutinas',
   ejercicios: 'Ejercicios',
   herramientas: 'Herramientas',
+  descanso: 'Descanso',
   ajustes: 'Ajustes',
   mas: 'Más',
 };
@@ -40,6 +42,7 @@ export const SECONDARY_ROUTES: readonly Route[] = [
   'rutinas',
   'ejercicios',
   'herramientas',
+  'descanso',
   'ajustes',
 ];
 

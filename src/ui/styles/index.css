@@ -1770,6 +1770,134 @@ dialog[open]::backdrop {
   }
 }
 
+/* ── Descanso: sonidos y respiración ────────────────────── */
+.sound-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.sound-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    background var(--dur-2) var(--ease-out),
+    transform var(--dur-1) var(--ease-spring);
+}
+
+.sound-card:hover {
+  background: var(--surface-3);
+}
+
+.sound-card:active {
+  transform: scale(0.98);
+}
+
+.sound-card.is-active {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+}
+
+.sound-emoji {
+  font-size: 1.5rem;
+}
+
+.sound-label {
+  font-weight: 600;
+}
+
+.sound-desc {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.sound-state {
+  margin-top: 0.35rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+.sound-card:not(.is-active) .sound-state {
+  color: var(--text-muted);
+}
+
+.range {
+  width: 100%;
+  accent-color: var(--accent);
+  height: var(--target);
+}
+
+/* Respiración guiada */
+.breath {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.breath-stage {
+  position: relative;
+  width: 100%;
+  height: 14rem;
+  display: grid;
+  place-items: center;
+}
+
+.breath-circle {
+  width: 11rem;
+  height: 11rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    color-mix(in srgb, var(--accent) 32%, var(--surface)),
+    color-mix(in srgb, var(--accent) 14%, var(--surface))
+  );
+  border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  transition-property: transform;
+  transition-timing-function: linear;
+  will-change: transform;
+}
+
+.breath-readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.breath-phase {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.breath-count {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--accent-text);
+  line-height: 1;
+}
+
+.breath-timer {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
 /* ── Avisos de estado ───────────────────────────────────── */
 .notice {
   border-radius: var(--radius-m);
