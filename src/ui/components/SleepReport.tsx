@@ -1,8 +1,47 @@
 // CAPA 3 · Interfaz — Informe de una noche: resumen, gráfica de ruido y los
-// momentos más sonoros.
-import type { SleepSession } from '../../data/sleepModels';
+// momentos más sonoros (con clip reproducible de los más fuertes).
+import { useEffect, useRef, useState } from 'react';
+import type { NoiseEvent, SleepSession } from '../../data/sleepModels';
 import { sleepVerdict, summarizeNight } from '../../domain/sleepAnalysis';
 import { formatShortDate } from '../utils/format';
+
+function ClipButton({ clip, label }: { clip: Blob; label: string }) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(clip);
+    const audio = new Audio(url);
+    audio.onended = () => setPlaying(false);
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      URL.revokeObjectURL(url);
+    };
+  }, [clip]);
+
+  return (
+    <button
+      type="button"
+      className="btn btn--small btn--ghost"
+      aria-label={playing ? `Pausar ${label}` : `Escuchar ${label}`}
+      onClick={() => {
+        const a = audioRef.current;
+        if (!a) return;
+        if (playing) {
+          a.pause();
+          a.currentTime = 0;
+          setPlaying(false);
+        } else {
+          void a.play();
+          setPlaying(true);
+        }
+      }}
+    >
+      {playing ? '❚❚ Sonando' : '▶ Escuchar'}
+    </button>
+  );
+}
 
 function clock(ms: number): string {
   const total = Math.round(ms / 1000);
@@ -65,7 +104,7 @@ export function SleepReport({ session }: { session: SleepSession }) {
         <>
           <h3>Momentos más sonoros</h3>
           <ul className="item-list">
-            {summary.loudest.slice(0, 6).map((e, i) => (
+            {summary.loudest.slice(0, 6).map((e: NoiseEvent, i) => (
               <li key={i}>
                 <div style={{ flex: 1 }}>
                   <span className="title">
@@ -77,6 +116,12 @@ export function SleepReport({ session }: { session: SleepSession }) {
                     intensidad {e.peak}
                   </span>
                 </div>
+                {e.clip && (
+                  <ClipButton
+                    clip={e.clip}
+                    label={`${e.kind} a los ${clock(e.atMs)} de iniciar`}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -84,8 +129,8 @@ export function SleepReport({ session }: { session: SleepSession }) {
       )}
 
       <p className="hint">
-        Registrado el {formatShortDate(session.startedAt)}. El audio se analizó en tu dispositivo y
-        no se guardó.
+        Registrado el {formatShortDate(session.startedAt)}. El audio se analizó en tu dispositivo;
+        solo se guardaron clips cortos de los momentos más sonoros, y nada salió de aquí.
       </p>
     </div>
   );

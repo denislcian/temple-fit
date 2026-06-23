@@ -125,7 +125,8 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
       </div>
       <p className="hint">
         Deja el teléfono cerca, boca arriba. El micrófono escucha la noche y detecta ruidos y
-        ronquidos. <strong>El audio se analiza en tu dispositivo y no se guarda ni se sube.</strong>
+        ronquidos, y guarda un clip corto de los más sonoros para que puedas oírlos.{' '}
+        <strong>Todo se procesa en tu dispositivo; nada se sube a ningún sitio.</strong>
       </p>
       <div className="btn-row">
         <button type="button" className="btn btn--primary" onClick={() => tracker.start(nextAlarm(alarm))}>

@@ -1,7 +1,7 @@
 // CAPA 3 · Interfaz — Seguimiento del sueño con el micrófono.
-// El audio se analiza EN VIVO en el dispositivo (AnalyserNode) y NO se guarda ni
-// se sube: solo quedan los eventos detectados (instante, duración, intensidad,
-// tipo) y la curva de ruido por minuto. Privacidad por diseño.
+// El audio se analiza EN VIVO en el dispositivo (AnalyserNode). De los eventos
+// más sonoros se guarda un clip corto (MediaRecorder) para poder OÍRLOS; el
+// resto del audio nunca se almacena ni se sube. Privacidad por diseño.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { NoiseEvent, SleepSession } from '../../data/sleepModels';
 import { classifyNoise } from '../../domain/sleepAnalysis';
@@ -19,10 +19,22 @@ interface Detector {
 }
 
 const TICK_MS = 120;
-const HANGOVER_MS = 450; // silencio para cerrar un evento
+const HANGOVER_MS = 450;
 const MIN_EVENT_MS = 300;
 const MIN_PEAK = 16;
-const DELTA = 14; // por encima del ruido de fondo
+const DELTA = 14;
+// Clips de los eventos más sonoros.
+const CLIP_MS = 6000;
+const MAX_CLIPS = 6;
+const CLIP_ONSET_MIN = 30;
+
+function pickMime(): string {
+  if (typeof MediaRecorder === 'undefined') return '';
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']) {
+    if (MediaRecorder.isTypeSupported?.(m)) return m;
+  }
+  return '';
+}
 
 export function useSleepTracker(onAlarm: () => void) {
   const [phase, setPhase] = useState<Phase>('idle');
@@ -49,9 +61,72 @@ export function useSleepTracker(onAlarm: () => void) {
     belowSince: 0,
     baseline: 8,
   });
+  // Grabación de clips.
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const pendingClips = useRef<Map<number, Blob>>(new Map());
+  const clipBudget = useRef(0);
+
+  const attachPending = useCallback(() => {
+    let changed = false;
+    for (const [atMs, blob] of pendingClips.current) {
+      const ev = eventsRef.current.find((e) => e.atMs === atMs);
+      if (ev) {
+        ev.clip = blob;
+        pendingClips.current.delete(atMs);
+        changed = true;
+      }
+    }
+    // Conserva solo los MAX_CLIPS más sonoros.
+    const withClip = eventsRef.current.filter((e) => e.clip);
+    if (withClip.length > MAX_CLIPS) {
+      withClip
+        .sort((a, b) => a.peak - b.peak)
+        .slice(0, withClip.length - MAX_CLIPS)
+        .forEach((e) => {
+          delete e.clip;
+        });
+      changed = true;
+    }
+    if (changed) setEvents([...eventsRef.current]);
+  }, []);
+
+  const startClip = useCallback(
+    (eventStartMs: number) => {
+      const stream = streamRef.current;
+      const mime = pickMime();
+      if (!stream || !mime || recorderRef.current || clipBudget.current <= 0) return;
+      try {
+        const chunks: Blob[] = [];
+        const rec = new MediaRecorder(stream, { mimeType: mime });
+        rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
+        rec.onstop = () => {
+          recorderRef.current = null;
+          if (chunks.length) {
+            pendingClips.current.set(eventStartMs, new Blob(chunks, { type: mime }));
+            attachPending();
+          }
+        };
+        recorderRef.current = rec;
+        clipBudget.current -= 1;
+        rec.start();
+        setTimeout(() => rec.state !== 'inactive' && rec.stop(), CLIP_MS);
+      } catch {
+        recorderRef.current = null;
+      }
+    },
+    [attachPending],
+  );
 
   const cleanup = useCallback(() => {
     clearInterval(rafRef.current);
+    try {
+      if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+        recorderRef.current.stop();
+      }
+    } catch {
+      /* noop */
+    }
+    recorderRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     void ctxRef.current?.close();
@@ -72,18 +147,19 @@ export function useSleepTracker(onAlarm: () => void) {
         streamRef.current = stream;
         const ctx = new AudioContext();
         ctxRef.current = ctx;
-        const src = ctx.createMediaStreamSource(stream);
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 1024;
         analyser.smoothingTimeConstant = 0.6;
-        src.connect(analyser);
+        ctx.createMediaStreamSource(stream).connect(analyser);
         const bins = analyser.frequencyBinCount;
         const data = new Uint8Array(bins);
-        const lowBins = Math.max(8, Math.floor(bins / 32)); // ~bajas frecuencias
+        const lowBins = Math.max(8, Math.floor(bins / 32));
 
         startRef.current = Date.now();
         levelsRef.current = [];
         eventsRef.current = [];
+        pendingClips.current.clear();
+        clipBudget.current = MAX_CLIPS * 2; // se graban algunos de más; se queda con los más fuertes
         det.current = {
           inEvent: false,
           startMs: 0,
@@ -105,20 +181,16 @@ export function useSleepTracker(onAlarm: () => void) {
             sum += data[i]!;
             if (i < lowBins) low += data[i]!;
           }
-          const avg = sum / bins; // 0-255
-          const lvl = Math.min(100, Math.round((avg / 255) * 220));
+          const lvl = Math.min(100, Math.round((sum / bins / 255) * 220));
           const lowRatio = sum > 0 ? low / sum : 0;
           setLevel(lvl);
 
           const now = Date.now();
           const elapsed = now - startRef.current;
           setElapsedMs(elapsed);
-
-          // Curva por minuto (máximo).
           const min = Math.floor(elapsed / 60000);
           levelsRef.current[min] = Math.max(levelsRef.current[min] ?? 0, lvl);
 
-          // Detección de eventos.
           const d = det.current;
           const threshold = Math.max(MIN_PEAK, d.baseline + DELTA);
           if (lvl >= threshold) {
@@ -128,38 +200,35 @@ export function useSleepTracker(onAlarm: () => void) {
               d.peak = lvl;
               d.lowSum = lowRatio;
               d.lowCount = 1;
+              if (lvl >= CLIP_ONSET_MIN) startClip(elapsed);
             } else {
               d.peak = Math.max(d.peak, lvl);
               d.lowSum += lowRatio;
               d.lowCount += 1;
             }
             d.belowSince = 0;
-          } else {
-            if (d.inEvent) {
-              if (d.belowSince === 0) d.belowSince = now;
-              if (now - d.belowSince >= HANGOVER_MS) {
-                const durationMs = elapsed - d.startMs - HANGOVER_MS;
-                if (durationMs >= MIN_EVENT_MS && d.peak >= MIN_PEAK) {
-                  const lowAvg = d.lowSum / Math.max(1, d.lowCount);
-                  const ev: NoiseEvent = {
-                    atMs: d.startMs,
-                    durationMs,
-                    peak: d.peak,
-                    kind: classifyNoise(durationMs, lowAvg),
-                  };
-                  eventsRef.current.push(ev);
-                  setEvents([...eventsRef.current]);
-                }
-                d.inEvent = false;
-                d.peak = 0;
+          } else if (d.inEvent) {
+            if (d.belowSince === 0) d.belowSince = now;
+            if (now - d.belowSince >= HANGOVER_MS) {
+              const durationMs = elapsed - d.startMs - HANGOVER_MS;
+              if (durationMs >= MIN_EVENT_MS && d.peak >= MIN_PEAK) {
+                const ev: NoiseEvent = {
+                  atMs: d.startMs,
+                  durationMs,
+                  peak: d.peak,
+                  kind: classifyNoise(durationMs, d.lowSum / Math.max(1, d.lowCount)),
+                };
+                eventsRef.current.push(ev);
+                attachPending();
+                setEvents([...eventsRef.current]);
               }
-            } else {
-              // Actualiza el ruido de fondo solo en silencio.
-              d.baseline = d.baseline * 0.98 + lvl * 0.02;
+              d.inEvent = false;
+              d.peak = 0;
             }
+          } else {
+            d.baseline = d.baseline * 0.98 + lvl * 0.02;
           }
 
-          // Alarma.
           const a = alarmRef.current;
           if (a && !a.fired && now >= a.at) {
             a.fired = true;
@@ -171,10 +240,9 @@ export function useSleepTracker(onAlarm: () => void) {
         setPhase('error');
       }
     },
-    [],
+    [startClip, attachPending],
   );
 
-  /** Detiene y devuelve la sesión construida (el llamador la guarda). */
   const stop = useCallback((): SleepSession | null => {
     if (phase !== 'tracking') {
       cleanup();
