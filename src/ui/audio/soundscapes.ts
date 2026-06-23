@@ -22,6 +22,26 @@ export const SOUNDSCAPES: Soundscape[] = [
   { id: 'viento', label: 'Viento', hint: '🍃', description: 'Brisa suave entre los árboles.' },
 ];
 
+export interface MusicTrack {
+  id: string;
+  label: string;
+  file: string;
+}
+
+// Pistas reales de relajación (servidas bajo demanda y cacheadas para offline).
+export const MUSIC_TRACKS: MusicTrack[] = [
+  { id: 'celestial-drift', label: 'Celestial Drift', file: 'celestial-drift.mp3' },
+  { id: 'soft-ocean-breeze', label: 'Soft Ocean Breeze', file: 'soft-ocean-breeze.mp3' },
+  { id: 'soft-static', label: 'Soft Static', file: 'soft-static.mp3' },
+  { id: 'softly-slowly', label: 'Softly, Slowly', file: 'softly-slowly.mp3' },
+  { id: 'softly-the-night-unfolds', label: 'Softly, the Night Unfolds', file: 'softly-the-night-unfolds.mp3' },
+];
+
+/** URL de una pista respetando el base de despliegue (subruta de GitHub Pages). */
+export function trackUrl(file: string): string {
+  return `${import.meta.env.BASE_URL}music/${file}`;
+}
+
 /** Reproduce una vez un timbre de alarma suave (3 notas ascendentes). */
 export function playAlarmChime(): void {
   if (typeof window === 'undefined' || !('AudioContext' in window)) return;
@@ -101,6 +121,8 @@ export class SoundscapePlayer {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private voice: Voice | null = null;
+  private audioEl: HTMLAudioElement | null = null;
+  private mediaNode: MediaElementAudioSourceNode | null = null;
   private fadeTimer: ReturnType<typeof setTimeout> | undefined;
   private _volume = 0.6;
   current: string | null = null;
@@ -121,11 +143,43 @@ export class SoundscapePlayer {
     return this.ctx;
   }
 
+  private fadeMasterIn(ctx: AudioContext): void {
+    if (!this.master) return;
+    this.master.gain.cancelScheduledValues(ctx.currentTime);
+    this.master.gain.setValueAtTime(Math.max(0.0001, this.master.gain.value), ctx.currentTime);
+    this.master.gain.linearRampToValueAtTime(this._volume, ctx.currentTime + 0.4);
+  }
+
+  private pauseTrack(): void {
+    this.audioEl?.pause();
+  }
+
+  /** Reproduce una pista de audio (archivo) por el mismo master que los sonidos. */
+  playTrack(id: string, url: string): void {
+    const ctx = this.ensureContext();
+    if (!ctx || !this.master) return;
+    clearTimeout(this.fadeTimer);
+    this.stopVoice(0.1);
+    if (!this.audioEl) {
+      this.audioEl = new Audio();
+      this.audioEl.loop = true;
+      this.audioEl.preload = 'auto';
+      // createMediaElementSource solo se puede llamar una vez por elemento.
+      this.mediaNode = ctx.createMediaElementSource(this.audioEl);
+      this.mediaNode.connect(this.master);
+    }
+    if (!this.audioEl.src.endsWith(url)) this.audioEl.src = url;
+    void this.audioEl.play();
+    this.current = id;
+    this.fadeMasterIn(ctx);
+  }
+
   /** Arranca (o cambia a) un paisaje, con un breve fundido de entrada. */
   play(id: string): void {
     const ctx = this.ensureContext();
     if (!ctx || !this.master) return;
     clearTimeout(this.fadeTimer);
+    this.pauseTrack();
     this.stopVoice(0.15);
 
     const voice = this.buildVoice(ctx, id);
@@ -239,6 +293,8 @@ export class SoundscapePlayer {
     this.master.gain.setValueAtTime(this.master.gain.value, now);
     this.master.gain.linearRampToValueAtTime(0.0001, now + 0.4);
     this.stopVoice(0.4);
+    setTimeout(() => this.pauseTrack(), 420);
+    this.current = null;
   }
 
   setVolume(v: number): void {
@@ -280,6 +336,9 @@ export class SoundscapePlayer {
   dispose(): void {
     clearTimeout(this.fadeTimer);
     this.stopVoice(0);
+    this.audioEl?.pause();
+    this.audioEl = null;
+    this.mediaNode = null;
     void this.ctx?.close();
     this.ctx = null;
     this.master = null;

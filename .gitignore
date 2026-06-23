@@ -20,3 +20,7 @@ coverage
 # (las instrucciones de la carpeta si entran en el repo)
 src/img/*
 !src/img/README.md
+
+# Originales WAV de la musica (~35 MB c/u): solo se versionan los MP3
+# comprimidos en public/music/.
+music/

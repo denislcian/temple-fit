@@ -24,6 +24,18 @@ export function useSoundscape() {
     }
   }
 
+  function toggleTrack(id: string, url: string) {
+    const p = player();
+    if (current === id) {
+      p.stop();
+      setCurrent(null);
+      setSleepMin(0);
+    } else {
+      p.playTrack(id, url);
+      setCurrent(id);
+    }
+  }
+
   function setVolume(v: number) {
     player().setVolume(v);
     setVolumeState(v);
@@ -48,6 +60,7 @@ export function useSoundscape() {
     sleepMin,
     supported: player().isSupported,
     toggle,
+    toggleTrack,
     setVolume,
     startSleepTimer,
     cancelSleepTimer,

@@ -55,9 +55,22 @@ export default defineConfig({
       workbox: {
         // Precachear todo el build, fuentes e ilustraciones de músculos
         // incluidas: tras la primera visita la app funciona sin red
-        // (el gimnasio sin cobertura).
+        // (el gimnasio sin cobertura). La música NO se precachea (pesa), se
+        // cachea bajo demanda al reproducirla por primera vez.
         globPatterns: ['**/*.{js,css,html,png,ico,woff2,webp}'],
         navigateFallback: 'index.html',
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'audio',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'temple-audio',
+              rangeRequests: true,
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

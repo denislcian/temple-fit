@@ -2,7 +2,7 @@
 // respiración guiada. Sin ficheros, sin red: todo se genera en el dispositivo.
 import { useCallback, useState } from 'react';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
-import { SOUNDSCAPES } from '../audio/soundscapes';
+import { MUSIC_TRACKS, SOUNDSCAPES, trackUrl } from '../audio/soundscapes';
 import { BREATH_PATTERNS } from '../../domain/breathing';
 import { BreathingGuide } from '../components/BreathingGuide';
 import { SelectField } from '../components/Field';
@@ -55,10 +55,10 @@ export function DescansoView() {
       </section>
 
       <section className="card" aria-labelledby="sounds-heading">
-        <h2 id="sounds-heading">Sonidos para dormir</h2>
+        <h2 id="sounds-heading">Sonidos y música para dormir</h2>
         <p className="muted">
-          Paisajes sonoros que se generan en tu dispositivo: suenan infinitos, sin descargar nada y
-          sin conexión.
+          Paisajes sonoros que se generan en tu dispositivo (infinitos, sin descargar nada) y pistas
+          de relajación. Suena una cosa a la vez; el volumen y el apagado valen para todo.
         </p>
 
         {!sound.supported && (
@@ -84,6 +84,31 @@ export function DescansoView() {
                 </span>
                 <span className="sound-label">{s.label}</span>
                 <span className="sound-desc">{s.description}</span>
+                <span className="sound-state" aria-hidden="true">
+                  {active ? '❚❚ Sonando' : '▶ Reproducir'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <h3 style={{ marginTop: '1.25rem' }}>Música de relajación</h3>
+        <div className="sound-grid">
+          {MUSIC_TRACKS.map((t) => {
+            const active = sound.current === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={`sound-card ${active ? 'is-active' : ''}`}
+                aria-pressed={active}
+                onClick={() => sound.toggleTrack(t.id, trackUrl(t.file))}
+                disabled={!sound.supported}
+              >
+                <span className="sound-emoji" aria-hidden="true">
+                  🎵
+                </span>
+                <span className="sound-label">{t.label}</span>
                 <span className="sound-state" aria-hidden="true">
                   {active ? '❚❚ Sonando' : '▶ Reproducir'}
                 </span>
