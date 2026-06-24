@@ -17,6 +17,7 @@ export interface NewPost {
   kind: Post['kind'];
   visibility?: Visibility;
   payload?: { title: string; lines: string[] };
+  image?: string;
 }
 
 export interface SocialRepository {
@@ -51,6 +52,7 @@ class LocalSocialRepository implements SocialRepository {
       kind: input.kind,
       visibility: input.visibility ?? 'publica',
       ...(input.payload ? { payload: input.payload } : {}),
+      ...(input.image ? { image: input.image } : {}),
       likes: 0,
       likedByMe: false,
       comments: [],

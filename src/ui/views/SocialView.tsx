@@ -1,10 +1,11 @@
 // CAPA 3 · Interfaz — Comunidad: red social de fitness (modo local).
 // Requiere cuenta. Publica con visibilidad (pública / solo seguidores /
 // privada), sigue a otras personas y el feed respeta quién puede ver qué.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Account } from '../../data/authModels';
 import type { Post, Visibility } from '../../data/nutritionModels';
 import { VISIBILITY_LABELS } from '../../data/nutritionModels';
+import { RECIPE_CATALOG } from '../../data/recipeCatalog';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllRoutines } from '../../data/repositories/routineRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
@@ -18,6 +19,15 @@ import { Avatar } from '../components/Avatar';
 import { SelectField, TextAreaField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg } from '../utils/format';
+import { compressImage } from '../utils/image';
+
+/** Filtros del feed por tipo de publicación. */
+const FEED_FILTERS: Array<{ id: string; label: string; kinds: Post['kind'][] }> = [
+  { id: 'todo', label: 'Todo', kinds: ['texto', 'rutina', 'sesion', 'receta', 'foto'] },
+  { id: 'fotos', label: '📷 Fotos', kinds: ['foto'] },
+  { id: 'rutinas', label: '📋 Rutinas', kinds: ['rutina', 'sesion'] },
+  { id: 'recetas', label: '🍽️ Recetas', kinds: ['receta'] },
+];
 
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
 
@@ -90,13 +100,28 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const [visibility, setVisibility] = useState<Visibility>('publica');
   const [toDelete, setToDelete] = useState<Post | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [photo, setPhoto] = useState<string>('');
+  const [feedFilter, setFeedFilter] = useState('todo');
+  const photoInput = useRef<HTMLInputElement>(null);
 
   const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
+  const activeKinds = FEED_FILTERS.find((f) => f.id === feedFilter)?.kinds ?? [];
+
+  async function onPhotoPicked(file: File) {
+    const data = await compressImage(file, 1280, 0.8);
+    if (data) {
+      setPhoto(data);
+      setAttach('foto');
+    } else {
+      announce('No se pudo procesar la imagen');
+    }
+  }
   const visibleFeed = visiblePosts(posts ?? [], myId, following);
 
   async function publish() {
     let kind: Post['kind'] = 'texto';
     let payload: { title: string; lines: string[] } | undefined;
+    let image: string | undefined;
 
     if (attach.startsWith('rutina:')) {
       const routine = routines?.find((r) => r.id === attach.slice('rutina:'.length));
@@ -104,6 +129,21 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         kind = 'rutina';
         payload = { title: routine.name, lines: routine.exerciseIds.map((id) => nameById.get(id) ?? id) };
       }
+    } else if (attach.startsWith('receta:')) {
+      const recipe = RECIPE_CATALOG.find((r) => r.id === attach.slice('receta:'.length));
+      if (recipe) {
+        kind = 'receta';
+        payload = {
+          title: recipe.name,
+          lines: [
+            `${recipe.minutes} min · ${recipe.servings} ${recipe.servings === 1 ? 'ración' : 'raciones'} · ${recipe.kcal} kcal · ${recipe.proteinG} g proteína`,
+            ...recipe.ingredients.map((i) => `${i.item} — ${i.amount}`),
+          ],
+        };
+      }
+    } else if (attach === 'foto' && photo) {
+      kind = 'foto';
+      image = photo;
     } else if (attach === 'ultima-sesion') {
       const sessions = await getAllSessions();
       const last = sessions[0];
@@ -121,14 +161,23 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
     }
 
     const text = postText.trim();
-    if (!text && !payload) {
-      announce('Escribe algo o adjunta una rutina antes de publicar');
+    if (!text && !payload && !image) {
+      announce('Escribe algo o adjunta una rutina, receta o foto antes de publicar');
       return;
     }
 
-    await socialRepo.publish({ author: me, authorId: myId, text, kind, visibility, ...(payload ? { payload } : {}) });
+    await socialRepo.publish({
+      author: me,
+      authorId: myId,
+      text,
+      kind,
+      visibility,
+      ...(payload ? { payload } : {}),
+      ...(image ? { image } : {}),
+    });
     setPostText('');
     setAttach('nada');
+    setPhoto('');
     setVisibility('publica');
     setPublishing(false);
     await reload();
@@ -221,7 +270,29 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         </section>
       )}
 
-      {visibleFeed.map((post) => (
+      <div className="btn-row feed-filter" role="group" aria-label="Filtrar el feed" style={{ marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        {FEED_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className={`btn btn--small ${feedFilter === f.id ? 'btn--primary' : 'btn--ghost'}`}
+            aria-pressed={feedFilter === f.id}
+            onClick={() => setFeedFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {visibleFeed.filter((p) => activeKinds.includes(p.kind)).length === 0 && (
+        <p className="muted" role="status">
+          No hay publicaciones de este tipo todavía.
+        </p>
+      )}
+
+      {visibleFeed
+        .filter((p) => activeKinds.includes(p.kind))
+        .map((post) => (
         <article key={post.id} className="card" aria-label={`Publicación de ${post.author}`}>
           <div className="post-head">
             <Avatar id={post.authorId ?? post.id} name={post.author} size={36} />
@@ -241,6 +312,10 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
             </div>
           </div>
           {post.text && <p>{post.text}</p>}
+
+          {post.image && (
+            <img className="post-photo" src={post.image} alt={`Foto de ${post.author}`} loading="lazy" />
+          )}
 
           {post.payload && (
             <div className="card" style={{ background: 'var(--surface-2)', marginBottom: '0.75rem' }}>
@@ -320,15 +395,56 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           onChange={setPostText}
           hint="Tu entrenamiento de hoy, un récord, una duda…"
         />
-        <SelectField label="Adjuntar" value={attach} onChange={setAttach}>
+        <SelectField
+          label="Adjuntar"
+          value={attach}
+          onChange={(v) => {
+            setAttach(v);
+            if (v !== 'foto') setPhoto('');
+            if (v === 'foto') photoInput.current?.click();
+          }}
+        >
           <option value="nada">Nada, solo texto</option>
+          <option value="foto">📷 Una foto</option>
           <option value="ultima-sesion">Mi última sesión de entrenamiento</option>
           {(routines ?? []).map((r) => (
             <option key={r.id} value={`rutina:${r.id}`}>
               Rutina: {r.name}
             </option>
           ))}
+          {RECIPE_CATALOG.map((r) => (
+            <option key={r.id} value={`receta:${r.id}`}>
+              Receta: {r.name}
+            </option>
+          ))}
         </SelectField>
+
+        <input
+          ref={photoInput}
+          type="file"
+          accept="image/*"
+          className="visually-hidden"
+          aria-label="Elegir foto"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void onPhotoPicked(file);
+          }}
+        />
+        {photo && (
+          <div className="photo-preview">
+            <img src={photo} alt="Vista previa de la foto a publicar" />
+            <button
+              type="button"
+              className="btn btn--small btn--ghost"
+              onClick={() => {
+                setPhoto('');
+                setAttach('nada');
+              }}
+            >
+              Quitar foto
+            </button>
+          </div>
+        )}
         <SelectField
           label="¿Quién puede verla?"
           value={visibility}

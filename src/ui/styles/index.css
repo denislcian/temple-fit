@@ -2063,6 +2063,32 @@ dialog[open]::backdrop {
   line-height: 1.5;
 }
 
+/* Foto de una publicación de la comunidad. */
+.post-photo {
+  display: block;
+  width: 100%;
+  max-height: 30rem;
+  object-fit: cover;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+  background: var(--surface-2);
+}
+
+.photo-preview {
+  margin: 0.5rem 0;
+}
+
+.photo-preview img {
+  display: block;
+  width: 100%;
+  max-height: 16rem;
+  object-fit: cover;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  margin-bottom: 0.4rem;
+}
+
 /* ── Avisos de estado ───────────────────────────────────── */
 .notice {
   border-radius: var(--radius-m);

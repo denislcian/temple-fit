@@ -72,11 +72,13 @@ export interface Post {
   authorId?: string;
   createdAt: string;
   text: string;
-  kind: 'rutina' | 'sesion' | 'texto';
+  kind: 'rutina' | 'sesion' | 'texto' | 'receta' | 'foto';
   /** Quién puede verla. Ausente = pública (retrocompatible). */
   visibility?: Visibility;
-  /** Contenido estructurado: título + líneas (ejercicios, series...). */
+  /** Contenido estructurado: título + líneas (ejercicios, series, receta...). */
   payload?: { title: string; lines: string[] };
+  /** Foto adjunta como dataURL (comprimida en el dispositivo). */
+  image?: string;
   likes: number;
   likedByMe: boolean;
   comments: PostComment[];
