@@ -63,8 +63,86 @@ export function validateDisplayName(raw: string): string | null {
   return null;
 }
 
+// Contraseñas muy comunes (y palabras propias de la app) — rechazo directo.
+const COMMON_PASSWORDS = new Set([
+  '12345678',
+  '123456789',
+  '1234567890',
+  'password',
+  'password1',
+  'contraseña',
+  'contrasena',
+  'qwerty',
+  'qwertyuiop',
+  'iloveyou',
+  'admin123',
+  'temple',
+  'temple123',
+  'gimnasio',
+  'football',
+  'princess',
+  'abc12345',
+]);
+
+function charClasses(s: string): number {
+  let n = 0;
+  if (/[a-z]/.test(s)) n++;
+  if (/[A-Z]/.test(s)) n++;
+  if (/\d/.test(s)) n++;
+  if (/[^a-zA-Z0-9]/.test(s)) n++;
+  return n;
+}
+
+/** ¿Es un único carácter repetido o una secuencia trivial (12345678, abcdefg)? */
+function isTrivialSequence(s: string): boolean {
+  const lower = s.toLowerCase();
+  if (/^(.)\1+$/.test(lower)) return true; // todo el mismo carácter
+  const seqs = '0123456789abcdefghijklmnopqrstuvwxyzqwertyuiopasdfghjklzxcvbnm';
+  const rev = [...seqs].reverse().join('');
+  return seqs.includes(lower) || rev.includes(lower);
+}
+
+/**
+ * Política moderna: longitud mínima de 8, pero las cortas (< 12) deben combinar
+ * al menos 3 tipos de carácter; las largas (passphrases) pasan sin exigir
+ * símbolos. Se rechazan las contraseñas comunes y las secuencias triviales.
+ */
 export function validatePassword(raw: string): string | null {
   if (raw.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
   if (raw.length > 100) return 'La contraseña es demasiado larga';
+  if (COMMON_PASSWORDS.has(raw.toLowerCase())) {
+    return 'Esa contraseña es demasiado común; elige otra';
+  }
+  if (isTrivialSequence(raw)) {
+    return 'Evita secuencias o caracteres repetidos (como 12345678 o aaaaaaaa)';
+  }
+  if (raw.length < 12 && charClasses(raw) < 3) {
+    return 'Combina mayúsculas, minúsculas, números o símbolos — o usa una contraseña más larga (12+)';
+  }
   return null;
+}
+
+export interface PasswordStrength {
+  /** 0 (muy débil) … 4 (fuerte). */
+  score: 0 | 1 | 2 | 3 | 4;
+  label: string;
+}
+
+const STRENGTH_LABELS = ['Muy débil', 'Débil', 'Aceptable', 'Buena', 'Fuerte'];
+
+/** Fuerza orientativa para el medidor visual (no es la validación). */
+export function passwordStrength(raw: string): PasswordStrength {
+  if (!raw) return { score: 0, label: STRENGTH_LABELS[0]! };
+  if (COMMON_PASSWORDS.has(raw.toLowerCase()) || isTrivialSequence(raw)) {
+    return { score: 0, label: STRENGTH_LABELS[0]! };
+  }
+  let points = 0;
+  if (raw.length >= 8) points++;
+  if (raw.length >= 12) points++;
+  if (raw.length >= 16) points++;
+  const classes = charClasses(raw);
+  if (classes >= 2) points++;
+  if (classes >= 3) points++;
+  const score = Math.min(4, points) as PasswordStrength['score'];
+  return { score, label: STRENGTH_LABELS[score]! };
 }

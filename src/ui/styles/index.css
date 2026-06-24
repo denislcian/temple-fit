@@ -2089,6 +2089,45 @@ dialog[open]::backdrop {
   margin-bottom: 0.4rem;
 }
 
+/* Medidor de fuerza de la contraseña. */
+.pw-strength {
+  margin-top: 0.45rem;
+}
+
+.pw-bars {
+  display: flex;
+  gap: 4px;
+}
+
+.pw-bars span {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+.pw-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.pw-strength[data-score='0'] .pw-bars span:nth-child(-n + 1),
+.pw-strength[data-score='1'] .pw-bars span:nth-child(-n + 1) {
+  background: var(--danger);
+}
+
+.pw-strength[data-score='2'] .pw-bars span:nth-child(-n + 2) {
+  background: var(--accent-2);
+}
+
+.pw-strength[data-score='3'] .pw-bars span:nth-child(-n + 3),
+.pw-strength[data-score='4'] .pw-bars span:nth-child(-n + 4) {
+  background: var(--success);
+}
+
 /* ── Avisos de estado ───────────────────────────────────── */
 .notice {
   border-radius: var(--radius-m);

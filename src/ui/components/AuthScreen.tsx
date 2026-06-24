@@ -3,6 +3,7 @@
 // autocompletar (gestores de contraseñas), sin CAPTCHA cognitivo.
 // En la nube (Supabase) el acceso es por email + contraseña con confirmación.
 import { useState } from 'react';
+import { passwordStrength } from '../../data/authModels';
 import { isSupabaseEnabled } from '../../data/supabase';
 import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
@@ -114,7 +115,8 @@ export function AuthScreen() {
           <label htmlFor="auth-password">Contraseña</label>
           {mode === 'register' && (
             <p className="hint" id="auth-password-hint">
-              Mínimo 8 caracteres.
+              Mínimo 8 caracteres. Si es corta, combina mayúsculas, minúsculas, números o símbolos;
+              o usa una frase larga (12+).
             </p>
           )}
           <input
@@ -126,6 +128,16 @@ export function AuthScreen() {
             autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             aria-describedby={mode === 'register' ? 'auth-password-hint' : undefined}
           />
+          {mode === 'register' && password.length > 0 && (
+            <div className="pw-strength" data-score={passwordStrength(password).score}>
+              <div className="pw-bars" aria-hidden="true">
+                <span /> <span /> <span /> <span />
+              </div>
+              <span className="pw-label" role="status">
+                Seguridad: {passwordStrength(password).label}
+              </span>
+            </div>
+          )}
         </div>
 
         {info && (
