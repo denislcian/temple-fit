@@ -8,12 +8,13 @@ import '@fontsource/archivo/600.css';
 import '@fontsource/archivo/700.css';
 import '@fontsource/archivo-black/400.css';
 import { requestPersistentStorage } from '../data/db';
-import { hasOnboarded } from '../data/profile';
+import { isSupabaseEnabled } from '../data/supabase';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
-import { AuthProvider } from './components/AuthContext';
-import { Onboarding } from './components/Onboarding';
+import { AuthProvider, useAuth } from './components/AuthContext';
+import { AuthScreen } from './components/AuthScreen';
+import { WelcomeHero } from './components/WelcomeHero';
 import {
   PRIMARY_ROUTES,
   ROUTE_LABELS,
@@ -166,12 +167,10 @@ function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) =
   );
 }
 
-function AppShell() {
+function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   const { route } = useHashRoute();
-  const { theme, setTheme } = useTheme();
   const announce = useAnnounce();
   const [ready, setReady] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() => !hasOnboarded());
   const [draftActive, setDraftActive] = useState(false);
   const prevRoute = useRef<Route | null>(null);
 
@@ -329,17 +328,59 @@ function AppShell() {
           </div>
         )}
       </main>
-
-      {ready && showWelcome && <Onboarding onDone={() => setShowWelcome(false)} />}
     </div>
   );
+}
+
+// Puerta de acceso: pantalla completa con la presentación de la app y el
+// registro/inicio de sesión. Solo aparece en modo nube (Supabase) cuando no hay
+// sesión; al autenticarse, AuthContext actualiza la cuenta y se muestra la app.
+function AuthGate({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  return (
+    <div className="gate">
+      <header className="gate__top">
+        <Brand />
+        <ThemeToggle theme={theme} setTheme={setTheme} />
+      </header>
+      <div className="gate__body">
+        <section className="gate__hero">
+          <WelcomeHero />
+        </section>
+        <section className="gate__auth" aria-label="Acceso">
+          <p className="gate__auth-kicker">Crea tu cuenta gratis o inicia sesión para empezar</p>
+          <AuthScreen />
+        </section>
+      </div>
+    </div>
+  );
+}
+
+// Decide qué se muestra: cargando → app local → puerta (nube sin sesión) → app.
+function Root() {
+  const { account, loading } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  if (isSupabaseEnabled && loading) {
+    return (
+      <div className="gate gate--loading">
+        <span className="spark" aria-hidden="true" />
+        <p className="muted" role="status">
+          Cargando…
+        </p>
+      </div>
+    );
+  }
+  if (isSupabaseEnabled && !account) {
+    return <AuthGate theme={theme} setTheme={setTheme} />;
+  }
+  return <AppShell theme={theme} setTheme={setTheme} />;
 }
 
 export function App() {
   return (
     <AnnouncerProvider>
       <AuthProvider>
-        <AppShell />
+        <Root />
       </AuthProvider>
     </AnnouncerProvider>
   );

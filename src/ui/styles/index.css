@@ -1513,6 +1513,68 @@ legend {
   }
 }
 
+/* ── Puerta de acceso (registro obligatorio en la nube) ───── */
+.gate {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(55rem 38rem at 82% -12%, var(--bg-glow), transparent 62%),
+    var(--bg);
+}
+
+.gate__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.gate__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 5vw, 3.5rem);
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 var(--space-5) var(--space-6);
+}
+
+.gate__auth {
+  width: 100%;
+}
+
+.gate__auth-kicker {
+  max-width: 26rem;
+  margin: 0 auto var(--space-3);
+  text-align: center;
+  font-weight: 700;
+}
+
+.gate--loading {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+@media (min-width: 56rem) {
+  .gate__body {
+    grid-template-columns: 1.05fr 1fr;
+  }
+  /* En dos columnas, el hero se alinea a la izquierda. */
+  .gate__hero .welcome {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .gate__hero .welcome__tagline {
+    margin-left: 0;
+  }
+}
+
 /* ── Avatar y red social ────────────────────────────────── */
 .avatar {
   display: inline-flex;
