@@ -497,9 +497,10 @@ p {
 }
 
 .main-nav a svg {
-  transition: transform var(--dur-2) var(--ease-out);
+  transition: transform var(--dur-2) var(--ease-spring);
 }
 
+.main-nav a:hover svg,
 .main-nav a[aria-current='page'] svg {
   transform: translateY(-1px);
 }
@@ -811,14 +812,15 @@ p {
 }
 
 .stat {
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
   padding: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.stat {
-  background: var(--surface-2);
+[data-theme='light'] .stat {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .stat .value {
@@ -1065,10 +1067,18 @@ textarea.input {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
+  /* Canto interior sutil: el campo se siente "rebajado", más táctil. */
+  box-shadow: inset 0 1px 2px rgba(16, 40, 30, 0.05);
   transition:
     border-color var(--dur-1) var(--ease-out),
     box-shadow var(--dur-1) var(--ease-out),
     background-color var(--dur-1) var(--ease-out);
+}
+
+[data-theme='dark'] .input,
+[data-theme='dark'] select.input,
+[data-theme='dark'] textarea.input {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 
 /* Select: se quita la flecha nativa y se pinta un chevron propio (sigue
