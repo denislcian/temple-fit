@@ -2089,6 +2089,37 @@ dialog[open]::backdrop {
   margin-bottom: 0.4rem;
 }
 
+/* Separador "o" y botón de Google en la pantalla de acceso. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9rem 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.btn--google {
+  width: 100%;
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  gap: 0.6rem;
+}
+
+.btn--google:hover {
+  background: #f5f6f7;
+  border-color: #c6c8cc;
+}
+
 /* Medidor de fuerza de la contraseña. */
 .pw-strength {
   margin-top: 0.45rem;

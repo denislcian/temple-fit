@@ -20,6 +20,8 @@ interface AuthContextValue {
   login: (emailOrUsername: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
+  /** Disponible solo si el servicio de auth lo soporta (Supabase). */
+  signInWithGoogle?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -67,8 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccount(null);
   }, []);
 
+  const signInWithGoogle = authService.signInWithGoogle
+    ? () => authService.signInWithGoogle!()
+    : undefined;
+
   return (
-    <AuthContext.Provider value={{ account, loading, register, login, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ account, loading, register, login, logout, refresh, signInWithGoogle }}
+    >
       {children}
     </AuthContext.Provider>
   );

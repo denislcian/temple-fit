@@ -76,6 +76,14 @@ export class SupabaseAuthService implements AuthService {
     return account;
   }
 
+  async signInWithGoogle(): Promise<void> {
+    const { error } = await this.sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw new Error('No se pudo iniciar sesión con Google');
+  }
+
   logout(): void {
     void this.sb.auth.signOut();
   }

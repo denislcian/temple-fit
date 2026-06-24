@@ -35,6 +35,8 @@ export interface AuthService {
   deleteAccount(id: string): Promise<void>;
   /** Suscripción a cambios de sesión (login/logout/confirmación). Opcional. */
   onAuthChange?(cb: () => void): () => void;
+  /** Inicio de sesión con Google (OAuth). Solo en la nube. */
+  signInWithGoogle?(): Promise<void>;
 }
 
 class LocalAuthService implements AuthService {
