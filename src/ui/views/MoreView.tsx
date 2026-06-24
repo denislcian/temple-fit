@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { ROUTE_LABELS, SECONDARY_ROUTES } from '../hooks/useHashRoute';
 
 const DESCRIPTIONS: Record<string, string> = {
+  coach: 'Tu entrenador adaptativo: ajustes según tu RPE, volumen y descanso',
   historial: 'Todas tus sesiones guardadas, sin límite temporal',
   rutinas: 'Tus plantillas y el generador de planes por objetivo',
   ejercicios: 'La biblioteca de movimientos en español',

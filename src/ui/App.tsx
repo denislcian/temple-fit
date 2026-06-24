@@ -30,6 +30,7 @@ import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
+import { CoachView } from './views/CoachView';
 import { DescansoView } from './views/DescansoView';
 import { RecipesView } from './views/RecipesView';
 import { ToolsView } from './views/ToolsView';
@@ -164,6 +165,15 @@ const ICONS: Record<Route, ReactNode> = {
       <rect x="16" y="6.5" width="3" height="13.5" rx="0.8" />
     </svg>
   ),
+  coach: (
+    // Diana: objetivo y guía adaptativa.
+    <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" {...FILL_SOFT} />
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none" />
+    </svg>
+  ),
   ajustes: (
     // Deslizadores: claro e inequívoco para "Ajustes".
     <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
@@ -178,7 +188,7 @@ const ICONS: Record<Route, ReactNode> = {
 
 // Agrupación de la barra lateral de escritorio (en móvil: 5 pestañas + Más).
 const NAV_GROUPS: Array<{ label: string; routes: Route[] }> = [
-  { label: 'Entrenamiento', routes: ['entrenar', 'rutinas', 'ejercicios', 'herramientas', 'historial'] },
+  { label: 'Entrenamiento', routes: ['entrenar', 'coach', 'rutinas', 'ejercicios', 'herramientas', 'historial'] },
   { label: 'Seguimiento', routes: ['progreso', 'nutricion', 'recetas'] },
   { label: 'Bienestar', routes: ['descanso'] },
   { label: 'Comunidad', routes: ['social'] },
@@ -355,6 +365,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
           // por ruta (render condicional), igual que antes.
           <div className="app-view">
             {route === 'entrenar' && <TrainView />}
+            {route === 'coach' && <CoachView />}
             {route === 'nutricion' && <NutritionView />}
             {route === 'social' && <SocialView />}
             {route === 'mas' && <MoreView icons={ICONS} />}

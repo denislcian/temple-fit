@@ -9,6 +9,7 @@ export const ROUTES = [
   'nutricion',
   'social',
   'progreso',
+  'coach',
   'historial',
   'rutinas',
   'ejercicios',
@@ -26,6 +27,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   nutricion: 'Nutrición',
   social: 'Comunidad',
   progreso: 'Progreso',
+  coach: 'Coach',
   historial: 'Historial',
   rutinas: 'Rutinas',
   ejercicios: 'Ejercicios',
@@ -40,6 +42,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
 export const PRIMARY_ROUTES: readonly Route[] = ['entrenar', 'nutricion', 'social', 'progreso'];
 /** Solo en la cabecera de escritorio; en móvil viven dentro de "Más". */
 export const SECONDARY_ROUTES: readonly Route[] = [
+  'coach',
   'historial',
   'rutinas',
   'ejercicios',

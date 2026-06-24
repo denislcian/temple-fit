@@ -1601,6 +1601,89 @@ legend {
   }
 }
 
+/* ── Coach adaptativo ───────────────────────────────────── */
+.coach-verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  border-left: 4px solid var(--accent);
+}
+
+.coach-verdict--cargado {
+  border-left-color: var(--accent-2);
+}
+.coach-verdict--descansado {
+  border-left-color: var(--success);
+}
+
+.coach-fatiga {
+  font-size: 2.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.coach-recs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.coach-rec {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+}
+
+.coach-rec--alerta {
+  border-left-color: var(--accent-2);
+}
+.coach-rec--ajuste {
+  border-left-color: var(--accent-2);
+}
+.coach-rec--positivo {
+  border-left-color: var(--success);
+}
+.coach-rec--info {
+  border-left-color: var(--accent);
+}
+
+.coach-rec__icon {
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.coach-rec__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.coach-rec__body .title {
+  font-weight: 700;
+}
+
+.coach-rec__src {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.1rem;
+}
+
+.coach-foco {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
 /* ── Avatar y red social ────────────────────────────────── */
 .avatar {
   display: inline-flex;
