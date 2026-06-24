@@ -1,16 +1,18 @@
 // CAPA 3 · Interfaz — Descanso: sonidos para dormir (Web Audio procedural) y
 // respiración guiada. Sin ficheros, sin red: todo se genera en el dispositivo.
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
+import { loadRecoveryDays, markRecoveryDay } from '../../data/recovery';
 import { MUSIC_TRACKS, SOUNDSCAPES, trackUrl } from '../audio/soundscapes';
 import { BREATH_PATTERNS } from '../../domain/breathing';
+import { recoveryStreak } from '../../domain/recoveryStreak';
 import { BreathingGuide } from '../components/BreathingGuide';
 import { SelectField } from '../components/Field';
 import { SleepReport } from '../components/SleepReport';
 import { SleepTracker } from '../components/SleepTracker';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useSoundscape } from '../hooks/useSoundscape';
-import { formatShortDate } from '../utils/format';
+import { formatShortDate, localDateISO } from '../utils/format';
 
 const SLEEP_TIMERS = [15, 30, 60];
 const SESSION_MINUTES = [1, 3, 5, 10];
@@ -23,6 +25,20 @@ export function DescansoView() {
   const { data: nights, reload: reloadNights } = useAsyncData(
     useCallback(() => getAllSleepSessions(), []),
   );
+  const [recoveryVersion, setRecoveryVersion] = useState(0);
+
+  function markToday() {
+    markRecoveryDay(localDateISO());
+    setRecoveryVersion((v) => v + 1);
+  }
+
+  // La racha cuenta sueño registrado + respiraciones completadas (unión de
+  // fechas), siempre solo desde el dispositivo.
+  const streak = useMemo(() => {
+    const days = [...loadRecoveryDays(), ...(nights ?? []).map((n) => n.date)];
+    return recoveryStreak(days, localDateISO());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nights, recoveryVersion]);
 
   return (
     <>
@@ -31,12 +47,36 @@ export function DescansoView() {
         Descanso
       </h1>
 
+      {streak.total > 0 && (
+        <section className="card recovery-streak" aria-labelledby="rstreak-heading">
+          <span className="recovery-streak__flame" aria-hidden="true">
+            {streak.current > 0 ? '🔥' : '🌙'}
+          </span>
+          <div>
+            <h2 id="rstreak-heading" style={{ margin: 0 }}>
+              Racha de recuperación
+            </h2>
+            <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+              {streak.current > 0
+                ? `${streak.current} ${streak.current === 1 ? 'día' : 'días'} seguidos cuidándote.`
+                : 'Retoma hoy tu racha con una respiración o registrando el sueño.'}
+              {streak.best > streak.current ? ` Tu mejor racha: ${streak.best}.` : ''}
+            </p>
+          </div>
+        </section>
+      )}
+
       <section className="card" aria-labelledby="sleep-heading">
         <h2 id="sleep-heading">Seguimiento del sueño</h2>
         <p className="muted">
           Un reloj de noche con alarma que, además, escucha y detecta tus ruidos y ronquidos.
         </p>
-        <SleepTracker onSaved={reloadNights} />
+        <SleepTracker
+          onSaved={() => {
+            markToday();
+            reloadNights();
+          }}
+        />
 
         {nights && nights.length > 0 && (
           <div style={{ marginTop: '1rem' }}>
@@ -185,7 +225,12 @@ export function DescansoView() {
         </div>
 
         {/* key reinicia la guía al cambiar de ejercicio o duración. */}
-        <BreathingGuide key={`${patternId}-${sessionMin}`} pattern={pattern} durationMin={sessionMin} />
+        <BreathingGuide
+          key={`${patternId}-${sessionMin}`}
+          pattern={pattern}
+          durationMin={sessionMin}
+          onComplete={markToday}
+        />
       </section>
     </>
   );

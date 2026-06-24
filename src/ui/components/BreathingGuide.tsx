@@ -9,6 +9,8 @@ interface BreathingGuideProps {
   pattern: BreathPattern;
   /** Duración de la sesión en minutos. */
   durationMin: number;
+  /** Se llama cuando la sesión termina completa (no al detener a mano). */
+  onComplete?: () => void;
 }
 
 const MIN_SCALE = 0.55;
@@ -20,7 +22,7 @@ function targetScale(kind: string, prevWasExhala: boolean): number {
   return prevWasExhala ? MIN_SCALE : MAX_SCALE; // mantén: conserva
 }
 
-export function BreathingGuide({ pattern, durationMin }: BreathingGuideProps) {
+export function BreathingGuide({ pattern, durationMin, onComplete }: BreathingGuideProps) {
   const announce = useAnnounce();
   const [running, setRunning] = useState(false);
   const [scale, setScale] = useState(MIN_SCALE);
@@ -74,7 +76,10 @@ export function BreathingGuide({ pattern, durationMin }: BreathingGuideProps) {
     setTransition(0.4);
     setLabel(completed ? 'Sesión completada' : 'Prepárate');
     setCountdown(0);
-    if (completed) announce('Sesión de respiración completada. Buen trabajo.');
+    if (completed) {
+      announce('Sesión de respiración completada. Buen trabajo.');
+      onComplete?.();
+    }
   }
 
   const mm = Math.floor(sessionLeft / 60);

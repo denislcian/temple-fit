@@ -5,7 +5,9 @@ import { db } from '../../data/db';
 import { getAllMeasurements } from '../../data/repositories/bodyRepo';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
+import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { achievements, trainingCalendar, weeklyStreak } from '../../domain/consistency';
+import { effortRecoveryInsight, weeklyEffortRecovery } from '../../domain/effortRecovery';
 import { computeRecords } from '../../domain/records';
 import { exerciseProgression, summarizeProgress, totals } from '../../domain/stats';
 import { weeklyVolume } from '../../domain/volume';
@@ -33,6 +35,7 @@ export default function ProgressView() {
   const { data: measurements, reload: reloadBody } = useAsyncData(
     useCallback(() => getAllMeasurements(), []),
   );
+  const { data: sleep } = useAsyncData(useCallback(() => getAllSleepSessions(), []));
   const { data: extras } = useAsyncData(
     useCallback(async () => {
       const [diary, posts] = await Promise.all([db.diary.toArray(), db.posts.toArray()]);
@@ -104,6 +107,12 @@ export default function ProgressView() {
   const streak = weeklyStreak(sessions, today);
   const calendar = trainingCalendar(sessions, today, 12);
   const trainedDays = calendar.filter((d) => d.sessions > 0).length;
+  const effortRecovery = weeklyEffortRecovery(sessions, sleep ?? []);
+  const effortInsight = effortRecoveryInsight(effortRecovery);
+  const effortRows = effortRecovery
+    .filter((w) => w.avgRpe !== null || w.avgSleepMin !== null)
+    .slice(-8);
+  const hasEffortData = effortRows.some((w) => w.avgRpe !== null);
   const badges = extras
     ? achievements({ sessions, diary: extras.diary, posts: extras.posts, todayISO: today })
     : [];
@@ -172,6 +181,37 @@ export default function ProgressView() {
           ))}
         </div>
       </section>
+
+      {hasEffortData && (
+        <section className="card" aria-labelledby="effort-heading">
+          <h2 id="effort-heading">Esfuerzo y descanso</h2>
+          <p className="chart-summary">
+            {effortInsight ??
+              'Tu RPE medio y tu sueño por semana. Lo que el coach cruza para ajustar tus cargas.'}
+          </p>
+          <table className="table">
+            <caption className="visually-hidden">RPE medio y sueño medio por semana</caption>
+            <thead>
+              <tr>
+                <th scope="col">Semana del</th>
+                <th scope="col">RPE medio</th>
+                <th scope="col">Sueño medio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {effortRows.map((w) => (
+                <tr key={w.weekStart}>
+                  <td>{formatShortDate(`${w.weekStart}T00:00:00.000Z`)}</td>
+                  <td className="num">{w.avgRpe ?? '—'}</td>
+                  <td className="num">
+                    {w.avgSleepMin !== null ? `${Math.round((w.avgSleepMin / 60) * 10) / 10} h` : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {badges.length > 0 && (
         <section className="card" aria-labelledby="badges-heading">
