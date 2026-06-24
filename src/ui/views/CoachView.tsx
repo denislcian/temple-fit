@@ -5,8 +5,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
+import { AI_PROVIDERS } from '../../data/aiProviders';
 import { generateCoachMessage, type CoachMessage } from '../../data/coach';
-import { loadGeminiKey } from '../../data/profile';
+import { loadAIKey, loadCoachProvider } from '../../data/profile';
 import { buildCoachContext } from '../../domain/coach/coachContext';
 import { evaluateCoach, fatigueVerdict, type CoachTone } from '../../domain/coach/coachRules';
 import { suggestProgram } from '../../domain/coach/programs';
@@ -74,7 +75,8 @@ export function CoachView() {
   const program = useMemo(() => suggestProgram(goal, level, days), [goal, level, days]);
   const nameById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e.name])), [exercises]);
 
-  const hasKey = loadGeminiKey().trim().length > 0;
+  const provider = loadCoachProvider();
+  const hasKey = loadAIKey(provider).trim().length > 0;
 
   async function askAi() {
     if (!ctx || !verdict) return;
@@ -82,7 +84,7 @@ export function CoachView() {
     setAiError('');
     setAi(null);
     try {
-      const msg = await generateCoachMessage(loadGeminiKey(), {
+      const msg = await generateCoachMessage(provider, loadAIKey(provider), {
         verdict,
         recommendations: recs,
         context: {
@@ -182,8 +184,8 @@ export function CoachView() {
         ) : (
           <p className="muted" style={{ marginTop: '0.25rem' }}>
             {hasKey
-              ? 'Pídele al coach IA que resuma cómo estás y qué priorizar hoy, en lenguaje natural.'
-              : 'Activa la IA añadiendo tu clave gratuita de Gemini en Ajustes y tendrás un consejo redactado para ti. El análisis de abajo funciona igual sin clave.'}
+              ? `Pídele al coach (${AI_PROVIDERS[provider].label.replace(' (recomendado)', '')}) que resuma cómo estás y qué priorizar hoy, en lenguaje natural.`
+              : 'Activa la IA en Ajustes con una clave gratuita (Groq, OpenRouter, Cerebras o Gemini) y tendrás un consejo redactado para ti. El análisis de abajo funciona igual sin clave.'}
           </p>
         )}
         {aiError && (
