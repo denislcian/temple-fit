@@ -10,6 +10,7 @@ import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllRoutines } from '../../data/repositories/routineRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { socialRepo } from '../../data/repositories/socialRepo';
+import { isSupabaseEnabled } from '../../data/supabase';
 import { visiblePosts } from '../../domain/feed';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
@@ -231,11 +232,13 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         </button>
       </div>
 
-      <p className="hint" role="note">
-        Modo local de demostración: las cuentas y el feed viven en este dispositivo. La seguridad y
-        la privacidad reales (servidor, políticas por fila) llegan con la fase en la nube — ver{' '}
-        docs/SECURITY.md.
-      </p>
+      {!isSupabaseEnabled && (
+        <p className="hint" role="note">
+          Modo local de demostración: las cuentas y el feed viven en este dispositivo. La seguridad y
+          la privacidad reales (servidor, políticas por fila) llegan con la fase en la nube — ver{' '}
+          docs/SECURITY.md.
+        </p>
+      )}
 
       <div className="btn-row" style={{ marginBottom: '1rem' }}>
         <button type="button" className="btn btn--primary" onClick={() => setPublishing(true)}>

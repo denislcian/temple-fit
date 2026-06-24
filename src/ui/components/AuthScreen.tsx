@@ -1,7 +1,9 @@
 // CAPA 3 · Interfaz — Registro / inicio de sesión.
-// Puerta de entrada a la red social (Comunidad). Cumple WCAG 3.3.8: permite
-// pegar y autocompletar (gestores de contraseñas), sin CAPTCHA cognitivo.
+// Puerta de entrada a la Comunidad. Cumple WCAG 3.3.8: permite pegar y
+// autocompletar (gestores de contraseñas), sin CAPTCHA cognitivo.
+// En la nube (Supabase) el acceso es por email + contraseña con confirmación.
 import { useState } from 'react';
+import { isSupabaseEnabled } from '../../data/supabase';
 import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
 import { TextField } from './Field';
@@ -11,22 +13,43 @@ type Mode = 'login' | 'register';
 export function AuthScreen() {
   const announce = useAnnounce();
   const { login, register } = useAuth();
+  const cloud = isSupabaseEnabled;
   const [mode, setMode] = useState<Mode>('login');
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  function switchMode(m: Mode) {
+    setMode(m);
+    setError(null);
+    setInfo(null);
+  }
 
   async function submit() {
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
       if (mode === 'register') {
-        await register({ username, displayName, password });
-        announce(`Cuenta creada. Bienvenido, ${displayName}`);
+        const { needsConfirmation } = await register({
+          ...(cloud ? { email } : {}),
+          username,
+          displayName,
+          password,
+        });
+        if (needsConfirmation) {
+          setInfo('Te hemos enviado un email para confirmar tu cuenta. Ábrelo y luego inicia sesión.');
+          setMode('login');
+          setPassword('');
+        } else {
+          announce(`Cuenta creada. Bienvenido, ${displayName}`);
+        }
       } else {
-        await login(username, password);
+        await login(cloud ? email : username, password);
         announce('Sesión iniciada');
       }
     } catch (e) {
@@ -39,10 +62,10 @@ export function AuthScreen() {
   return (
     <div className="card card--accent" style={{ maxWidth: '26rem', margin: '0 auto' }}>
       <div className="segmented" role="group" aria-label="Acceder o crear cuenta">
-        <button type="button" aria-pressed={mode === 'login'} onClick={() => { setMode('login'); setError(null); }}>
+        <button type="button" aria-pressed={mode === 'login'} onClick={() => switchMode('login')}>
           Iniciar sesión
         </button>
-        <button type="button" aria-pressed={mode === 'register'} onClick={() => { setMode('register'); setError(null); }}>
+        <button type="button" aria-pressed={mode === 'register'} onClick={() => switchMode('register')}>
           Crear cuenta
         </button>
       </div>
@@ -53,13 +76,31 @@ export function AuthScreen() {
           submit();
         }}
       >
-        <TextField
-          label="Nombre de usuario"
-          value={username}
-          onChange={setUsername}
-          autoComplete="username"
-          hint={mode === 'register' ? '3-20 caracteres: letras, números, _ o .' : undefined}
-        />
+        {cloud && (
+          <div className="field">
+            <label htmlFor="auth-email">Email</label>
+            <input
+              id="auth-email"
+              className="input"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+        )}
+
+        {(!cloud || mode === 'register') && (
+          <TextField
+            label="Nombre de usuario"
+            value={username}
+            onChange={setUsername}
+            autoComplete="username"
+            hint={mode === 'register' ? '3-20 caracteres: letras, números, _ o .' : undefined}
+          />
+        )}
+
         {mode === 'register' && (
           <TextField
             label="Nombre para mostrar"
@@ -68,7 +109,7 @@ export function AuthScreen() {
             autoComplete="nickname"
           />
         )}
-        {/* Campo de contraseña: type=password, permite pegar y autocompletar. */}
+
         <div className="field">
           <label htmlFor="auth-password">Contraseña</label>
           {mode === 'register' && (
@@ -87,6 +128,11 @@ export function AuthScreen() {
           />
         </div>
 
+        {info && (
+          <p className="notice notice--success" role="status">
+            {info}
+          </p>
+        )}
         {error && (
           <p className="notice notice--error" role="alert">
             {error}
@@ -101,9 +147,9 @@ export function AuthScreen() {
       </form>
 
       <p className="hint" style={{ marginTop: '0.75rem' }}>
-        Modo local de demostración: tu cuenta vive solo en este dispositivo. La seguridad real
-        (servidor, contraseñas cifradas, privacidad aplicada) llega con la fase en la nube —
-        ver docs/SECURITY.md.
+        {cloud
+          ? 'Tu cuenta y la comunidad viven en la nube (Supabase), con la privacidad de cada publicación impuesta en el servidor. Tus entrenos, nutrición y sueño siguen solo en tu dispositivo.'
+          : 'Modo local de demostración: tu cuenta vive solo en este dispositivo. La seguridad real llega con la fase en la nube — ver docs/SECURITY.md.'}
       </p>
     </div>
   );

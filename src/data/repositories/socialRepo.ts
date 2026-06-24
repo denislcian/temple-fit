@@ -227,4 +227,11 @@ async function ensureSeeded(): Promise<void> {
   await db.posts.bulkAdd(demoPosts);
 }
 
-export const socialRepo: SocialRepository = new LocalSocialRepository();
+import { isSupabaseEnabled, supabase } from '../supabase';
+import { SupabaseSocialRepository } from './supabaseSocialRepo';
+
+// En la nube (credenciales presentes) usa Supabase; si no, el feed local.
+export const socialRepo: SocialRepository =
+  isSupabaseEnabled && supabase
+    ? new SupabaseSocialRepository(supabase)
+    : new LocalSocialRepository();

@@ -19,18 +19,31 @@ import { newId } from '../models';
 const SESSION_KEY = 'forjafit-session';
 
 export interface AuthService {
-  register(input: { username: string; displayName: string; password: string }): Promise<Account>;
-  login(username: string, password: string): Promise<Account>;
+  /** Devuelve la cuenta, o null si el registro requiere confirmar el email. */
+  register(input: {
+    email?: string;
+    username: string;
+    displayName: string;
+    password: string;
+  }): Promise<Account | null>;
+  login(emailOrUsername: string, password: string): Promise<Account>;
   logout(): void;
-  currentAccountId(): string | null;
+  currentAccountId(): Promise<string | null>;
   getAccount(id: string): Promise<Account | undefined>;
   updateProfile(id: string, changes: Partial<Pick<Account, 'displayName' | 'bio' | 'privateProfile'>>): Promise<void>;
   changePassword(id: string, current: string, next: string): Promise<void>;
   deleteAccount(id: string): Promise<void>;
+  /** Suscripción a cambios de sesión (login/logout/confirmación). Opcional. */
+  onAuthChange?(cb: () => void): () => void;
 }
 
 class LocalAuthService implements AuthService {
-  async register(input: { username: string; displayName: string; password: string }): Promise<Account> {
+  async register(input: {
+    email?: string;
+    username: string;
+    displayName: string;
+    password: string;
+  }): Promise<Account> {
     const username = normalizeUsername(input.username);
     const uErr = validateUsername(username);
     if (uErr) throw new Error(uErr);
@@ -78,7 +91,7 @@ class LocalAuthService implements AuthService {
     localStorage.removeItem(SESSION_KEY);
   }
 
-  currentAccountId(): string | null {
+  async currentAccountId(): Promise<string | null> {
     return localStorage.getItem(SESSION_KEY);
   }
 
@@ -124,10 +137,15 @@ class LocalAuthService implements AuthService {
         .toArray();
       await db.follows.bulkDelete(rel.map((f) => f.id));
     });
-    if (this.currentAccountId() === id) this.logout();
+    if ((await this.currentAccountId()) === id) this.logout();
   }
 }
 
-export const authService: AuthService = new LocalAuthService();
+import { isSupabaseEnabled, supabase } from '../supabase';
+import { SupabaseAuthService } from './supabaseAuthRepo';
+
+// En la nube (credenciales presentes) usa Supabase Auth; si no, modo local.
+export const authService: AuthService =
+  isSupabaseEnabled && supabase ? new SupabaseAuthService(supabase) : new LocalAuthService();
 
 export type { PublicAccount };
