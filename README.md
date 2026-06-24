@@ -2,8 +2,7 @@
 
 > **PWA de registro de entrenamientos de fuerza: gratis, sin cuentas, 100% offline y accesible (WCAG 2.2 AA).** Regala exactamente lo que las apps comerciales cobran — rutinas ilimitadas, historial completo, analítica y export de datos — y funciona donde se usa: un gimnasio sin cobertura.
 
-![CI](https://github.com/TU_USUARIO/forjafit/actions/workflows/ci.yml/badge.svg)
-*(sustituye `TU_USUARIO` al subirlo a GitHub; el badge se activa solo)*
+![CI](https://github.com/denislcian/temple-fit/actions/workflows/ci.yml/badge.svg)
 
 **Stack:** React 19 · TypeScript estricto · Vite 8 · Dexie/IndexedDB · Recharts · vite-plugin-pwa (Workbox) · Vitest + Testing Library + axe-core · GitHub Actions
 **Coste total del proyecto: 0 €** — todas las herramientas y servicios son gratuitos.
@@ -102,8 +101,8 @@ Y desde la fase 5, una vuelta de perfeccionamiento (UX viva, más herramientas y
 Necesitas [Node.js](https://nodejs.org/) 20.19+ o 22+ (gratis).
 
 ```bash
-git clone https://github.com/TU_USUARIO/forjafit.git
-cd forjafit
+git clone https://github.com/denislcian/temple-fit.git
+cd temple-fit
 npm install        # instala las dependencias
 npm run dev        # abre http://localhost:5173
 ```
@@ -264,13 +263,13 @@ La accesibilidad es el ángulo diferenciador del proyecto: **ningún competidor 
 
 ### Opción A — GitHub Pages (recomendada: todo en un ecosistema)
 
-1. Crea un repo **público** en GitHub llamado `forjafit` y sube el código:
+1. Repo en GitHub: [`denislcian/temple-fit`](https://github.com/denislcian/temple-fit). Sube el código:
    ```bash
-   git remote add origin https://github.com/TU_USUARIO/forjafit.git
+   git remote add origin https://github.com/denislcian/temple-fit.git
    git push -u origin main
    ```
 2. En el repo: **Settings → Pages → Source: "GitHub Actions"**.
-3. Listo. El workflow [deploy.yml](.github/workflows/deploy.yml) ya incluido publica la app en `https://TU_USUARIO.github.io/forjafit/` en cada push a `main` (el `base: './'` de Vite ya está configurado para que funcione en esa subruta).
+3. Listo. El workflow [deploy.yml](.github/workflows/deploy.yml) ya incluido publica la app en `https://denislcian.github.io/temple-fit/` en cada push a `main` (el `base: './'` de Vite ya está configurado para que funcione en esa subruta).
 
 ### Opción B — Cloudflare Pages (ancho de banda ilimitado)
 

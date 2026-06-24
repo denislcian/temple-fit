@@ -22,5 +22,6 @@ src/img/*
 !src/img/README.md
 
 # Originales WAV de la musica (~35 MB c/u): solo se versionan los MP3
-# comprimidos en public/music/.
-music/
+# comprimidos en public/music/. La barra inicial ancla la regla a la raiz para
+# NO ignorar tambien public/music/ (donde viven los MP3 que usa la app).
+/music/

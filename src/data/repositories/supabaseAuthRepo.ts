@@ -20,6 +20,13 @@ interface ProfileRow {
   created_at: string;
 }
 
+/** URL base de la app (sin hash) a la que Supabase debe devolver tras OAuth o
+ *  confirmar el email. En GitHub Pages incluye la subruta (/temple-fit/); en
+ *  local es http://localhost:3000/. */
+function appReturnUrl(): string {
+  return window.location.origin + window.location.pathname;
+}
+
 function toAccount(p: ProfileRow): Account {
   return {
     id: p.id,
@@ -56,7 +63,7 @@ export class SupabaseAuthService implements AuthService {
       password: input.password,
       options: {
         data: { username, display_name: input.displayName.trim() },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: appReturnUrl(),
       },
     });
     if (error) throw new Error(traducir(error.message));
@@ -79,7 +86,7 @@ export class SupabaseAuthService implements AuthService {
   async signInWithGoogle(): Promise<void> {
     const { error } = await this.sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: appReturnUrl() },
     });
     if (error) throw new Error('No se pudo iniciar sesión con Google');
   }
