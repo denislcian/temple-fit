@@ -1,81 +1,64 @@
 // CAPA 3 · Interfaz — Bienvenida del primer arranque.
-// Tres pasos que presentan la app y su propuesta de valor. Se muestra una
-// sola vez (marca hasOnboarded). Accesible: usa el <dialog> nativo (focus
-// trap + Escape) y anuncia cada paso.
-import { useState } from 'react';
+// Una sola pantalla que presenta la app: emblema, propuesta de valor y los seis
+// pilares de la plataforma. Se muestra una vez (marca hasOnboarded). Accesible:
+// usa el <dialog> nativo (focus trap + Escape) con su propio titular de nivel 2.
 import { markOnboarded } from '../../data/profile';
-import { useAnnounce } from './Announcer';
 import { AppDialog } from './AppDialog';
 
-interface Slide {
+interface Pillar {
   icon: string;
-  title: string;
-  body: string;
+  label: string;
+  desc: string;
 }
 
-const SLIDES: Slide[] = [
-  {
-    icon: '🔥',
-    title: 'Bienvenido a Temple',
-    body: 'Tu cuaderno de gimnasio: registra tus entrenamientos de fuerza, tu nutrición y tu progreso. Gratis, sin cuentas y funcionando sin conexión.',
-  },
-  {
-    icon: '🛡️',
-    title: 'Tus datos son tuyos',
-    body: 'Todo se guarda solo en este dispositivo: nada de servidores ni rastreo. Puedes exportar e importar tus datos cuando quieras desde Ajustes.',
-  },
-  {
-    icon: '💪',
-    title: 'Todo en un sitio',
-    body: 'Entrena con plantillas y progresión sugerida, cuenta calorías y macros (incluso por foto), sigue tu peso y tus récords, y comparte rutinas en la comunidad.',
-  },
+const PILLARS: Pillar[] = [
+  { icon: '🏋️', label: 'Entrena', desc: 'Rutinas y progresión' },
+  { icon: '📈', label: 'Progreso', desc: 'Peso, récords y gráficas' },
+  { icon: '🥗', label: 'Nutrición', desc: 'Calorías y macros, por foto' },
+  { icon: '🌙', label: 'Descanso', desc: 'Sonidos, respiración y sueño' },
+  { icon: '🍳', label: 'Recetas', desc: 'Saludables y filtrables' },
+  { icon: '👥', label: 'Comunidad', desc: 'Comparte y sigue a otros' },
 ];
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
-  const announce = useAnnounce();
-  const [step, setStep] = useState(0);
-  const slide = SLIDES[step]!;
-  const isLast = step === SLIDES.length - 1;
-
   function finish() {
     markOnboarded();
     onDone();
   }
 
-  function next() {
-    if (isLast) {
-      finish();
-      return;
-    }
-    const n = step + 1;
-    setStep(n);
-    announce(`${SLIDES[n]!.title}. Paso ${n + 1} de ${SLIDES.length}`);
-  }
-
   return (
-    <AppDialog open title={slide.title} onClose={finish}>
-      <div className="onboarding">
-        <span className="onboarding-icon" aria-hidden="true">
-          {slide.icon}
+    <AppDialog open title="Bienvenido a Temple" onClose={finish} hideTitleHeading>
+      <div className="welcome">
+        <span className="welcome__emblem" aria-hidden="true">
+          🔥
         </span>
-        <p>{slide.body}</p>
+        <h2 className="welcome__title">Bienvenido a Temple</h2>
+        <p className="welcome__tagline">
+          Tu plataforma de salud y entrenamiento. Todo en un sitio, contigo siempre.
+        </p>
 
-        <div className="onboarding-dots" aria-hidden="true">
-          {SLIDES.map((_, i) => (
-            <span key={i} className={`dot ${i === step ? 'active' : ''}`} />
+        <ul className="welcome__pillars">
+          {PILLARS.map((p) => (
+            <li key={p.label}>
+              <span className="welcome__pillar-icon" aria-hidden="true">
+                {p.icon}
+              </span>
+              <span className="welcome__pillar-text">
+                <span className="welcome__pillar-label">{p.label}</span>
+                <span className="welcome__pillar-desc">{p.desc}</span>
+              </span>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        <div className="btn-row" style={{ justifyContent: isLast ? 'center' : 'space-between' }}>
-          {!isLast && (
-            <button type="button" className="btn btn--ghost" onClick={finish}>
-              Saltar
-            </button>
-          )}
-          <button type="button" className="btn btn--primary" onClick={next}>
-            {isLast ? 'Empezar a entrenar' : 'Siguiente'}
-          </button>
-        </div>
+        <p className="welcome__privacy">
+          <span aria-hidden="true">🔒</span> Tus entrenos, nutrición y sueño se guardan solo en tu
+          dispositivo. La comunidad es opcional.
+        </p>
+
+        <button type="button" className="btn btn--primary welcome__cta" onClick={finish}>
+          Empezar
+        </button>
       </div>
     </AppDialog>
   );

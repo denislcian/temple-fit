@@ -27,9 +27,7 @@ describe('App', () => {
     localStorage.removeItem('forjafit-onboarded');
     render(<App />);
     expect(await screen.findByRole('heading', { name: /bienvenido a temple/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
-    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /empezar a entrenar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^empezar$/i }));
     expect(screen.queryByRole('heading', { name: /bienvenido a temple/i })).not.toBeInTheDocument();
     expect(localStorage.getItem('forjafit-onboarded')).toBe('1');
   });

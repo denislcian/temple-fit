@@ -11,9 +11,12 @@ interface AppDialogProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Oculta el <h2> por defecto cuando el contenido aporta su propio titular.
+   *  El nombre accesible del diálogo se mantiene vía aria-label. */
+  hideTitleHeading?: boolean;
 }
 
-export function AppDialog({ open, title, onClose, children }: AppDialogProps) {
+export function AppDialog({ open, title, onClose, children, hideTitleHeading }: AppDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
@@ -53,7 +56,7 @@ export function AppDialog({ open, title, onClose, children }: AppDialogProps) {
     <dialog ref={ref} onClose={onClose} aria-label={title}>
       {open && (
         <>
-          <h2>{title}</h2>
+          {!hideTitleHeading && <h2>{title}</h2>}
           {children}
         </>
       )}
