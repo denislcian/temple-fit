@@ -103,21 +103,30 @@ function isTrivialSequence(s: string): boolean {
 }
 
 /**
- * Política moderna: longitud mínima de 8, pero las cortas (< 12) deben combinar
- * al menos 3 tipos de carácter; las largas (passphrases) pasan sin exigir
- * símbolos. Se rechazan las contraseñas comunes y las secuencias triviales.
+ * Política de ALTA SEGURIDAD: mínimo 12 caracteres con minúscula, mayúscula,
+ * número Y símbolo obligatorios. Además se rechazan las contraseñas comunes y
+ * las secuencias/repeticiones triviales.
  */
+export const PASSWORD_MIN = 12;
+
 export function validatePassword(raw: string): string | null {
-  if (raw.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+  if (raw.length < PASSWORD_MIN) {
+    return `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`;
+  }
   if (raw.length > 100) return 'La contraseña es demasiado larga';
+
+  const missing: string[] = [];
+  if (!/[a-z]/.test(raw)) missing.push('una minúscula');
+  if (!/[A-Z]/.test(raw)) missing.push('una mayúscula');
+  if (!/\d/.test(raw)) missing.push('un número');
+  if (!/[^a-zA-Z0-9]/.test(raw)) missing.push('un símbolo (! ? @ # _ - …)');
+  if (missing.length > 0) return `Añade ${missing.join(', ')}`;
+
   if (COMMON_PASSWORDS.has(raw.toLowerCase())) {
     return 'Esa contraseña es demasiado común; elige otra';
   }
   if (isTrivialSequence(raw)) {
     return 'Evita secuencias o caracteres repetidos (como 12345678 o aaaaaaaa)';
-  }
-  if (raw.length < 12 && charClasses(raw) < 3) {
-    return 'Combina mayúsculas, minúsculas, números o símbolos — o usa una contraseña más larga (12+)';
   }
   return null;
 }
@@ -130,19 +139,22 @@ export interface PasswordStrength {
 
 const STRENGTH_LABELS = ['Muy débil', 'Débil', 'Aceptable', 'Buena', 'Fuerte'];
 
-/** Fuerza orientativa para el medidor visual (no es la validación). */
+/** Fuerza orientativa para el medidor visual (no es la validación). Mientras
+ *  no cumpla la política de alta seguridad, se muestra como "Débil" como mucho. */
 export function passwordStrength(raw: string): PasswordStrength {
   if (!raw) return { score: 0, label: STRENGTH_LABELS[0]! };
   if (COMMON_PASSWORDS.has(raw.toLowerCase()) || isTrivialSequence(raw)) {
     return { score: 0, label: STRENGTH_LABELS[0]! };
   }
   let points = 0;
-  if (raw.length >= 8) points++;
   if (raw.length >= 12) points++;
   if (raw.length >= 16) points++;
+  if (raw.length >= 20) points++;
   const classes = charClasses(raw);
-  if (classes >= 2) points++;
   if (classes >= 3) points++;
-  const score = Math.min(4, points) as PasswordStrength['score'];
-  return { score, label: STRENGTH_LABELS[score]! };
+  if (classes >= 4) points++;
+  let score = Math.min(4, points);
+  // Hasta que cumple los requisitos (12+, 4 tipos), no pasa de "Débil".
+  if (validatePassword(raw) !== null) score = Math.min(score, 1);
+  return { score: score as PasswordStrength['score'], label: STRENGTH_LABELS[score]! };
 }

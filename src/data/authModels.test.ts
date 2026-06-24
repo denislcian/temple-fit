@@ -27,31 +27,24 @@ describe('authModels — validación', () => {
     expect(validateDisplayName('Dani')).toBeNull();
   });
 
-  it('exige al menos 8 caracteres', () => {
-    expect(validatePassword('corta')).toMatch(/al menos 8/);
-    expect(validatePassword('a'.repeat(101))).toMatch(/demasiado larga/);
+  it('exige al menos 12 caracteres', () => {
+    expect(validatePassword('Aa1!aaaa')).toMatch(/12 caracteres/); // 8
+    expect(validatePassword('A'.repeat(101))).toMatch(/demasiado larga/);
   });
 
-  it('rechaza contraseñas comunes y secuencias triviales', () => {
-    expect(validatePassword('password')).toMatch(/común/);
-    expect(validatePassword('12345678')).toMatch(/común|secuencias/);
-    expect(validatePassword('abcdefgh')).toMatch(/secuencias/);
-    expect(validatePassword('aaaaaaaa')).toMatch(/secuencias|repetidos/);
+  it('exige minúscula, mayúscula, número y símbolo (alta seguridad)', () => {
+    expect(validatePassword('alllowercase12!@')).toMatch(/mayúscula/);
+    expect(validatePassword('ALLUPPERCASE12!@')).toMatch(/minúscula/);
+    expect(validatePassword('NoNumbersHere!!@')).toMatch(/número/);
+    expect(validatePassword('NoSymbolsHere123')).toMatch(/símbolo/);
+    expect(validatePassword('Temple7x!Run_42')).toBeNull(); // 15, los 4 tipos
   });
 
-  it('a las cortas (<12) les exige variedad de caracteres', () => {
-    expect(validatePassword('sololetras')).toMatch(/Combina|más larga/); // 10, 1 tipo
-    expect(validatePassword('Temple7x')).toBeNull(); // 8, 3 tipos: ok
-  });
-
-  it('acepta passphrases largas aunque sean solo minúsculas', () => {
-    expect(validatePassword('caballo correcto bateria')).toBeNull(); // 24 chars
-  });
-
-  it('passwordStrength puntúa de 0 a 4 y marca lo trivial como muy débil', () => {
+  it('passwordStrength: 0-4, y como mucho "Débil" mientras no cumpla la política', () => {
     expect(passwordStrength('').score).toBe(0);
     expect(passwordStrength('12345678').score).toBe(0); // secuencia
-    expect(passwordStrength('Temple7x').score).toBeGreaterThanOrEqual(2);
+    expect(passwordStrength('Temple7x').score).toBeLessThanOrEqual(1); // no cumple (8 chars)
+    expect(passwordStrength('Temple7x!Run_42').score).toBeGreaterThanOrEqual(3); // cumple
     expect(passwordStrength('Caballo-Correcto-7-Bateria!').score).toBe(4);
   });
 });

@@ -115,8 +115,7 @@ export function AuthScreen() {
           <label htmlFor="auth-password">Contraseña</label>
           {mode === 'register' && (
             <p className="hint" id="auth-password-hint">
-              Mínimo 8 caracteres. Si es corta, combina mayúsculas, minúsculas, números o símbolos;
-              o usa una frase larga (12+).
+              Mínimo 12 caracteres, con mayúscula, minúscula, número y símbolo.
             </p>
           )}
           <input
