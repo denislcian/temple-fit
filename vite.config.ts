@@ -6,6 +6,8 @@ import { defineConfig } from 'vitest/config';
 // (GitHub Pages sirve en https://usuario.github.io/forjafit/)
 export default defineConfig({
   base: './',
+  server: { port: 3000 },
+  preview: { port: 3000 },
   plugins: [
     react(),
     // CAPA 4 · Plataforma — PWA instalable y 100% offline (Workbox).
