@@ -195,11 +195,12 @@ export function AuthScreen() {
         </>
       )}
 
-      <p className="hint" style={{ marginTop: '0.75rem' }}>
-        {cloud
-          ? 'Tu cuenta y la comunidad viven en la nube (Supabase), con la privacidad de cada publicación impuesta en el servidor. Tus entrenos, nutrición y sueño siguen solo en tu dispositivo.'
-          : 'Modo local de demostración: tu cuenta vive solo en este dispositivo. La seguridad real llega con la fase en la nube — ver docs/SECURITY.md.'}
-      </p>
+      {!cloud && (
+        <p className="hint" style={{ marginTop: '0.75rem' }}>
+          Modo local de demostración: tu cuenta vive solo en este dispositivo. La seguridad real
+          llega con la fase en la nube — ver docs/SECURITY.md.
+        </p>
+      )}
     </div>
   );
 }
