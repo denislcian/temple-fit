@@ -22,7 +22,7 @@ create table if not exists public.posts (
   created_at timestamptz not null default now(),
   text text not null default '',
   kind text not null default 'texto'
-    check (kind in ('texto','rutina','sesion','receta','foto')),
+    check (kind in ('texto','rutina','sesion','receta','foto','sueno','meditacion')),
   visibility text not null default 'publica'
     check (visibility in ('publica','seguidores','privada')),
   payload jsonb,

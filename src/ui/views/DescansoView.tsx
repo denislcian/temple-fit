@@ -1,18 +1,31 @@
 // CAPA 3 · Interfaz — Descanso: sonidos para dormir (Web Audio procedural) y
 // respiración guiada. Sin ficheros, sin red: todo se genera en el dispositivo.
 import { useCallback, useMemo, useState } from 'react';
+import type { SleepSession } from '../../data/sleepModels';
+import type { Visibility } from '../../data/nutritionModels';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
+import { socialRepo } from '../../data/repositories/socialRepo';
 import { loadRecoveryDays, markRecoveryDay } from '../../data/recovery';
 import { MUSIC_TRACKS, SOUNDSCAPES, trackUrl } from '../audio/soundscapes';
 import { BREATH_PATTERNS } from '../../domain/breathing';
 import { recoveryStreak } from '../../domain/recoveryStreak';
+import { useAnnounce } from '../components/Announcer';
+import { AppDialog } from '../components/AppDialog';
+import { useAuth } from '../components/AuthContext';
 import { BreathingGuide } from '../components/BreathingGuide';
-import { SelectField } from '../components/Field';
+import { SelectField, TextAreaField } from '../components/Field';
 import { SleepReport } from '../components/SleepReport';
 import { SleepTracker } from '../components/SleepTracker';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useSoundscape } from '../hooks/useSoundscape';
 import { formatShortDate, localDateISO } from '../utils/format';
+
+interface ShareDraft {
+  kind: 'sueno' | 'meditacion';
+  title: string;
+  lines: string[];
+  defaultText: string;
+}
 
 const SLEEP_TIMERS = [15, 30, 60];
 const SESSION_MINUTES = [1, 3, 5, 10];
@@ -25,7 +38,14 @@ export function DescansoView() {
   const { data: nights, reload: reloadNights } = useAsyncData(
     useCallback(() => getAllSleepSessions(), []),
   );
+  const { account } = useAuth();
+  const announce = useAnnounce();
   const [recoveryVersion, setRecoveryVersion] = useState(0);
+  const [lastBreath, setLastBreath] = useState<{ label: string; min: number } | null>(null);
+  const [share, setShare] = useState<ShareDraft | null>(null);
+  const [shareText, setShareText] = useState('');
+  const [shareVis, setShareVis] = useState<Visibility>('seguidores');
+  const [sharing, setSharing] = useState(false);
 
   function markToday() {
     markRecoveryDay(localDateISO());
@@ -39,6 +59,55 @@ export function DescansoView() {
     return recoveryStreak(days, localDateISO());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nights, recoveryVersion]);
+
+  function openShare(draft: ShareDraft) {
+    setShare(draft);
+    setShareText(draft.defaultText);
+    setShareVis('seguidores');
+  }
+
+  function shareSleep(n: SleepSession) {
+    openShare({
+      kind: 'sueno',
+      title: `Noche del ${formatShortDate(n.startedAt)}`,
+      lines: [
+        `Duración: ${Math.floor(n.durationMin / 60)} h ${n.durationMin % 60} min`,
+        `Ronquidos detectados: ${n.snoreCount}`,
+      ],
+      defaultText: 'Mi descanso de anoche 🌙',
+    });
+  }
+
+  function shareBreath() {
+    if (!lastBreath) return;
+    openShare({
+      kind: 'meditacion',
+      title: `Respiración: ${lastBreath.label}`,
+      lines: [`Duración: ${lastBreath.min} ${lastBreath.min === 1 ? 'minuto' : 'minutos'}`],
+      defaultText: 'Un momento de calma 🧘',
+    });
+  }
+
+  async function doShare() {
+    if (!share || !account) return;
+    setSharing(true);
+    try {
+      await socialRepo.publish({
+        author: account.displayName,
+        authorId: account.id,
+        text: shareText.trim(),
+        kind: share.kind,
+        visibility: shareVis,
+        payload: { title: share.title, lines: share.lines },
+      });
+      announce('Compartido en la comunidad');
+      setShare(null);
+    } catch (e) {
+      announce(e instanceof Error ? e.message : 'No se pudo compartir');
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <>
@@ -88,6 +157,13 @@ export function DescansoView() {
                   {n.durationMin % 60}m · {n.snoreCount} ronquidos
                 </summary>
                 <SleepReport session={n} />
+                {account && (
+                  <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                    <button type="button" className="btn btn--small" onClick={() => shareSleep(n)}>
+                      🌙 Compartir en la comunidad
+                    </button>
+                  </div>
+                )}
               </details>
             ))}
           </div>
@@ -229,9 +305,67 @@ export function DescansoView() {
           key={`${patternId}-${sessionMin}`}
           pattern={pattern}
           durationMin={sessionMin}
-          onComplete={markToday}
+          onComplete={() => {
+            markToday();
+            setLastBreath({ label: pattern.label, min: sessionMin });
+          }}
         />
+        {account && lastBreath && (
+          <div className="btn-row" style={{ justifyContent: 'center', marginTop: '0.5rem' }}>
+            <button type="button" className="btn btn--small" onClick={shareBreath}>
+              🧘 Compartir esta sesión
+            </button>
+          </div>
+        )}
       </section>
+
+      <AppDialog
+        open={share !== null}
+        title="Compartir en la comunidad"
+        onClose={() => setShare(null)}
+      >
+        {share && (
+          <>
+            <div className="card" style={{ background: 'var(--surface-2)', marginBottom: '0.75rem' }}>
+              <h2 style={{ fontSize: '1rem' }}>{share.title}</h2>
+              <ul>
+                {share.lines.map((l, i) => (
+                  <li key={i} className="num">
+                    {l}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <TextAreaField
+              label="¿Quieres añadir algo?"
+              value={shareText}
+              onChange={setShareText}
+              hint="Cómo te sientes, qué te ayudó a descansar…"
+            />
+            <SelectField
+              label="¿Quién puede verla?"
+              value={shareVis}
+              onChange={(v) => setShareVis(v as Visibility)}
+            >
+              <option value="seguidores">Solo mis seguidores (recomendado)</option>
+              <option value="publica">Pública — cualquiera</option>
+              <option value="privada">Privada — solo yo</option>
+            </SelectField>
+            <p className="hint">
+              Solo se comparte este resumen. Los detalles (clips de audio, niveles por minuto) se
+              quedan en tu dispositivo.
+            </p>
+            <div className="btn-row">
+              <button type="button" className="btn btn--primary" onClick={doShare} disabled={sharing}>
+                {sharing ? 'Compartiendo…' : 'Compartir'}
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={() => setShare(null)}>
+                Cancelar
+              </button>
+            </div>
+          </>
+        )}
+      </AppDialog>
     </>
   );
 }

@@ -64,7 +64,7 @@ export const VISIBILITY_LABELS: Record<Visibility, string> = {
   privada: 'Privada',
 };
 
-/** Publicación de la comunidad (rutina, sesión o texto). */
+/** Publicación de la comunidad (rutina, sesión, texto, receta, foto o recuperación). */
 export interface Post {
   id: string;
   author: string;
@@ -72,7 +72,7 @@ export interface Post {
   authorId?: string;
   createdAt: string;
   text: string;
-  kind: 'rutina' | 'sesion' | 'texto' | 'receta' | 'foto';
+  kind: 'rutina' | 'sesion' | 'texto' | 'receta' | 'foto' | 'sueno' | 'meditacion';
   /** Quién puede verla. Ausente = pública (retrocompatible). */
   visibility?: Visibility;
   /** Contenido estructurado: título + líneas (ejercicios, series, receta...). */

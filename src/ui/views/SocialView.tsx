@@ -24,10 +24,11 @@ import { compressImage } from '../utils/image';
 
 /** Filtros del feed por tipo de publicación. */
 const FEED_FILTERS: Array<{ id: string; label: string; kinds: Post['kind'][] }> = [
-  { id: 'todo', label: 'Todo', kinds: ['texto', 'rutina', 'sesion', 'receta', 'foto'] },
+  { id: 'todo', label: 'Todo', kinds: ['texto', 'rutina', 'sesion', 'receta', 'foto', 'sueno', 'meditacion'] },
   { id: 'fotos', label: '📷 Fotos', kinds: ['foto'] },
   { id: 'rutinas', label: '📋 Rutinas', kinds: ['rutina', 'sesion'] },
   { id: 'recetas', label: '🍽️ Recetas', kinds: ['receta'] },
+  { id: 'recuperacion', label: '🌙 Recuperación', kinds: ['sueno', 'meditacion'] },
 ];
 
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
