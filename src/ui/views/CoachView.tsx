@@ -1,12 +1,13 @@
 // CAPA 3 · Interfaz — Coach adaptativo.
 // Siempre muestra el análisis determinista (funciona sin red y sin clave). Si
 // el usuario tiene clave de Gemini, ofrece un consejo redactado por IA encima.
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { AI_PROVIDERS } from '../../data/aiProviders';
 import { generateCoachMessage, type CoachMessage } from '../../data/coach';
+import { isOnDeviceSupported, type DownloadProgress } from '../../data/onDeviceLLM';
 import { loadAIKey, loadCoachProvider } from '../../data/profile';
 import { buildCoachContext } from '../../domain/coach/coachContext';
 import { evaluateCoach, fatigueVerdict, type CoachTone } from '../../domain/coach/coachRules';
@@ -44,6 +45,25 @@ export function CoachView() {
   const [ai, setAi] = useState<CoachMessage | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [dl, setDl] = useState<DownloadProgress | null>(null);
+  const [onDeviceOk, setOnDeviceOk] = useState<boolean | null>(null);
+
+  const provider = loadCoachProvider();
+
+  // Comprueba WebGPU una vez si el proveedor es la IA en el dispositivo.
+  useEffect(() => {
+    let alive = true;
+    if (provider === 'ondevice') {
+      void isOnDeviceSupported().then((ok) => {
+        if (alive) setOnDeviceOk(ok);
+      });
+    } else {
+      setOnDeviceOk(null);
+    }
+    return () => {
+      alive = false;
+    };
+  }, [provider]);
 
   function changeGoal(g: string) {
     const next = (GOALS.includes(g as Goal) ? g : 'hipertrofia') as Goal;
@@ -75,31 +95,39 @@ export function CoachView() {
   const program = useMemo(() => suggestProgram(goal, level, days), [goal, level, days]);
   const nameById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e.name])), [exercises]);
 
-  const provider = loadCoachProvider();
-  const hasKey = loadAIKey(provider).trim().length > 0;
+  const isOnDevice = provider === 'ondevice';
+  const canUseAi = isOnDevice ? onDeviceOk === true : loadAIKey(provider).trim().length > 0;
 
   async function askAi() {
     if (!ctx || !verdict) return;
     setAiLoading(true);
     setAiError('');
     setAi(null);
+    setDl(null);
     try {
-      const msg = await generateCoachMessage(provider, loadAIKey(provider), {
-        verdict,
-        recommendations: recs,
-        context: {
-          goal,
-          avgRpe7d: ctx.avgRpe7d,
-          avgSleepHours: ctx.avgSleepMin === null ? null : Math.round((ctx.avgSleepMin / 60) * 10) / 10,
-          sessionsPerWeek: ctx.sessionsPerWeek,
-          fatigueScore: ctx.fatigueScore,
+      const msg = await generateCoachMessage(
+        provider,
+        loadAIKey(provider),
+        {
+          verdict,
+          recommendations: recs,
+          context: {
+            goal,
+            avgRpe7d: ctx.avgRpe7d,
+            avgSleepHours:
+              ctx.avgSleepMin === null ? null : Math.round((ctx.avgSleepMin / 60) * 10) / 10,
+            sessionsPerWeek: ctx.sessionsPerWeek,
+            fatigueScore: ctx.fatigueScore,
+          },
         },
-      });
+        (p) => setDl(p),
+      );
       setAi(msg);
     } catch (e) {
       setAiError(e instanceof Error ? e.message : 'No se pudo generar el consejo.');
     } finally {
       setAiLoading(false);
+      setDl(null);
     }
   }
 
@@ -183,20 +211,42 @@ export function CoachView() {
           </>
         ) : (
           <p className="muted" style={{ marginTop: '0.25rem' }}>
-            {hasKey
-              ? `Pídele al coach (${AI_PROVIDERS[provider].label.replace(' (recomendado)', '')}) que resuma cómo estás y qué priorizar hoy, en lenguaje natural.`
-              : 'Activa la IA en Ajustes con una clave gratuita (Groq, OpenRouter, Cerebras o Gemini) y tendrás un consejo redactado para ti. El análisis de abajo funciona igual sin clave.'}
+            {canUseAi
+              ? isOnDevice
+                ? 'Consejo redactado por una IA que corre en TU dispositivo, sin clave ni cuenta. La primera vez descarga el modelo (~1,6 GB); luego es instantáneo y funciona offline. Nada sale de aquí.'
+                : `Pídele al coach (${AI_PROVIDERS[provider].label.replace(' (recomendado)', '')}) que resuma cómo estás y qué priorizar hoy, en lenguaje natural.`
+              : isOnDevice
+                ? 'Tu navegador no soporta IA en el dispositivo (WebGPU). En Ajustes → Coach con IA puedes elegir una clave gratuita en la nube. El análisis de abajo funciona igual.'
+                : 'Activa la IA en Ajustes con una clave gratuita (Groq, OpenRouter, Cerebras o Gemini) y tendrás un consejo redactado para ti. El análisis de abajo funciona igual sin clave.'}
           </p>
+        )}
+        {dl && dl.progress < 1 && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <div className="goal-bar">
+              <span className="fill" style={{ width: `${Math.round(dl.progress * 100)}%` }} />
+            </div>
+            <p className="meta num" style={{ marginTop: '0.3rem' }} role="status">
+              Descargando el modelo… {Math.round(dl.progress * 100)}% (solo la primera vez)
+            </p>
+          </div>
         )}
         {aiError && (
           <p className="notice notice--error" role="alert" style={{ marginTop: '0.75rem' }}>
             {aiError}
           </p>
         )}
-        {hasKey && (
+        {canUseAi && (
           <div className="btn-row" style={{ marginTop: '0.75rem' }}>
             <button type="button" className="btn btn--primary" onClick={askAi} disabled={aiLoading}>
-              {aiLoading ? 'Pensando…' : ai ? 'Volver a preguntar' : 'Pedir consejo al coach IA'}
+              {aiLoading
+                ? dl && dl.progress < 1
+                  ? `Descargando… ${Math.round(dl.progress * 100)}%`
+                  : 'Pensando…'
+                : ai
+                  ? 'Volver a preguntar'
+                  : isOnDevice
+                    ? 'Activar IA y pedir consejo'
+                    : 'Pedir consejo al coach IA'}
             </button>
           </div>
         )}

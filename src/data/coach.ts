@@ -5,6 +5,7 @@
 // AGREGADOS. Si no hay clave/red/cuota, la app usa el coach básico.
 import { buildCoachPrompt, type CoachAIPayload } from '../domain/coach/coachPrompts';
 import { callLLM, type AIProviderId } from './aiProviders';
+import { generateOnDevice, type DownloadProgress } from './onDeviceLLM';
 
 export interface CoachMessage {
   mensaje: string;
@@ -22,11 +23,13 @@ export async function generateCoachMessage(
   provider: AIProviderId,
   apiKey: string,
   payload: CoachAIPayload,
+  onProgress?: (p: DownloadProgress) => void,
 ): Promise<CoachMessage> {
-  const raw = await callLLM(provider, apiKey, buildCoachPrompt(payload), {
-    json: true,
-    temperature: 0.4,
-  });
+  const prompt = buildCoachPrompt(payload);
+  const raw =
+    provider === 'ondevice'
+      ? await generateOnDevice(prompt, onProgress)
+      : await callLLM(provider, apiKey, prompt, { json: true, temperature: 0.4 });
 
   let parsed: { mensaje?: unknown; foco?: unknown };
   try {

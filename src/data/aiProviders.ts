@@ -4,7 +4,9 @@
 // de comida (vision.ts) sigue en Gemini porque necesita imágenes.
 // Fuente de proveedores/límites: github.com/cheahjs/free-llm-api-resources.
 
-export type AIProviderId = 'gemini' | 'groq' | 'openrouter' | 'cerebras';
+import { ON_DEVICE_MODEL } from './onDeviceLLM';
+
+export type AIProviderId = 'ondevice' | 'gemini' | 'groq' | 'openrouter' | 'cerebras';
 
 export interface AIProvider {
   id: AIProviderId;
@@ -20,6 +22,14 @@ export interface AIProvider {
 }
 
 export const AI_PROVIDERS: Record<AIProviderId, AIProvider> = {
+  ondevice: {
+    id: 'ondevice',
+    label: 'En tu dispositivo (sin clave)',
+    model: ON_DEVICE_MODEL,
+    keyUrl: '',
+    privacy: 'alta',
+    note: 'Sin clave ni cuenta: el modelo corre dentro de tu móvil/PC. Descarga única (~1,6 GB) y luego funciona offline. Nada sale del dispositivo. Necesita un navegador moderno (WebGPU).',
+  },
   groq: {
     id: 'groq',
     label: 'Groq (recomendado)',
@@ -54,7 +64,13 @@ export const AI_PROVIDERS: Record<AIProviderId, AIProvider> = {
   },
 };
 
-export const AI_PROVIDER_IDS: AIProviderId[] = ['groq', 'openrouter', 'cerebras', 'gemini'];
+export const AI_PROVIDER_IDS: AIProviderId[] = [
+  'ondevice',
+  'groq',
+  'openrouter',
+  'cerebras',
+  'gemini',
+];
 
 interface CallOptions {
   temperature?: number;
@@ -71,7 +87,9 @@ function mapError(status: number): string {
 const GEMINI_ENDPOINT = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-const OPENAI_ENDPOINT: Record<Exclude<AIProviderId, 'gemini'>, string> = {
+type RemoteOpenAIProvider = 'groq' | 'openrouter' | 'cerebras';
+
+const OPENAI_ENDPOINT: Record<RemoteOpenAIProvider, string> = {
   groq: 'https://api.groq.com/openai/v1/chat/completions',
   openrouter: 'https://openrouter.ai/api/v1/chat/completions',
   cerebras: 'https://api.cerebras.ai/v1/chat/completions',
@@ -111,6 +129,11 @@ export async function callLLM(
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('El servicio de IA no devolvió respuesta.');
     return text;
+  }
+
+  if (providerId === 'ondevice') {
+    // La IA local se ejecuta con WebLLM (onDeviceLLM.ts), no por aquí.
+    throw new Error('La IA en el dispositivo se ejecuta en local, no por la red.');
   }
 
   // OpenAI-compatible (Groq, OpenRouter, Cerebras).

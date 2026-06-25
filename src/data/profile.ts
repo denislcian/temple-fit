@@ -91,22 +91,27 @@ const COACH_PROVIDER_KEY = 'forjafit-coach-provider';
 
 export function loadCoachProvider(): AIProviderId {
   const v = localStorage.getItem(COACH_PROVIDER_KEY);
-  if (v === 'groq' || v === 'openrouter' || v === 'cerebras' || v === 'gemini') return v;
-  // Por defecto: reusa Gemini si ya hay clave (del escáner); si no, Groq.
-  return loadGeminiKey().trim() ? 'gemini' : 'groq';
+  if (v === 'ondevice' || v === 'groq' || v === 'openrouter' || v === 'cerebras' || v === 'gemini') {
+    return v;
+  }
+  // Por defecto: IA integrada en el dispositivo (sin clave). El usuario puede
+  // cambiar a una clave en la nube si prefiere no descargar el modelo.
+  return 'ondevice';
 }
 
 export function saveCoachProvider(id: AIProviderId): void {
   localStorage.setItem(COACH_PROVIDER_KEY, id);
 }
 
-/** Clave de un proveedor. Gemini reutiliza la clave del escáner de comida. */
+/** Clave de un proveedor. 'ondevice' no usa clave; Gemini reutiliza la del escáner. */
 export function loadAIKey(provider: AIProviderId): string {
+  if (provider === 'ondevice') return '';
   if (provider === 'gemini') return loadGeminiKey();
   return localStorage.getItem(`forjafit-ai-key-${provider}`) ?? '';
 }
 
 export function saveAIKey(provider: AIProviderId, key: string): void {
+  if (provider === 'ondevice') return;
   if (provider === 'gemini') {
     saveGeminiKey(key);
     return;

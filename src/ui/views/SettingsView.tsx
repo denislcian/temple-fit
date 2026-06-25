@@ -316,25 +316,33 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
         </div>
         <p className="hint">
           {AI_PROVIDERS[coachProvider].privacy === 'alta' ? '🔒 ' : '⚠️ '}
-          {AI_PROVIDERS[coachProvider].note} Clave gratis en{' '}
-          <a href={AI_PROVIDERS[coachProvider].keyUrl} target="_blank" rel="noreferrer">
-            {AI_PROVIDERS[coachProvider].keyUrl.replace('https://', '')}
-          </a>
-          .
+          {AI_PROVIDERS[coachProvider].note}
+          {coachProvider !== 'ondevice' && (
+            <>
+              {' '}
+              Clave gratis en{' '}
+              <a href={AI_PROVIDERS[coachProvider].keyUrl} target="_blank" rel="noreferrer">
+                {AI_PROVIDERS[coachProvider].keyUrl.replace('https://', '')}
+              </a>
+              .
+            </>
+          )}
         </p>
-        <div className="field">
-          <label htmlFor="coach-key">
-            Clave de {AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')}
-          </label>
-          <input
-            id="coach-key"
-            className="input"
-            type="password"
-            value={coachKey}
-            onChange={(e) => setCoachKey(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
+        {coachProvider !== 'ondevice' && (
+          <div className="field">
+            <label htmlFor="coach-key">
+              Clave de {AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')}
+            </label>
+            <input
+              id="coach-key"
+              className="input"
+              type="password"
+              value={coachKey}
+              onChange={(e) => setCoachKey(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+        )}
         <div className="btn-row">
           <button
             type="button"
@@ -343,9 +351,11 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
               saveCoachProvider(coachProvider);
               saveAIKey(coachProvider, coachKey);
               announce(
-                coachKey.trim()
-                  ? `Coach con ${AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')} activado`
-                  : 'Clave del coach eliminada',
+                coachProvider === 'ondevice'
+                  ? 'Coach con IA en el dispositivo activado (sin clave)'
+                  : coachKey.trim()
+                    ? `Coach con ${AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')} activado`
+                    : 'Clave del coach eliminada',
               );
             }}
           >

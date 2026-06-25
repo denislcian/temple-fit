@@ -8,6 +8,18 @@ export default defineConfig({
   base: './',
   server: { port: 3000 },
   preview: { port: 3000 },
+  build: {
+    rollupOptions: {
+      output: {
+        // El runtime de WebLLM (IA en el dispositivo) va a su propio chunk con
+        // nombre estable, para excluirlo del precache (es grande y perezoso).
+        manualChunks(id: string) {
+          if (id.includes('@mlc-ai/web-llm')) return 'webllm';
+          return undefined;
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     // CAPA 4 · Plataforma — PWA instalable y 100% offline (Workbox).
@@ -60,6 +72,9 @@ export default defineConfig({
         // (el gimnasio sin cobertura). La música NO se precachea (pesa), se
         // cachea bajo demanda al reproducirla por primera vez.
         globPatterns: ['**/*.{js,css,html,png,ico,woff2,webp}'],
+        // El runtime de WebLLM (~6 MB) NO se precachea: solo lo descarga quien
+        // active la IA en el dispositivo; se cachea bajo demanda (abajo).
+        globIgnores: ['**/webllm-*.js'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
@@ -69,6 +84,16 @@ export default defineConfig({
               cacheName: 'temple-audio',
               rangeRequests: true,
               expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // El chunk de WebLLM: se cachea al activarse la IA local (offline después).
+            urlPattern: ({ url }) => /\/assets\/webllm-/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'temple-webllm',
+              expiration: { maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 180 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
