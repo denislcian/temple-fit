@@ -1,8 +1,9 @@
 // CAPA 1 · Datos — Base de datos local (IndexedDB vía Dexie).
 // Los datos viven en el dispositivo del usuario: sin cuentas, sin servidores.
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type EntityTable, type Table } from 'dexie';
 import type { Account } from './authModels';
 import type { BodyMeasurement, WaterDay } from './bodyModels';
+import type { Challenge, ChallengeMember } from './challengeModels';
 import type { Exercise, Routine, Session } from './models';
 import type { DiaryEntry, FoodItem, Follow, Post } from './nutritionModels';
 import type { SleepSession } from './sleepModels';
@@ -19,6 +20,8 @@ export class TempleDB extends Dexie {
   accounts!: EntityTable<Account, 'id'>;
   follows!: EntityTable<Follow, 'id'>;
   sleepSessions!: EntityTable<SleepSession, 'id'>;
+  challenges!: EntityTable<Challenge, 'id'>;
+  challengeMembers!: Table<ChallengeMember, [string, string]>;
 
   constructor() {
     super('forjafit');
@@ -77,6 +80,23 @@ export class TempleDB extends Dexie {
       accounts: 'id, &username',
       follows: 'id, followerId, followeeId, [followerId+followeeId]',
       sleepSessions: 'id, date, startedAt',
+    });
+    // v6 (comunidad): retos grupales opt-in. challengeMembers usa clave
+    // compuesta [challengeId+userId] (un usuario por reto).
+    this.version(6).stores({
+      exercises: 'id, name, muscleGroup, isCustom',
+      routines: 'id, name, createdAt',
+      sessions: 'id, date',
+      foods: 'id, name, source, barcode',
+      diary: 'id, date, meal',
+      posts: 'id, createdAt, authorId',
+      bodyMetrics: 'id, date',
+      water: 'date',
+      accounts: 'id, &username',
+      follows: 'id, followerId, followeeId, [followerId+followeeId]',
+      sleepSessions: 'id, date, startedAt',
+      challenges: 'id, endsAt, creatorId',
+      challengeMembers: '[challengeId+userId], challengeId, userId',
     });
   }
 }

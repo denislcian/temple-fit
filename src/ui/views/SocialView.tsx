@@ -17,6 +17,7 @@ import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { AuthScreen } from '../components/AuthScreen';
 import { useAuth } from '../components/AuthContext';
 import { Avatar } from '../components/Avatar';
+import { ChallengesSection } from '../components/ChallengesSection';
 import { SelectField, TextAreaField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg } from '../utils/format';
@@ -273,6 +274,8 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           </ul>
         </section>
       )}
+
+      <ChallengesSection account={account} />
 
       <div className="btn-row feed-filter" role="group" aria-label="Filtrar el feed" style={{ marginBottom: '0.75rem', flexWrap: 'wrap' }}>
         {FEED_FILTERS.map((f) => (
