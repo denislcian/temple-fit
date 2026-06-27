@@ -287,3 +287,11 @@ drop policy if exists notif_update on public.notifications;
 create policy notif_update on public.notifications for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 drop policy if exists notif_delete on public.notifications;
 create policy notif_delete on public.notifications for delete using (user_id = auth.uid());
+
+-- ── Perfil social: avatar, ubicación + fotos públicas ───────────────────────
+-- También en supabase/migration-perfil-social.sql.
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles add column if not exists location text;
+alter table public.profiles add column if not exists lat double precision;
+alter table public.profiles add column if not exists lng double precision;
+update storage.buckets set public = true where id = 'fotos';

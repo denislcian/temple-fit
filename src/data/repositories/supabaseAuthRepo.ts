@@ -18,7 +18,13 @@ interface ProfileRow {
   bio: string | null;
   private_profile: boolean;
   created_at: string;
+  avatar_url: string | null;
+  location: string | null;
+  lat: number | null;
+  lng: number | null;
 }
+
+const PROFILE_COLS = 'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
 
 /** URL base de la app (sin hash) a la que Supabase debe devolver tras OAuth o
  *  confirmar el email. En GitHub Pages incluye la subruta (/temple-fit/); en
@@ -37,6 +43,10 @@ function toAccount(p: ProfileRow): Account {
     passwordSalt: '',
     createdAt: p.created_at,
     privateProfile: p.private_profile,
+    ...(p.avatar_url ? { avatarUrl: p.avatar_url } : {}),
+    ...(p.location ? { location: p.location } : {}),
+    ...(p.lat != null ? { lat: p.lat } : {}),
+    ...(p.lng != null ? { lng: p.lng } : {}),
   };
 }
 
@@ -101,17 +111,15 @@ export class SupabaseAuthService implements AuthService {
   }
 
   async getAccount(id: string): Promise<Account | undefined> {
-    const { data } = await this.sb
-      .from('profiles')
-      .select('id, username, display_name, bio, private_profile, created_at')
-      .eq('id', id)
-      .maybeSingle();
+    const { data } = await this.sb.from('profiles').select(PROFILE_COLS).eq('id', id).maybeSingle();
     return data ? toAccount(data as ProfileRow) : undefined;
   }
 
   async updateProfile(
     id: string,
-    changes: Partial<Pick<Account, 'displayName' | 'bio' | 'privateProfile'>>,
+    changes: Partial<
+      Pick<Account, 'displayName' | 'bio' | 'privateProfile' | 'avatarUrl' | 'location' | 'lat' | 'lng'>
+    >,
   ): Promise<void> {
     if (changes.displayName !== undefined) {
       const err = validateDisplayName(changes.displayName);
@@ -121,8 +129,24 @@ export class SupabaseAuthService implements AuthService {
     if (changes.displayName !== undefined) row.display_name = changes.displayName.trim();
     if (changes.bio !== undefined) row.bio = changes.bio;
     if (changes.privateProfile !== undefined) row.private_profile = changes.privateProfile;
+    if (changes.avatarUrl !== undefined) row.avatar_url = changes.avatarUrl;
+    if (changes.location !== undefined) row.location = changes.location || null;
+    if (changes.lat !== undefined) row.lat = changes.lat ?? null;
+    if (changes.lng !== undefined) row.lng = changes.lng ?? null;
     const { error } = await this.sb.from('profiles').update(row).eq('id', id);
     if (error) throw new Error('No se pudo guardar el perfil');
+  }
+
+  async uploadAvatar(id: string, dataUrl: string): Promise<string> {
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = `${id}/avatar-${Date.now()}.jpg`;
+    const { error } = await this.sb.storage
+      .from('fotos')
+      .upload(path, blob, { upsert: true, contentType: blob.type || 'image/jpeg' });
+    if (error) throw new Error('No se pudo subir la foto');
+    const url = this.sb.storage.from('fotos').getPublicUrl(path).data.publicUrl;
+    await this.updateProfile(id, { avatarUrl: url });
+    return url;
   }
 
   async changePassword(_id: string, current: string, next: string): Promise<void> {

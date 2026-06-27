@@ -1,7 +1,8 @@
 // CAPA 3 · Interfaz — Gestión de la cuenta en Ajustes.
-// Editar perfil, privacidad, cambiar contraseña y borrar la cuenta (RGPD).
-import { useState } from 'react';
+// Editar perfil, foto, privacidad, cambiar contraseña y borrar la cuenta (RGPD).
+import { useRef, useState } from 'react';
 import { authService } from '../../data/repositories/authRepo';
+import { compressImage } from '../utils/image';
 import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
 import { ConfirmDialog } from './AppDialog';
@@ -44,6 +45,9 @@ function AccountEditor({
   const [bio, setBio] = useState(account?.bio ?? '');
   const [privateProfile, setPrivateProfile] = useState(account?.privateProfile ?? false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState(account?.avatarUrl ?? '');
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [curPwd, setCurPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
@@ -52,6 +56,36 @@ function AccountEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!account) return null;
+
+  async function pickAvatar(file: File | undefined) {
+    if (!file) return;
+    setAvatarBusy(true);
+    try {
+      const dataUrl = await compressImage(file, 256, 0.85);
+      if (!dataUrl) throw new Error('No se pudo procesar la imagen');
+      const url = await authService.uploadAvatar(accountId, dataUrl);
+      setAvatarUrl(url);
+      await onChange();
+      announce('Foto de perfil actualizada');
+    } catch (e) {
+      announce(e instanceof Error ? e.message : 'No se pudo subir la foto');
+    } finally {
+      setAvatarBusy(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  async function removeAvatar() {
+    setAvatarBusy(true);
+    try {
+      await authService.updateProfile(accountId, { avatarUrl: '' });
+      setAvatarUrl('');
+      await onChange();
+      announce('Foto eliminada');
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
 
   async function saveProfile() {
     try {
@@ -83,12 +117,44 @@ function AccountEditor({
   return (
     <section className="card" aria-labelledby="account-heading">
       <div className="session-bar" style={{ marginBottom: '1rem' }}>
-        <Avatar id={account.id} name={account.displayName} size={48} />
+        <button
+          type="button"
+          className="avatar-edit"
+          onClick={() => fileRef.current?.click()}
+          disabled={avatarBusy}
+          aria-label="Cambiar foto de perfil"
+        >
+          <Avatar id={account.id} name={account.displayName} size={56} photoUrl={avatarUrl || undefined} />
+          <span className="avatar-edit__hint" aria-hidden="true">
+            {avatarBusy ? '…' : '📷'}
+          </span>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => void pickAvatar(e.target.files?.[0])}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 id="account-heading" style={{ margin: 0 }}>
             Tu cuenta
           </h2>
           <span className="meta">@{account.username}</span>
+          <br />
+          <span className="meta">
+            <button type="button" className="link-btn" onClick={() => fileRef.current?.click()} disabled={avatarBusy}>
+              Cambiar foto
+            </button>
+            {avatarUrl && (
+              <>
+                {' · '}
+                <button type="button" className="link-btn" onClick={() => void removeAvatar()} disabled={avatarBusy}>
+                  Quitar
+                </button>
+              </>
+            )}
+          </span>
         </div>
         <button type="button" className="btn btn--small btn--ghost" onClick={onLogout}>
           Cerrar sesión

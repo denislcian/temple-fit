@@ -70,6 +70,8 @@ export interface Post {
   author: string;
   /** id de la cuenta autora (ausente en las publicaciones de ejemplo). */
   authorId?: string;
+  /** Foto del autor, añadida al leer el feed (no se persiste). */
+  authorAvatar?: string;
   createdAt: string;
   text: string;
   kind: 'rutina' | 'sesion' | 'texto' | 'receta' | 'foto' | 'sueno' | 'meditacion';

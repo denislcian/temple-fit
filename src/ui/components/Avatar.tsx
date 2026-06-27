@@ -1,9 +1,31 @@
-// CAPA 3 · Interfaz — Avatar generado (iniciales + color por id).
-// Sin subir imágenes: evita el coste y los riesgos de moderar fotos en el
-// modo local. Decorativo (el nombre va siempre como texto al lado).
+// CAPA 3 · Interfaz — Avatar: foto de perfil si la hay, o iniciales + color por id.
 import { avatarHue, initials } from '../../data/authModels';
 
-export function Avatar({ id, name, size = 40 }: { id: string; name: string; size?: number }) {
+export function Avatar({
+  id,
+  name,
+  size = 40,
+  photoUrl,
+}: {
+  id: string;
+  name: string;
+  size?: number;
+  photoUrl?: string;
+}) {
+  if (photoUrl) {
+    return (
+      <img
+        className="avatar avatar--photo"
+        src={photoUrl}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        loading="lazy"
+      />
+    );
+  }
   const hue = avatarHue(id);
   return (
     <span

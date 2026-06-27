@@ -19,7 +19,10 @@ export interface ProfileData {
   displayName: string;
   username: string;
   bio?: string;
+  avatarUrl?: string;
+  location?: string;
   followers: number;
+  following: number;
   isFollowing: boolean;
   isMe: boolean;
   stats: PublicStats;
@@ -47,6 +50,10 @@ export interface SocialRepository {
   follow(followerId: string, followeeId: string): Promise<void>;
   unfollow(followerId: string, followeeId: string): Promise<void>;
   countFollowers(accountId: string): Promise<number>;
+  /** Cuentas que siguen a userId. */
+  getFollowers(userId: string): Promise<Account[]>;
+  /** Cuentas a las que userId sigue. */
+  getFollowingAccounts(userId: string): Promise<Account[]>;
   /** Otras cuentas a las que seguir (excluye al propio viewer). */
   discoverAccounts(viewerId: string): Promise<Account[]>;
   /** Busca personas por nombre o @usuario (excluye al viewer). */
@@ -96,7 +103,7 @@ const DEMO_STATS: Record<string, PublicStats> = {
 class LocalSocialRepository implements SocialRepository {
   async getFeed(): Promise<Post[]> {
     await ensureSeeded();
-    return db.posts.orderBy('createdAt').reverse().toArray();
+    return this.withAvatars(await db.posts.orderBy('createdAt').reverse().toArray());
   }
 
   async publish(input: NewPost): Promise<Post> {
@@ -182,6 +189,20 @@ class LocalSocialRepository implements SocialRepository {
     return db.follows.where('followeeId').equals(accountId).count();
   }
 
+  async getFollowers(userId: string): Promise<Account[]> {
+    await ensureSeeded();
+    const rows = await db.follows.where('followeeId').equals(userId).toArray();
+    const accs = await db.accounts.bulkGet(rows.map((f) => f.followerId));
+    return accs.filter((a): a is Account => !!a);
+  }
+
+  async getFollowingAccounts(userId: string): Promise<Account[]> {
+    await ensureSeeded();
+    const rows = await db.follows.where('followerId').equals(userId).toArray();
+    const accs = await db.accounts.bulkGet(rows.map((f) => f.followeeId));
+    return accs.filter((a): a is Account => !!a);
+  }
+
   async discoverAccounts(viewerId: string): Promise<Account[]> {
     await ensureSeeded();
     const all = await db.accounts.toArray();
@@ -215,8 +236,9 @@ class LocalSocialRepository implements SocialRepository {
     await ensureSeeded();
     const acc = await db.accounts.get(userId);
     if (!acc) return null;
-    const [followers, following, stats] = await Promise.all([
+    const [followers, following, isFollowing, stats] = await Promise.all([
       this.countFollowers(userId),
+      db.follows.where('followerId').equals(userId).count(),
       this.isFollowing(viewerId, userId),
       this.statsFor(userId, viewerId),
     ]);
@@ -225,20 +247,36 @@ class LocalSocialRepository implements SocialRepository {
       displayName: acc.displayName,
       username: acc.username,
       ...(acc.bio ? { bio: acc.bio } : {}),
+      ...(acc.avatarUrl ? { avatarUrl: acc.avatarUrl } : {}),
+      ...(acc.location ? { location: acc.location } : {}),
       followers,
-      isFollowing: following,
+      following,
+      isFollowing,
       isMe: userId === viewerId,
       stats,
     };
+  }
+
+  /** Añade la foto del autor (authorAvatar) a cada publicación. */
+  private async withAvatars(posts: Post[]): Promise<Post[]> {
+    const ids = [...new Set(posts.map((p) => p.authorId).filter((x): x is string => !!x))];
+    if (ids.length === 0) return posts;
+    const accs = await db.accounts.bulkGet(ids);
+    const avatar = new Map<string, string>();
+    for (const a of accs) if (a?.avatarUrl) avatar.set(a.id, a.avatarUrl);
+    return posts.map((p) =>
+      p.authorId && avatar.has(p.authorId) ? { ...p, authorAvatar: avatar.get(p.authorId) } : p,
+    );
   }
 
   async getUserPosts(userId: string, viewerId: string): Promise<Post[]> {
     await ensureSeeded();
     const following = new Set(await this.getFollowing(viewerId));
     const all = await db.posts.where('authorId').equals(userId).toArray();
-    return visiblePosts(all, viewerId, following).sort((a, b) =>
+    const visible = visiblePosts(all, viewerId, following).sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     );
+    return this.withAvatars(visible);
   }
 
   async publishStats(userId: string, stats: PublicStats): Promise<void> {

@@ -12,6 +12,13 @@ export interface Account {
   createdAt: string;
   /** Perfil privado: solo tus seguidores ven tu actividad. */
   privateProfile?: boolean;
+  /** Foto de perfil (URL en la nube, o dataURL en modo local). */
+  avatarUrl?: string;
+  /** Ubicación textual (ciudad/zona) para sugerencias cercanas. */
+  location?: string;
+  /** Coordenadas aproximadas (opcionales, para ordenar por cercanía). */
+  lat?: number;
+  lng?: number;
 }
 
 /** Cuenta sin los campos sensibles, para mostrar en la UI. */

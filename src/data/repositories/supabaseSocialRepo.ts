@@ -9,6 +9,8 @@ import type { NewPost, ProfileData, SocialRepository } from './socialRepo';
 
 const BUCKET = 'fotos';
 const POST_COLS = 'id, author, created_at, text, kind, visibility, payload, image_path';
+const ACCOUNT_COLS =
+  'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
 
 interface PostRow {
   id: string;
@@ -19,6 +21,36 @@ interface PostRow {
   visibility: Post['visibility'];
   payload: { title: string; lines: string[] } | null;
   image_path: string | null;
+}
+
+interface AccountRow {
+  id: string;
+  username: string;
+  display_name: string;
+  bio: string | null;
+  private_profile: boolean;
+  created_at: string;
+  avatar_url: string | null;
+  location: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+function rowToAccount(p: AccountRow): Account {
+  return {
+    id: p.id,
+    username: p.username,
+    displayName: p.display_name,
+    ...(p.bio ? { bio: p.bio } : {}),
+    passwordHash: '',
+    passwordSalt: '',
+    createdAt: p.created_at,
+    privateProfile: p.private_profile,
+    ...(p.avatar_url ? { avatarUrl: p.avatar_url } : {}),
+    ...(p.location ? { location: p.location } : {}),
+    ...(p.lat != null ? { lat: p.lat } : {}),
+    ...(p.lng != null ? { lng: p.lng } : {}),
+  };
 }
 
 /** dataURL (base64) → Blob, para subir a Storage. */
@@ -68,7 +100,7 @@ export class SupabaseSocialRepository implements SocialRepository {
     const authors = [...new Set(rows.map((p) => p.author))];
 
     const [profilesRes, likesRes, commentsRes] = await Promise.all([
-      this.sb.from('profiles').select('id, display_name').in('id', authors),
+      this.sb.from('profiles').select('id, display_name, avatar_url').in('id', authors),
       this.sb.from('post_likes').select('post_id, user_id').in('post_id', ids),
       this.sb
         .from('post_comments')
@@ -77,12 +109,11 @@ export class SupabaseSocialRepository implements SocialRepository {
         .order('created_at', { ascending: true }),
     ]);
 
-    const nameById = new Map(
-      ((profilesRes.data as { id: string; display_name: string }[] | null) ?? []).map((p) => [
-        p.id,
-        p.display_name,
-      ]),
-    );
+    const profiles =
+      (profilesRes.data as { id: string; display_name: string; avatar_url: string | null }[] | null) ??
+      [];
+    const nameById = new Map(profiles.map((p) => [p.id, p.display_name]));
+    const avatarById = new Map(profiles.filter((p) => p.avatar_url).map((p) => [p.id, p.avatar_url!]));
     const likes = (likesRes.data as { post_id: string; user_id: string }[] | null) ?? [];
     const comments =
       (commentsRes.data as
@@ -95,6 +126,7 @@ export class SupabaseSocialRepository implements SocialRepository {
         id: p.id,
         author: nameById.get(p.author) ?? 'Atleta',
         authorId: p.author,
+        ...(avatarById.get(p.author) ? { authorAvatar: avatarById.get(p.author) } : {}),
         createdAt: p.created_at,
         text: p.text,
         kind: p.kind,
@@ -229,32 +261,8 @@ export class SupabaseSocialRepository implements SocialRepository {
   }
 
   async discoverAccounts(viewerId: string): Promise<Account[]> {
-    const { data } = await this.sb
-      .from('profiles')
-      .select('id, username, display_name, bio, private_profile, created_at')
-      .neq('id', viewerId)
-      .limit(20);
-    return (
-      (data as
-        | {
-            id: string;
-            username: string;
-            display_name: string;
-            bio: string | null;
-            private_profile: boolean;
-            created_at: string;
-          }[]
-        | null) ?? []
-    ).map((p) => ({
-      id: p.id,
-      username: p.username,
-      displayName: p.display_name,
-      ...(p.bio ? { bio: p.bio } : {}),
-      passwordHash: '',
-      passwordSalt: '',
-      createdAt: p.created_at,
-      privateProfile: p.private_profile,
-    }));
+    const { data } = await this.sb.from('profiles').select(ACCOUNT_COLS).neq('id', viewerId).limit(20);
+    return ((data as AccountRow[] | null) ?? []).map(rowToAccount);
   }
 
   async searchAccounts(query: string, viewerId: string): Promise<Account[]> {
@@ -263,37 +271,40 @@ export class SupabaseSocialRepository implements SocialRepository {
     if (!q) return [];
     const { data } = await this.sb
       .from('profiles')
-      .select('id, username, display_name, bio, private_profile, created_at')
+      .select(ACCOUNT_COLS)
       .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
       .neq('id', viewerId)
       .limit(20);
-    return (
-      (data as
-        | {
-            id: string;
-            username: string;
-            display_name: string;
-            bio: string | null;
-            private_profile: boolean;
-            created_at: string;
-          }[]
-        | null) ?? []
-    ).map((p) => ({
-      id: p.id,
-      username: p.username,
-      displayName: p.display_name,
-      ...(p.bio ? { bio: p.bio } : {}),
-      passwordHash: '',
-      passwordSalt: '',
-      createdAt: p.created_at,
-      privateProfile: p.private_profile,
-    }));
+    return ((data as AccountRow[] | null) ?? []).map(rowToAccount);
+  }
+
+  /** Cuentas (perfiles) a partir de una lista de ids, preservando el orden. */
+  private async accountsByIds(ids: string[]): Promise<Account[]> {
+    if (ids.length === 0) return [];
+    const { data } = await this.sb.from('profiles').select(ACCOUNT_COLS).in('id', ids);
+    const byId = new Map(((data as AccountRow[] | null) ?? []).map((r) => [r.id, rowToAccount(r)]));
+    return ids.map((id) => byId.get(id)).filter((a): a is Account => !!a);
+  }
+
+  async getFollowers(userId: string): Promise<Account[]> {
+    const { data } = await this.sb.from('follows').select('follower').eq('followee', userId).limit(200);
+    return this.accountsByIds(((data as { follower: string }[] | null) ?? []).map((f) => f.follower));
+  }
+
+  async getFollowingAccounts(userId: string): Promise<Account[]> {
+    const { data } = await this.sb.from('follows').select('followee').eq('follower', userId).limit(200);
+    return this.accountsByIds(((data as { followee: string }[] | null) ?? []).map((f) => f.followee));
   }
 
   async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
-    const [profRes, followers, isFollowing, statsRes, me] = await Promise.all([
-      this.sb.from('profiles').select('id, username, display_name, bio').eq('id', userId).maybeSingle(),
+    const [profRes, followers, followingRes, isFollowing, statsRes, me] = await Promise.all([
+      this.sb
+        .from('profiles')
+        .select('id, username, display_name, bio, avatar_url, location')
+        .eq('id', userId)
+        .maybeSingle(),
       this.countFollowers(userId),
+      this.sb.from('follows').select('follower', { count: 'exact', head: true }).eq('follower', userId),
       this.isFollowing(viewerId, userId),
       this.sb
         .from('profile_stats')
@@ -303,7 +314,14 @@ export class SupabaseSocialRepository implements SocialRepository {
       this.uid(),
     ]);
     const p = profRes.data as
-      | { id: string; username: string; display_name: string; bio: string | null }
+      | {
+          id: string;
+          username: string;
+          display_name: string;
+          bio: string | null;
+          avatar_url: string | null;
+          location: string | null;
+        }
       | null;
     if (!p) return null;
     const s = statsRes.data as
@@ -314,7 +332,10 @@ export class SupabaseSocialRepository implements SocialRepository {
       displayName: p.display_name,
       username: p.username,
       ...(p.bio ? { bio: p.bio } : {}),
+      ...(p.avatar_url ? { avatarUrl: p.avatar_url } : {}),
+      ...(p.location ? { location: p.location } : {}),
       followers,
+      following: followingRes.count ?? 0,
       isFollowing,
       isMe: me === userId,
       stats: s

@@ -41,6 +41,14 @@ export function ProfileView({ userId }: { userId: string }) {
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const nameById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e.name])), [exercises]);
   const [busy, setBusy] = useState(false);
+  const [panel, setPanel] = useState<'followers' | 'following' | null>(null);
+  const { data: connections } = useAsyncData(
+    useCallback(() => {
+      if (panel === 'followers') return socialRepo.getFollowers(targetId);
+      if (panel === 'following') return socialRepo.getFollowingAccounts(targetId);
+      return Promise.resolve(null);
+    }, [panel, targetId]),
+  );
 
   async function toggleFollow() {
     if (!profile || profile.isMe) return;
@@ -112,18 +120,42 @@ export function ProfileView({ userId }: { userId: string }) {
       </a>
 
       <section className="card profile-head" aria-labelledby="view-title">
-        <Avatar id={profile.id} name={profile.displayName} size={64} />
+        <Avatar id={profile.id} name={profile.displayName} size={64} photoUrl={profile.avatarUrl} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 id="view-title" tabIndex={-1} style={{ margin: 0 }}>
             {profile.displayName}
           </h1>
           <p className="meta" style={{ margin: '0.15rem 0 0' }}>
-            @{profile.username} · {profile.followers}{' '}
-            {profile.followers === 1 ? 'seguidor' : 'seguidores'}
+            @{profile.username}
+            {profile.location ? ` · 📍 ${profile.location}` : ''}
+          </p>
+          <p className="meta" style={{ margin: '0.15rem 0 0' }}>
+            <button
+              type="button"
+              className="link-btn"
+              aria-pressed={panel === 'followers'}
+              onClick={() => setPanel((p) => (p === 'followers' ? null : 'followers'))}
+            >
+              <strong className="num">{profile.followers}</strong>{' '}
+              {profile.followers === 1 ? 'seguidor' : 'seguidores'}
+            </button>
+            {' · '}
+            <button
+              type="button"
+              className="link-btn"
+              aria-pressed={panel === 'following'}
+              onClick={() => setPanel((p) => (p === 'following' ? null : 'following'))}
+            >
+              <strong className="num">{profile.following}</strong> siguiendo
+            </button>
           </p>
           {profile.bio && <p style={{ margin: '0.4rem 0 0' }}>{profile.bio}</p>}
         </div>
-        {!profile.isMe && (
+        {profile.isMe ? (
+          <a className="btn btn--small" href="#/ajustes">
+            Editar perfil
+          </a>
+        ) : (
           <button
             type="button"
             className={`btn btn--small ${profile.isFollowing ? '' : 'btn--primary'}`}
@@ -135,6 +167,40 @@ export function ProfileView({ userId }: { userId: string }) {
           </button>
         )}
       </section>
+
+      {panel && (
+        <section className="card" aria-label={panel === 'followers' ? 'Seguidores' : 'Siguiendo'}>
+          <h2 style={{ marginTop: 0 }}>{panel === 'followers' ? 'Seguidores' : 'Siguiendo'}</h2>
+          {connections === undefined && (
+            <p className="muted" role="status">
+              Cargando…
+            </p>
+          )}
+          {connections && connections.length === 0 && (
+            <p className="muted">
+              {panel === 'followers' ? 'Todavía no tiene seguidores.' : 'Todavía no sigue a nadie.'}
+            </p>
+          )}
+          {connections && connections.length > 0 && (
+            <ul className="item-list">
+              {connections.map((acc) => (
+                <li key={acc.id}>
+                  <a href={`#/perfil/${encodeURIComponent(acc.id)}`} aria-label={`Perfil de ${acc.displayName}`}>
+                    <Avatar id={acc.id} name={acc.displayName} size={36} photoUrl={acc.avatarUrl} />
+                  </a>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <a className="author-link" href={`#/perfil/${encodeURIComponent(acc.id)}`}>
+                      <span className="title">{acc.displayName}</span>
+                    </a>
+                    <br />
+                    <span className="meta">@{acc.username}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <div className="stat-grid">
         <div className="stat">

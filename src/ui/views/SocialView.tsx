@@ -260,7 +260,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const accountRow = (acc: Account) => (
     <li key={acc.id}>
       <a href={`#/perfil/${encodeURIComponent(acc.id)}`} aria-label={`Ver el perfil de ${acc.displayName}`}>
-        <Avatar id={acc.id} name={acc.displayName} size={36} />
+        <Avatar id={acc.id} name={acc.displayName} size={36} photoUrl={acc.avatarUrl} />
       </a>
       <div style={{ flex: 1, minWidth: 0 }}>
         <a className="author-link" href={`#/perfil/${encodeURIComponent(acc.id)}`}>
@@ -298,7 +298,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
 
       <div className="card session-bar">
         <a href={`#/perfil/${encodeURIComponent(myId)}`} aria-label="Ver mi perfil">
-          <Avatar id={myId} name={me} />
+          <Avatar id={myId} name={me} photoUrl={account.avatarUrl} />
         </a>
         <div style={{ flex: 1, minWidth: 0 }}>
           <a className="author-link" href={`#/perfil/${encodeURIComponent(myId)}`}>
@@ -414,10 +414,10 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           <div className="post-head">
             {post.authorId ? (
               <a href={`#/perfil/${encodeURIComponent(post.authorId)}`} aria-label={`Ver el perfil de ${post.author}`}>
-                <Avatar id={post.authorId} name={post.author} size={36} />
+                <Avatar id={post.authorId} name={post.author} size={36} photoUrl={post.authorAvatar} />
               </a>
             ) : (
-              <Avatar id={post.id} name={post.author} size={36} />
+              <Avatar id={post.id} name={post.author} size={36} photoUrl={post.authorAvatar} />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               {post.authorId ? (

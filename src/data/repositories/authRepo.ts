@@ -30,7 +30,14 @@ export interface AuthService {
   logout(): void;
   currentAccountId(): Promise<string | null>;
   getAccount(id: string): Promise<Account | undefined>;
-  updateProfile(id: string, changes: Partial<Pick<Account, 'displayName' | 'bio' | 'privateProfile'>>): Promise<void>;
+  updateProfile(
+    id: string,
+    changes: Partial<
+      Pick<Account, 'displayName' | 'bio' | 'privateProfile' | 'avatarUrl' | 'location' | 'lat' | 'lng'>
+    >,
+  ): Promise<void>;
+  /** Sube una foto de perfil (dataURL) y devuelve su URL final. */
+  uploadAvatar(id: string, dataUrl: string): Promise<string>;
   changePassword(id: string, current: string, next: string): Promise<void>;
   deleteAccount(id: string): Promise<void>;
   /** Suscripción a cambios de sesión (login/logout/confirmación). Opcional. */
@@ -103,7 +110,9 @@ class LocalAuthService implements AuthService {
 
   async updateProfile(
     id: string,
-    changes: Partial<Pick<Account, 'displayName' | 'bio' | 'privateProfile'>>,
+    changes: Partial<
+      Pick<Account, 'displayName' | 'bio' | 'privateProfile' | 'avatarUrl' | 'location' | 'lat' | 'lng'>
+    >,
   ): Promise<void> {
     if (changes.displayName !== undefined) {
       const err = validateDisplayName(changes.displayName);
@@ -111,6 +120,12 @@ class LocalAuthService implements AuthService {
       changes = { ...changes, displayName: changes.displayName.trim() };
     }
     await db.accounts.update(id, changes);
+  }
+
+  async uploadAvatar(id: string, dataUrl: string): Promise<string> {
+    // En local no hay Storage: se guarda el propio dataURL como avatar.
+    await db.accounts.update(id, { avatarUrl: dataUrl });
+    return dataUrl;
   }
 
   async changePassword(id: string, current: string, next: string): Promise<void> {

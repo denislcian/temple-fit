@@ -1750,6 +1750,48 @@ legend {
   border-radius: var(--radius-m);
 }
 
+/* Editar foto de perfil. */
+.avatar-edit {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.avatar-edit:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.avatar-edit__hint {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 1.3rem;
+  height: 1.3rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-btn:disabled {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: none;
+}
+
 /* ── Avatar y red social ────────────────────────────────── */
 .avatar {
   display: inline-flex;
@@ -1761,6 +1803,10 @@ legend {
   flex-shrink: 0;
   letter-spacing: 0.02em;
   user-select: none;
+}
+.avatar--photo {
+  object-fit: cover;
+  background: var(--surface-2);
 }
 
 .session-bar {
