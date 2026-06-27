@@ -105,7 +105,23 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [photo, setPhoto] = useState<string>('');
   const [feedFilter, setFeedFilter] = useState('todo');
+  const [feedSource, setFeedSource] = useState<'todos' | 'siguiendo'>('todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Account[]>([]);
   const photoInput = useRef<HTMLInputElement>(null);
+
+  // Búsqueda de personas (con debounce ligero).
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      void socialRepo.searchAccounts(q, myId).then(setSearchResults);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [searchQuery, myId]);
 
   const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
   const activeKinds = FEED_FILTERS.find((f) => f.id === feedFilter)?.kinds ?? [];
@@ -215,6 +231,38 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
     await reloadDiscover();
   }
 
+  const accountRow = (acc: Account) => (
+    <li key={acc.id}>
+      <a href={`#/perfil/${encodeURIComponent(acc.id)}`} aria-label={`Ver el perfil de ${acc.displayName}`}>
+        <Avatar id={acc.id} name={acc.displayName} size={36} />
+      </a>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <a className="author-link" href={`#/perfil/${encodeURIComponent(acc.id)}`}>
+          <span className="title">{acc.displayName}</span>
+        </a>
+        <br />
+        <span className="meta">
+          @{acc.username}
+          {acc.bio ? ` · ${acc.bio}` : ''}
+        </span>
+      </div>
+      <button
+        type="button"
+        className={`btn btn--small ${following.has(acc.id) ? '' : 'btn--primary'}`}
+        aria-pressed={following.has(acc.id)}
+        onClick={() => toggleFollow(acc)}
+      >
+        {following.has(acc.id) ? 'Siguiendo' : 'Seguir'}
+        <span className="visually-hidden"> a {acc.displayName}</span>
+      </button>
+    </li>
+  );
+
+  const sourcedFeed =
+    feedSource === 'siguiendo'
+      ? visibleFeed.filter((p) => p.authorId === myId || (p.authorId ? following.has(p.authorId) : false))
+      : visibleFeed;
+
   return (
     <>
       <span className="kicker">Entrena acompañado</span>
@@ -248,38 +296,60 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         </button>
       </div>
 
-      {discover && discover.length > 0 && (
+      <section className="card" aria-labelledby="search-heading">
+        <h2 id="search-heading">Buscar personas</h2>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label htmlFor="user-search" className="visually-hidden">
+            Buscar por nombre o usuario
+          </label>
+          <input
+            id="user-search"
+            className="input"
+            type="search"
+            placeholder="Buscar por nombre o @usuario…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        {searchQuery.trim() &&
+          (searchResults.length > 0 ? (
+            <ul className="item-list" style={{ marginTop: '0.75rem' }}>
+              {searchResults.map(accountRow)}
+            </ul>
+          ) : (
+            <p className="muted" role="status" style={{ marginTop: '0.5rem' }}>
+              Sin resultados para «{searchQuery.trim()}».
+            </p>
+          ))}
+      </section>
+
+      {!searchQuery.trim() && discover && discover.length > 0 && (
         <section className="card" aria-labelledby="discover-heading">
           <h2 id="discover-heading">Descubrir personas</h2>
-          <ul className="item-list">
-            {discover.map((acc) => (
-              <li key={acc.id}>
-                <a href={`#/perfil/${encodeURIComponent(acc.id)}`} aria-label={`Ver el perfil de ${acc.displayName}`}>
-                  <Avatar id={acc.id} name={acc.displayName} size={36} />
-                </a>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <a className="author-link" href={`#/perfil/${encodeURIComponent(acc.id)}`}>
-                    <span className="title">{acc.displayName}</span>
-                  </a>
-                  <br />
-                  <span className="meta">@{acc.username}{acc.bio ? ` · ${acc.bio}` : ''}</span>
-                </div>
-                <button
-                  type="button"
-                  className={`btn btn--small ${following.has(acc.id) ? '' : 'btn--primary'}`}
-                  aria-pressed={following.has(acc.id)}
-                  onClick={() => toggleFollow(acc)}
-                >
-                  {following.has(acc.id) ? 'Siguiendo' : 'Seguir'}
-                  <span className="visually-hidden"> a {acc.displayName}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <ul className="item-list">{discover.map(accountRow)}</ul>
         </section>
       )}
 
       <ChallengesSection account={account} />
+
+      <div className="btn-row" role="group" aria-label="Fuente del feed" style={{ marginBottom: '0.5rem' }}>
+        <button
+          type="button"
+          className={`btn btn--small ${feedSource === 'siguiendo' ? 'btn--primary' : 'btn--ghost'}`}
+          aria-pressed={feedSource === 'siguiendo'}
+          onClick={() => setFeedSource('siguiendo')}
+        >
+          Siguiendo
+        </button>
+        <button
+          type="button"
+          className={`btn btn--small ${feedSource === 'todos' ? 'btn--primary' : 'btn--ghost'}`}
+          aria-pressed={feedSource === 'todos'}
+          onClick={() => setFeedSource('todos')}
+        >
+          Descubrir
+        </button>
+      </div>
 
       <div className="btn-row feed-filter" role="group" aria-label="Filtrar el feed" style={{ marginBottom: '0.75rem', flexWrap: 'wrap' }}>
         {FEED_FILTERS.map((f) => (
@@ -295,13 +365,15 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         ))}
       </div>
 
-      {visibleFeed.filter((p) => activeKinds.includes(p.kind)).length === 0 && (
+      {sourcedFeed.filter((p) => activeKinds.includes(p.kind)).length === 0 && (
         <p className="muted" role="status">
-          No hay publicaciones de este tipo todavía.
+          {feedSource === 'siguiendo'
+            ? 'Aún no hay publicaciones de quien sigues. Sigue a alguien o pásate a Descubrir.'
+            : 'No hay publicaciones de este tipo todavía.'}
         </p>
       )}
 
-      {visibleFeed
+      {sourcedFeed
         .filter((p) => activeKinds.includes(p.kind))
         .map((post) => (
         <article key={post.id} className="card" aria-label={`Publicación de ${post.author}`}>

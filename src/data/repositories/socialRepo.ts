@@ -49,6 +49,8 @@ export interface SocialRepository {
   countFollowers(accountId: string): Promise<number>;
   /** Otras cuentas a las que seguir (excluye al propio viewer). */
   discoverAccounts(viewerId: string): Promise<Account[]>;
+  /** Busca personas por nombre o @usuario (excluye al viewer). */
+  searchAccounts(query: string, viewerId: string): Promise<Account[]>;
   // Perfiles
   getProfile(userId: string, viewerId: string): Promise<ProfileData | null>;
   getUserPosts(userId: string, viewerId: string): Promise<Post[]>;
@@ -181,8 +183,23 @@ class LocalSocialRepository implements SocialRepository {
   }
 
   async discoverAccounts(viewerId: string): Promise<Account[]> {
+    await ensureSeeded();
     const all = await db.accounts.toArray();
     return all.filter((a) => a.id !== viewerId);
+  }
+
+  async searchAccounts(query: string, viewerId: string): Promise<Account[]> {
+    await ensureSeeded();
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const all = await db.accounts.toArray();
+    return all
+      .filter(
+        (a) =>
+          a.id !== viewerId &&
+          (a.displayName.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)),
+      )
+      .slice(0, 20);
   }
 
   private async statsFor(userId: string, viewerId: string): Promise<PublicStats> {

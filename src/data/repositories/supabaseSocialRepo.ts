@@ -257,6 +257,39 @@ export class SupabaseSocialRepository implements SocialRepository {
     }));
   }
 
+  async searchAccounts(query: string, viewerId: string): Promise<Account[]> {
+    // Se limpian caracteres que romperían el filtro .or de PostgREST.
+    const q = query.trim().replace(/[,%()*]/g, '');
+    if (!q) return [];
+    const { data } = await this.sb
+      .from('profiles')
+      .select('id, username, display_name, bio, private_profile, created_at')
+      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+      .neq('id', viewerId)
+      .limit(20);
+    return (
+      (data as
+        | {
+            id: string;
+            username: string;
+            display_name: string;
+            bio: string | null;
+            private_profile: boolean;
+            created_at: string;
+          }[]
+        | null) ?? []
+    ).map((p) => ({
+      id: p.id,
+      username: p.username,
+      displayName: p.display_name,
+      ...(p.bio ? { bio: p.bio } : {}),
+      passwordHash: '',
+      passwordSalt: '',
+      createdAt: p.created_at,
+      privateProfile: p.private_profile,
+    }));
+  }
+
   async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
     const [profRes, followers, isFollowing, statsRes, me] = await Promise.all([
       this.sb.from('profiles').select('id, username, display_name, bio').eq('id', userId).maybeSingle(),
