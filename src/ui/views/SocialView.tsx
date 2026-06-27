@@ -8,6 +8,7 @@ import { VISIBILITY_LABELS } from '../../data/nutritionModels';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllRoutines } from '../../data/repositories/routineRepo';
+import { notificationsRepo } from '../../data/repositories/notificationsRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { socialRepo } from '../../data/repositories/socialRepo';
 import { isSupabaseEnabled } from '../../data/supabase';
@@ -88,6 +89,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const { data: discover, reload: reloadDiscover } = useAsyncData(
     useCallback(() => socialRepo.discoverAccounts(myId), [myId]),
   );
+  const { data: unread } = useAsyncData(useCallback(() => notificationsRepo.countUnread(myId), [myId]));
 
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const reloadFollowing = useCallback(async () => {
@@ -206,6 +208,15 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   async function like(post: Post) {
     const updated = await socialRepo.toggleLike(post.id);
     await reload();
+    if (updated?.likedByMe && post.authorId) {
+      void notificationsRepo.create({
+        userId: post.authorId,
+        actorId: myId,
+        actorName: me,
+        kind: 'like',
+        postId: post.id,
+      });
+    }
     announce(updated?.likedByMe ? `Te gusta la publicación de ${post.author}` : `Ya no te gusta`);
   }
 
@@ -215,6 +226,15 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
     await socialRepo.addComment(post.id, me, text);
     setCommentDrafts((prev) => ({ ...prev, [post.id]: '' }));
     await reload();
+    if (post.authorId) {
+      void notificationsRepo.create({
+        userId: post.authorId,
+        actorId: myId,
+        actorName: me,
+        kind: 'comment',
+        postId: post.id,
+      });
+    }
     announce('Comentario publicado');
   }
 
@@ -224,6 +244,12 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       announce(`Dejaste de seguir a ${target.displayName}`);
     } else {
       await socialRepo.follow(myId, target.id);
+      void notificationsRepo.create({
+        userId: target.id,
+        actorId: myId,
+        actorName: me,
+        kind: 'follow',
+      });
       announce(`Ahora sigues a ${target.displayName}`);
     }
     await reloadFollowing();
@@ -271,14 +297,22 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       </h1>
 
       <div className="card session-bar">
-        <Avatar id={myId} name={me} />
+        <a href={`#/perfil/${encodeURIComponent(myId)}`} aria-label="Ver mi perfil">
+          <Avatar id={myId} name={me} />
+        </a>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="title">{me}</span>
+          <a className="author-link" href={`#/perfil/${encodeURIComponent(myId)}`}>
+            <span className="title">{me}</span>
+          </a>
           <br />
           <span className="meta">@{account.username}</span>
         </div>
+        <a href="#/notificaciones" className="notif-bell" aria-label={`Notificaciones${unread ? ` (${unread} sin leer)` : ''}`}>
+          <span aria-hidden="true">🔔</span>
+          {unread ? <span className="notif-badge num">{unread}</span> : null}
+        </a>
         <button type="button" className="btn btn--small btn--ghost" onClick={onLogout}>
-          Cerrar sesión
+          Salir
         </button>
       </div>
 

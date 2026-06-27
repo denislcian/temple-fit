@@ -5,6 +5,7 @@ import type { Account } from './authModels';
 import type { BodyMeasurement, WaterDay } from './bodyModels';
 import type { Challenge, ChallengeMember } from './challengeModels';
 import type { Exercise, Routine, Session } from './models';
+import type { Notification } from './notificationModels';
 import type { DiaryEntry, FoodItem, Follow, Post } from './nutritionModels';
 import type { SleepSession } from './sleepModels';
 
@@ -22,6 +23,7 @@ export class TempleDB extends Dexie {
   sleepSessions!: EntityTable<SleepSession, 'id'>;
   challenges!: EntityTable<Challenge, 'id'>;
   challengeMembers!: Table<ChallengeMember, [string, string]>;
+  notifications!: EntityTable<Notification, 'id'>;
 
   constructor() {
     super('forjafit');
@@ -97,6 +99,23 @@ export class TempleDB extends Dexie {
       sleepSessions: 'id, date, startedAt',
       challenges: 'id, endsAt, creatorId',
       challengeMembers: '[challengeId+userId], challengeId, userId',
+    });
+    // v7 (comunidad): notificaciones (te siguen / like / comentario).
+    this.version(7).stores({
+      exercises: 'id, name, muscleGroup, isCustom',
+      routines: 'id, name, createdAt',
+      sessions: 'id, date',
+      foods: 'id, name, source, barcode',
+      diary: 'id, date, meal',
+      posts: 'id, createdAt, authorId',
+      bodyMetrics: 'id, date',
+      water: 'date',
+      accounts: 'id, &username',
+      follows: 'id, followerId, followeeId, [followerId+followeeId]',
+      sleepSessions: 'id, date, startedAt',
+      challenges: 'id, endsAt, creatorId',
+      challengeMembers: '[challengeId+userId], challengeId, userId',
+      notifications: 'id, userId, createdAt',
     });
   }
 }

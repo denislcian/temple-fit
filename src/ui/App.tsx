@@ -35,6 +35,7 @@ import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
 import { ProfileView } from './views/ProfileView';
+import { NotificationsView } from './views/NotificationsView';
 import { CoachView } from './views/CoachView';
 import { DescansoView } from './views/DescansoView';
 import { RecipesView } from './views/RecipesView';
@@ -196,6 +197,14 @@ const ICONS: Record<Route, ReactNode> = {
       <circle cx="12" cy="8" r="3.6" />
       <path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6Z" {...FILL} />
       <path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6" />
+    </svg>
+  ),
+  notificaciones: (
+    // Campana.
+    <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
+      <path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 2 5.5 2 5.5H4s2-1 2-5.5Z" {...FILL_SOFT} />
+      <path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 2 5.5 2 5.5H4s2-1 2-5.5Z" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
     </svg>
   ),
 };
@@ -383,6 +392,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
             {route === 'nutricion' && <NutritionView />}
             {route === 'social' && <SocialView />}
             {route === 'perfil' && <ProfileView userId={param} />}
+            {route === 'notificaciones' && <NotificationsView />}
             {route === 'mas' && <MoreView icons={ICONS} />}
             {route === 'historial' && <HistoryView />}
             {route === 'rutinas' && <RoutinesView />}

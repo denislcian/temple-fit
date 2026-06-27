@@ -3,6 +3,7 @@
 // publicaciones. Se llega tocando a alguien en la comunidad (#/perfil/<id>).
 import { useCallback, useMemo, useState } from 'react';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
+import { notificationsRepo } from '../../data/repositories/notificationsRepo';
 import { socialRepo } from '../../data/repositories/socialRepo';
 import { useAnnounce } from '../components/Announcer';
 import { useAuth } from '../components/AuthContext';
@@ -50,6 +51,12 @@ export function ProfileView({ userId }: { userId: string }) {
         announce(`Dejaste de seguir a ${profile.displayName}`);
       } else {
         await socialRepo.follow(viewerId, profile.id);
+        void notificationsRepo.create({
+          userId: profile.id,
+          actorId: viewerId,
+          actorName: account?.displayName ?? 'Alguien',
+          kind: 'follow',
+        });
         announce(`Ahora sigues a ${profile.displayName}`);
       }
       await reload();

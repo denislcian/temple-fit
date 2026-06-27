@@ -18,6 +18,7 @@ export const ROUTES = [
   'recetas',
   'ajustes',
   'perfil',
+  'notificaciones',
   'mas',
 ] as const;
 
@@ -37,6 +38,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   recetas: 'Recetas',
   ajustes: 'Ajustes',
   perfil: 'Perfil',
+  notificaciones: 'Notificaciones',
   mas: 'Más',
 };
 
