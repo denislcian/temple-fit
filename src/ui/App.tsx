@@ -7,6 +7,7 @@ import '@fontsource/archivo/400.css';
 import '@fontsource/archivo/600.css';
 import '@fontsource/archivo/700.css';
 import '@fontsource/archivo-black/400.css';
+import { cloudSync } from '../data/cloudSync';
 import { requestPersistentStorage } from '../data/db';
 import { isSupabaseEnabled } from '../data/supabase';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
@@ -421,6 +422,13 @@ function AuthGate({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
 function Root() {
   const { account, loading } = useAuth();
   const { theme, setTheme } = useTheme();
+
+  // Al haber sesión (nube), sincroniza los datos de la cuenta: sube lo local la
+  // primera vez y baja lo de la nube (multi-dispositivo).
+  const accountId = account?.id;
+  useEffect(() => {
+    if (accountId && cloudSync) void cloudSync.syncNow(accountId);
+  }, [accountId]);
 
   if (isSupabaseEnabled && loading) {
     return (

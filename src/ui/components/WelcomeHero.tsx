@@ -43,8 +43,8 @@ export function WelcomeHero() {
       </ul>
 
       <p className="welcome__privacy">
-        <span aria-hidden="true">🔒</span> Tus entrenos, nutrición y sueño se guardan solo en tu
-        dispositivo. La comunidad es opcional.
+        <span aria-hidden="true">☁️</span> Tu cuenta guarda tu progreso y lo sincroniza en todos tus
+        dispositivos. Comparte lo que quieras con la comunidad.
       </p>
     </div>
   );
