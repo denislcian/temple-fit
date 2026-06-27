@@ -254,9 +254,13 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           <ul className="item-list">
             {discover.map((acc) => (
               <li key={acc.id}>
-                <Avatar id={acc.id} name={acc.displayName} size={36} />
+                <a href={`#/perfil/${encodeURIComponent(acc.id)}`} aria-label={`Ver el perfil de ${acc.displayName}`}>
+                  <Avatar id={acc.id} name={acc.displayName} size={36} />
+                </a>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span className="title">{acc.displayName}</span>
+                  <a className="author-link" href={`#/perfil/${encodeURIComponent(acc.id)}`}>
+                    <span className="title">{acc.displayName}</span>
+                  </a>
                   <br />
                   <span className="meta">@{acc.username}{acc.bio ? ` · ${acc.bio}` : ''}</span>
                 </div>
@@ -302,9 +306,21 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         .map((post) => (
         <article key={post.id} className="card" aria-label={`Publicación de ${post.author}`}>
           <div className="post-head">
-            <Avatar id={post.authorId ?? post.id} name={post.author} size={36} />
+            {post.authorId ? (
+              <a href={`#/perfil/${encodeURIComponent(post.authorId)}`} aria-label={`Ver el perfil de ${post.author}`}>
+                <Avatar id={post.authorId} name={post.author} size={36} />
+              </a>
+            ) : (
+              <Avatar id={post.id} name={post.author} size={36} />
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <strong>{post.author}</strong>{' '}
+              {post.authorId ? (
+                <a className="author-link" href={`#/perfil/${encodeURIComponent(post.authorId)}`}>
+                  <strong>{post.author}</strong>
+                </a>
+              ) : (
+                <strong>{post.author}</strong>
+              )}{' '}
               <span className="muted">· {relativeTime(post.createdAt)}</span>
               {post.visibility && post.visibility !== 'publica' && (
                 <span className="pr-badge badge--steel" style={{ marginLeft: '0.4rem' }}>

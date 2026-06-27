@@ -17,6 +17,7 @@ export const ROUTES = [
   'descanso',
   'recetas',
   'ajustes',
+  'perfil',
   'mas',
 ] as const;
 
@@ -35,6 +36,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   descanso: 'Descanso',
   recetas: 'Recetas',
   ajustes: 'Ajustes',
+  perfil: 'Perfil',
   mas: 'Más',
 };
 
@@ -52,23 +54,34 @@ export const SECONDARY_ROUTES: readonly Route[] = [
   'ajustes',
 ];
 
-function parseHash(): Route {
+/** Parsea el hash en ruta + parámetro opcional (p. ej. #/perfil/<id>). */
+function parseHash(): { route: Route; param: string } {
   const raw = window.location.hash.replace(/^#\/?/, '');
-  return (ROUTES as readonly string[]).includes(raw) ? (raw as Route) : 'entrenar';
+  const slash = raw.indexOf('/');
+  const first = slash === -1 ? raw : raw.slice(0, slash);
+  const param = slash === -1 ? '' : decodeURIComponent(raw.slice(slash + 1));
+  return {
+    route: (ROUTES as readonly string[]).includes(first) ? (first as Route) : 'entrenar',
+    param,
+  };
 }
 
-export function useHashRoute(): { route: Route; navigate: (to: Route) => void } {
-  const [route, setRoute] = useState<Route>(parseHash);
+export function useHashRoute(): {
+  route: Route;
+  param: string;
+  navigate: (to: Route, param?: string) => void;
+} {
+  const [state, setState] = useState(parseHash);
 
   useEffect(() => {
-    const onHashChange = () => setRoute(parseHash());
+    const onHashChange = () => setState(parseHash());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  const navigate = useCallback((to: Route) => {
-    window.location.hash = `/${to}`;
+  const navigate = useCallback((to: Route, param?: string) => {
+    window.location.hash = param ? `/${to}/${encodeURIComponent(param)}` : `/${to}`;
   }, []);
 
-  return { route, navigate };
+  return { route: state.route, param: state.param, navigate };
 }

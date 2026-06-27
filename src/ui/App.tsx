@@ -9,6 +9,9 @@ import '@fontsource/archivo/700.css';
 import '@fontsource/archivo-black/400.css';
 import { cloudSync } from '../data/cloudSync';
 import { requestPersistentStorage } from '../data/db';
+import { getAllSessions } from '../data/repositories/sessionRepo';
+import { socialRepo } from '../data/repositories/socialRepo';
+import { computeProfileStats } from '../domain/profileStats';
 import { isSupabaseEnabled } from '../data/supabase';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
@@ -31,6 +34,7 @@ import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
 import { SettingsView } from './views/SettingsView';
 import { SocialView } from './views/SocialView';
+import { ProfileView } from './views/ProfileView';
 import { CoachView } from './views/CoachView';
 import { DescansoView } from './views/DescansoView';
 import { RecipesView } from './views/RecipesView';
@@ -185,6 +189,15 @@ const ICONS: Record<Route, ReactNode> = {
       <circle cx="9" cy="16.5" r="2.5" />
     </svg>
   ),
+  perfil: (
+    // Persona (no aparece en el nav; se llega tocando a alguien).
+    <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
+      <circle cx="12" cy="8" r="3.6" {...FILL} />
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6Z" {...FILL} />
+      <path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6" />
+    </svg>
+  ),
 };
 
 // Agrupación de la barra lateral de escritorio (en móvil: 5 pestañas + Más).
@@ -230,7 +243,7 @@ function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) =
 }
 
 function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
-  const { route } = useHashRoute();
+  const { route, param } = useHashRoute();
   const announce = useAnnounce();
   const [ready, setReady] = useState(false);
   const [draftActive, setDraftActive] = useState(false);
@@ -369,6 +382,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
             {route === 'coach' && <CoachView />}
             {route === 'nutricion' && <NutritionView />}
             {route === 'social' && <SocialView />}
+            {route === 'perfil' && <ProfileView userId={param} />}
             {route === 'mas' && <MoreView icons={ICONS} />}
             {route === 'historial' && <HistoryView />}
             {route === 'rutinas' && <RoutinesView />}
@@ -423,11 +437,22 @@ function Root() {
   const { account, loading } = useAuth();
   const { theme, setTheme } = useTheme();
 
-  // Al haber sesión (nube), sincroniza los datos de la cuenta: sube lo local la
-  // primera vez y baja lo de la nube (multi-dispositivo).
+  // Al haber sesión: sincroniza los datos de la cuenta (sube lo local la 1ª vez,
+  // baja lo de la nube) y publica el resumen de stats para tu perfil.
   const accountId = account?.id;
   useEffect(() => {
-    if (accountId && cloudSync) void cloudSync.syncNow(accountId);
+    if (!accountId) return;
+    void (async () => {
+      try {
+        if (cloudSync) await cloudSync.syncNow(accountId);
+        await socialRepo.publishStats(
+          accountId,
+          computeProfileStats(await getAllSessions(), new Date().toISOString().slice(0, 10)),
+        );
+      } catch {
+        // Sync/stats son best-effort: nunca deben romper el arranque.
+      }
+    })();
   }, [accountId]);
 
   if (isSupabaseEnabled && loading) {

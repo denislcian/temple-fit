@@ -5,10 +5,25 @@
 // fase nube: una implementación con Supabase (Postgres + RLS + Realtime)
 // sustituirá a esta sin tocar la UI. La privacidad se aplica aquí en el
 // cliente por conveniencia; en producción la fuerzan las políticas RLS.
+import { visiblePosts } from '../../domain/feed';
+import { computeProfileStats, EMPTY_STATS, type PublicStats } from '../../domain/profileStats';
 import type { Account } from '../authModels';
 import { db } from '../db';
 import { newId } from '../models';
 import type { Post, Visibility } from '../nutritionModels';
+import { getAllSessions } from './sessionRepo';
+
+/** Datos de un perfil que se muestran al visitarlo. */
+export interface ProfileData {
+  id: string;
+  displayName: string;
+  username: string;
+  bio?: string;
+  followers: number;
+  isFollowing: boolean;
+  isMe: boolean;
+  stats: PublicStats;
+}
 
 export interface NewPost {
   author: string;
@@ -34,7 +49,47 @@ export interface SocialRepository {
   countFollowers(accountId: string): Promise<number>;
   /** Otras cuentas a las que seguir (excluye al propio viewer). */
   discoverAccounts(viewerId: string): Promise<Account[]>;
+  // Perfiles
+  getProfile(userId: string, viewerId: string): Promise<ProfileData | null>;
+  getUserPosts(userId: string, viewerId: string): Promise<Post[]>;
+  /** Publica TU resumen de stats (agregado) para que tu perfil lo muestre. */
+  publishStats(userId: string, stats: PublicStats): Promise<void>;
 }
+
+// Stats publicadas en modo local (en la nube van a la tabla profile_stats).
+const STATS_KEY = 'forjafit-profile-stats';
+function loadStatsMap(): Record<string, PublicStats> {
+  try {
+    return JSON.parse(localStorage.getItem(STATS_KEY) ?? '{}') as Record<string, PublicStats>;
+  } catch {
+    return {};
+  }
+}
+function saveStatsMap(m: Record<string, PublicStats>): void {
+  localStorage.setItem(STATS_KEY, JSON.stringify(m));
+}
+const DEMO_STATS: Record<string, PublicStats> = {
+  'demo-acc-marta': {
+    sessions: 42,
+    volumeKg: 128000,
+    streakWeeks: 6,
+    bestLifts: [
+      { exerciseId: 'sentadilla', est1RM: 95 },
+      { exerciseId: 'peso-muerto', est1RM: 120 },
+      { exerciseId: 'hip-thrust', est1RM: 140 },
+    ],
+  },
+  'demo-acc-alex': {
+    sessions: 58,
+    volumeKg: 164000,
+    streakWeeks: 9,
+    bestLifts: [
+      { exerciseId: 'press-banca', est1RM: 102 },
+      { exerciseId: 'sentadilla', est1RM: 130 },
+      { exerciseId: 'press-militar', est1RM: 62 },
+    ],
+  },
+};
 
 class LocalSocialRepository implements SocialRepository {
   async getFeed(): Promise<Post[]> {
@@ -129,9 +184,56 @@ class LocalSocialRepository implements SocialRepository {
     const all = await db.accounts.toArray();
     return all.filter((a) => a.id !== viewerId);
   }
+
+  private async statsFor(userId: string, viewerId: string): Promise<PublicStats> {
+    // Las mías se calculan en vivo de mis sesiones locales; las de otros vienen
+    // de lo que publicaron (o un demo en modo local).
+    if (userId === viewerId) {
+      return computeProfileStats(await getAllSessions(), new Date().toISOString().slice(0, 10));
+    }
+    return loadStatsMap()[userId] ?? DEMO_STATS[userId] ?? EMPTY_STATS;
+  }
+
+  async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
+    await ensureSeeded();
+    const acc = await db.accounts.get(userId);
+    if (!acc) return null;
+    const [followers, following, stats] = await Promise.all([
+      this.countFollowers(userId),
+      this.isFollowing(viewerId, userId),
+      this.statsFor(userId, viewerId),
+    ]);
+    return {
+      id: acc.id,
+      displayName: acc.displayName,
+      username: acc.username,
+      ...(acc.bio ? { bio: acc.bio } : {}),
+      followers,
+      isFollowing: following,
+      isMe: userId === viewerId,
+      stats,
+    };
+  }
+
+  async getUserPosts(userId: string, viewerId: string): Promise<Post[]> {
+    await ensureSeeded();
+    const following = new Set(await this.getFollowing(viewerId));
+    const all = await db.posts.where('authorId').equals(userId).toArray();
+    return visiblePosts(all, viewerId, following).sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+  }
+
+  async publishStats(userId: string, stats: PublicStats): Promise<void> {
+    const m = loadStatsMap();
+    m[userId] = stats;
+    saveStatsMap(m);
+  }
 }
 
-/** Cuentas y publicaciones de ejemplo del modo local (marcadas isDemo). */
+/** Cuentas y publicaciones de ejemplo del modo local (marcadas isDemo).
+ *  Idempotente (bulkPut): tolera llamadas concurrentes (StrictMode /
+ *  getFeed+getProfile a la vez) sin chocar por claves duplicadas. */
 async function ensureSeeded(): Promise<void> {
   const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
   const demoAccount = (id: string, username: string, displayName: string, bio: string): Account => ({
@@ -224,7 +326,7 @@ async function ensureSeeded(): Promise<void> {
     },
   ];
 
-  await db.posts.bulkAdd(demoPosts);
+  await db.posts.bulkPut(demoPosts);
 }
 
 import { isSupabaseEnabled, supabase } from '../supabase';

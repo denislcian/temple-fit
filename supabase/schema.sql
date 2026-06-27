@@ -230,3 +230,37 @@ drop policy if exists members_update on public.challenge_members;
 create policy members_update on public.challenge_members for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 drop policy if exists members_delete on public.challenge_members;
 create policy members_delete on public.challenge_members for delete using (user_id = auth.uid());
+
+-- ── Datos por cuenta (sync multi-dispositivo, privado) ──────────────────────
+-- También en supabase/migration-sync.sql.
+create table if not exists public.user_data (
+  user_id uuid not null references auth.users on delete cascade,
+  kind text not null,
+  item_id text not null,
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, kind, item_id)
+);
+create index if not exists user_data_user_kind_idx on public.user_data (user_id, kind);
+alter table public.user_data enable row level security;
+drop policy if exists user_data_all on public.user_data;
+create policy user_data_all on public.user_data for all
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ── Stats públicas del perfil ───────────────────────────────────────────────
+-- También en supabase/migration-perfiles.sql.
+create table if not exists public.profile_stats (
+  user_id uuid primary key references auth.users on delete cascade,
+  sessions int not null default 0,
+  volume_kg bigint not null default 0,
+  streak_weeks int not null default 0,
+  best_lifts jsonb not null default '[]',
+  updated_at timestamptz not null default now()
+);
+alter table public.profile_stats enable row level security;
+drop policy if exists profile_stats_select on public.profile_stats;
+create policy profile_stats_select on public.profile_stats for select using (true);
+drop policy if exists profile_stats_insert on public.profile_stats;
+create policy profile_stats_insert on public.profile_stats for insert with check (user_id = auth.uid());
+drop policy if exists profile_stats_update on public.profile_stats;
+create policy profile_stats_update on public.profile_stats for update using (user_id = auth.uid()) with check (user_id = auth.uid());

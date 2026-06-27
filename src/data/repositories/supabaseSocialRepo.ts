@@ -2,11 +2,13 @@
 // Implementa el MISMO contrato SocialRepository que la versión local: la UI no
 // cambia. La privacidad la impone Postgres (RLS), no este cliente.
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { EMPTY_STATS, type BestLift, type PublicStats } from '../../domain/profileStats';
 import type { Account } from '../authModels';
 import type { Post } from '../nutritionModels';
-import type { NewPost, SocialRepository } from './socialRepo';
+import type { NewPost, ProfileData, SocialRepository } from './socialRepo';
 
 const BUCKET = 'fotos';
+const POST_COLS = 'id, author, created_at, text, kind, visibility, payload, image_path';
 
 interface PostRow {
   id: string;
@@ -38,16 +40,30 @@ export class SupabaseSocialRepository implements SocialRepository {
   }
 
   async getFeed(): Promise<Post[]> {
-    const me = await this.uid();
-    const { data: posts, error } = await this.sb
+    const { data, error } = await this.sb
       .from('posts')
-      .select('id, author, created_at, text, kind, visibility, payload, image_path')
+      .select(POST_COLS)
       .order('created_at', { ascending: false })
       .limit(100);
-    if (error || !posts) return [];
-    const rows = posts as PostRow[];
-    if (rows.length === 0) return [];
+    if (error || !data) return [];
+    return this.enrich(data as PostRow[]);
+  }
 
+  async getUserPosts(userId: string): Promise<Post[]> {
+    const { data, error } = await this.sb
+      .from('posts')
+      .select(POST_COLS)
+      .eq('author', userId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error || !data) return [];
+    return this.enrich(data as PostRow[]);
+  }
+
+  /** Enriquece filas de posts con nombre de autor, likes y comentarios. */
+  private async enrich(rows: PostRow[]): Promise<Post[]> {
+    if (rows.length === 0) return [];
+    const me = await this.uid();
     const ids = rows.map((p) => p.id);
     const authors = [...new Set(rows.map((p) => p.author))];
 
@@ -239,5 +255,59 @@ export class SupabaseSocialRepository implements SocialRepository {
       createdAt: p.created_at,
       privateProfile: p.private_profile,
     }));
+  }
+
+  async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
+    const [profRes, followers, isFollowing, statsRes, me] = await Promise.all([
+      this.sb.from('profiles').select('id, username, display_name, bio').eq('id', userId).maybeSingle(),
+      this.countFollowers(userId),
+      this.isFollowing(viewerId, userId),
+      this.sb
+        .from('profile_stats')
+        .select('sessions, volume_kg, streak_weeks, best_lifts')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      this.uid(),
+    ]);
+    const p = profRes.data as
+      | { id: string; username: string; display_name: string; bio: string | null }
+      | null;
+    if (!p) return null;
+    const s = statsRes.data as
+      | { sessions: number; volume_kg: number; streak_weeks: number; best_lifts: BestLift[] | null }
+      | null;
+    return {
+      id: p.id,
+      displayName: p.display_name,
+      username: p.username,
+      ...(p.bio ? { bio: p.bio } : {}),
+      followers,
+      isFollowing,
+      isMe: me === userId,
+      stats: s
+        ? {
+            sessions: s.sessions,
+            volumeKg: s.volume_kg,
+            streakWeeks: s.streak_weeks,
+            bestLifts: s.best_lifts ?? [],
+          }
+        : EMPTY_STATS,
+    };
+  }
+
+  async publishStats(_userId: string, stats: PublicStats): Promise<void> {
+    const me = await this.uid();
+    if (!me) return;
+    await this.sb.from('profile_stats').upsert(
+      {
+        user_id: me,
+        sessions: stats.sessions,
+        volume_kg: stats.volumeKg,
+        streak_weeks: stats.streakWeeks,
+        best_lifts: stats.bestLifts,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
   }
 }
