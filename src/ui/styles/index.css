@@ -817,8 +817,18 @@ p {
 /* Dos campos lado a lado (peso + reps en las calculadoras). */
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0,1fr) deja que las columnas encojan por debajo de su contenido
+     (si no, un desplegable con texto largo desbordaría en móvil). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-3);
+}
+
+/* En móvil, los pares de campos se apilan: el texto de los desplegables se lee
+   entero y cada campo es más cómodo de tocar. */
+@media (max-width: 32rem) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Utilidad: texto en color de acento (cumple AA en ambos temas). */
@@ -2653,6 +2663,20 @@ legend {
 }
 .item-list > li:nth-child(n + 7) {
   animation-delay: 210ms;
+}
+
+/* En móvil, las filas densas (favorito + imagen + texto + acciones) dejan el
+   título sin sitio. Las acciones bajan a su propia línea (a la derecha) y el
+   texto recupera el ancho completo de la fila. */
+@media (max-width: 32rem) {
+  .item-list > li {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+  .item-list > li .row-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .item-list .title {

@@ -141,9 +141,17 @@ export function RoutinesView() {
               <span className="title">{routine.name}</span>
               <br />
               <span className="meta">
-                {routine.exerciseIds.length > 0
-                  ? routine.exerciseIds.map((id) => nameById.get(id) ?? id).join(' · ')
-                  : 'Sin ejercicios todavía'}
+                {routine.exerciseIds.length > 0 ? (
+                  <>
+                    <strong className="num">
+                      {routine.exerciseIds.length}{' '}
+                      {routine.exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'}
+                    </strong>{' '}
+                    · {routine.exerciseIds.map((id) => nameById.get(id) ?? id).join(' · ')}
+                  </>
+                ) : (
+                  'Sin ejercicios todavía'
+                )}
               </span>
             </div>
             <div className="row-actions">
