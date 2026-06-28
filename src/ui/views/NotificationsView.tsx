@@ -68,34 +68,43 @@ export function NotificationsView() {
 
   return (
     <>
-      <a className="btn btn--small btn--ghost" href="#/social">
-        ← Comunidad
-      </a>
-      <h1 id="view-title" tabIndex={-1}>
-        Notificaciones
-      </h1>
+      <div className="view-head">
+        <a className="view-back" href="#/social" aria-label="Volver a Comunidad">
+          <span aria-hidden="true">←</span>
+        </a>
+        <h1 id="view-title" tabIndex={-1}>
+          Notificaciones
+        </h1>
+      </div>
 
       {notifs && notifs.length === 0 && (
-        <p className="muted" role="status">
+        <p className="empty-state" role="status">
+          <span className="empty-state__icon" aria-hidden="true">
+            🔔
+          </span>
           Aquí verás cuando alguien te siga, te dé me gusta o te comente.
         </p>
       )}
 
-      <ul className="item-list">
+      <ul className="item-list notif-list">
         {(notifs ?? []).map((n) => {
           const { text, href } = describe(n);
           return (
             <li key={n.id} className={n.read ? '' : 'notif--unread'}>
-              <a href={`#/perfil/${encodeURIComponent(n.actorId)}`} aria-label={`Perfil de ${n.actorName}`}>
-                <Avatar id={n.actorId} name={n.actorName} size={36} />
+              <a
+                className="notif-avatar"
+                href={`#/perfil/${encodeURIComponent(n.actorId)}`}
+                aria-label={`Perfil de ${n.actorName}`}
+              >
+                <Avatar id={n.actorId} name={n.actorName} size={44} />
+                <span className={`notif-kind notif-kind--${n.kind}`} aria-hidden="true">
+                  {ICON[n.kind]}
+                </span>
               </a>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <a className="author-link" href={href}>
-                  <span aria-hidden="true">{ICON[n.kind]}</span> {text}
-                </a>
-                <br />
+              <a className="author-link notif-body" href={href}>
+                <span className="notif-text">{text}</span>
                 <span className="meta">{relativeTime(n.createdAt)}</span>
-              </div>
+              </a>
             </li>
           );
         })}

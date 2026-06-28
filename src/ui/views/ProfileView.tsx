@@ -100,12 +100,14 @@ export function ProfileView({ userId }: { userId: string }) {
   if (profile === null) {
     return (
       <>
-        <a className="btn btn--small btn--ghost" href="#/social">
-          ← Comunidad
-        </a>
-        <h1 id="view-title" tabIndex={-1}>
-          Perfil no encontrado
-        </h1>
+        <div className="view-head">
+          <a className="view-back" href="#/social" aria-label="Volver a Comunidad">
+            <span aria-hidden="true">←</span>
+          </a>
+          <h1 id="view-title" tabIndex={-1}>
+            Perfil no encontrado
+          </h1>
+        </div>
         <p className="muted">Esta persona no existe o ya no está disponible.</p>
       </>
     );
@@ -115,8 +117,8 @@ export function ProfileView({ userId }: { userId: string }) {
 
   return (
     <>
-      <a className="btn btn--small btn--ghost" href="#/social">
-        ← Comunidad
+      <a className="view-back view-back--standalone" href="#/social" aria-label="Volver a Comunidad">
+        <span aria-hidden="true">←</span>
       </a>
 
       <section className="card profile-head" aria-labelledby="view-title">

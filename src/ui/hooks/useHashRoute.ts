@@ -2,7 +2,25 @@
 // Decisión de diseño (ver README): un router por hash de ~40 líneas evita el
 // problema de los 404 en hosting estático (GitHub Pages), funciona con el
 // botón "atrás" y permite enlaces profundos, sin añadir dependencias.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+
+type DocumentWithVT = Document & {
+  startViewTransition?: (cb: () => void) => unknown;
+};
+
+/** Aplica el cambio de ruta con un crossfade nativo (View Transitions API) en
+ *  los navegadores que lo soportan; si no, cambia al instante (App.tsx anima la
+ *  entrada como respaldo). Respeta prefers-reduced-motion. */
+function applyRouteChange(apply: () => void): void {
+  const doc = document as DocumentWithVT;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (typeof doc.startViewTransition === 'function' && !reduce) {
+    doc.startViewTransition(() => flushSync(apply));
+  } else {
+    apply();
+  }
+}
 
 export const ROUTES = [
   'entrenar',
@@ -74,9 +92,16 @@ export function useHashRoute(): {
   navigate: (to: Route, param?: string) => void;
 } {
   const [state, setState] = useState(parseHash);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
-    const onHashChange = () => setState(parseHash());
+    const onHashChange = () => {
+      const next = parseHash();
+      const prev = stateRef.current;
+      if (prev.route === next.route && prev.param === next.param) return; // sin cambios reales
+      applyRouteChange(() => setState(next));
+    };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);

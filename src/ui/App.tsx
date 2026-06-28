@@ -284,13 +284,16 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
     if (prevRoute.current !== null && prevRoute.current !== route) {
       requestAnimationFrame(() => {
         document.getElementById('view-title')?.focus();
+        // Cada vista empieza arriba (no se hereda el scroll de la anterior).
+        window.scrollTo({ top: 0 });
       });
-      // Transición de entrada vía Web Animations API en lugar de remontar el
-      // contenedor con key={route}: el mecanismo es explícito y respeta
-      // prefers-reduced-motion sin depender del bloque CSS global.
+      // En navegadores con View Transitions API (useHashRoute) el crossfade lo
+      // hace el navegador. Como respaldo, en el resto animamos la entrada con la
+      // Web Animations API. Ambos respetan prefers-reduced-motion.
+      const hasViewTransitions = 'startViewTransition' in document;
       const view = document.querySelector('.app-view');
       const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      if (view && !reduce && typeof view.animate === 'function') {
+      if (!hasViewTransitions && view && !reduce && typeof view.animate === 'function') {
         view.animate(
           [
             { opacity: 0, transform: 'translateY(8px)' },
