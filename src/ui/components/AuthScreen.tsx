@@ -2,7 +2,7 @@
 // Puerta de entrada a la Comunidad. Cumple WCAG 3.3.8: permite pegar y
 // autocompletar (gestores de contraseñas), sin CAPTCHA cognitivo.
 // En la nube (Supabase) el acceso es por email + contraseña con confirmación.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   GOAL_LABELS,
   passwordStrength,
@@ -70,6 +70,18 @@ export function AuthScreen() {
   const birthYears = Array.from({ length: 88 }, (_, i) => String(nowYear - 13 - i)); // 13–100 años
   const birthDays = Array.from({ length: 31 }, (_, i) => pad2(i + 1));
   const birthdate = bDay && bMonth && bYear ? `${bYear}-${bMonth}-${bDay}` : '';
+
+  // Si volvemos de Google/Supabase con un error en la URL, mostrarlo (en vez de
+  // quedarnos mudos en la pantalla de acceso). El error llega como ?error=… o
+  // #error=… con un error_description legible.
+  useEffect(() => {
+    const raw = window.location.search + window.location.hash;
+    const desc = /error_description=([^&]+)/.exec(raw)?.[1] ?? /[#&?]error=([^&]+)/.exec(raw)?.[1];
+    if (desc) {
+      setError(decodeURIComponent(desc.replace(/\+/g, ' ')));
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   function switchMode(m: Mode) {
     setMode(m);

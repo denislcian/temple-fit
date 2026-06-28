@@ -9,8 +9,9 @@ import type { NewPost, ProfileData, SocialRepository } from './socialRepo';
 
 const BUCKET = 'fotos';
 const POST_COLS = 'id, author, created_at, text, kind, visibility, payload, image_path';
-const ACCOUNT_COLS =
-  'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
+// '*' para no depender de que la migración de perfil social (avatar/ubicación)
+// esté aplicada: trae las columnas que existan; rowToAccount toma lo que haya.
+const ACCOUNT_COLS = '*';
 
 interface PostRow {
   id: string;
@@ -100,7 +101,7 @@ export class SupabaseSocialRepository implements SocialRepository {
     const authors = [...new Set(rows.map((p) => p.author))];
 
     const [profilesRes, likesRes, commentsRes] = await Promise.all([
-      this.sb.from('profiles').select('id, display_name, avatar_url').in('id', authors),
+      this.sb.from('profiles').select('*').in('id', authors),
       this.sb.from('post_likes').select('post_id, user_id').in('post_id', ids),
       this.sb
         .from('post_comments')
@@ -298,11 +299,7 @@ export class SupabaseSocialRepository implements SocialRepository {
 
   async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
     const [profRes, followers, followingRes, isFollowing, statsRes, me] = await Promise.all([
-      this.sb
-        .from('profiles')
-        .select('id, username, display_name, bio, avatar_url, location')
-        .eq('id', userId)
-        .maybeSingle(),
+      this.sb.from('profiles').select('*').eq('id', userId).maybeSingle(),
       this.countFollowers(userId),
       this.sb.from('follows').select('follower', { count: 'exact', head: true }).eq('follower', userId),
       this.isFollowing(viewerId, userId),

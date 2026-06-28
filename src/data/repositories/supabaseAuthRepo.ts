@@ -21,14 +21,13 @@ interface ProfileRow {
   bio: string | null;
   private_profile: boolean;
   created_at: string;
-  avatar_url: string | null;
-  location: string | null;
-  lat: number | null;
-  lng: number | null;
+  // Opcionales: pueden no existir aún en la tabla si no se corrió la migración
+  // de perfil social. Por eso getAccount pide '*' (no rompe si faltan).
+  avatar_url?: string | null;
+  location?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
-
-const PROFILE_COLS =
-  'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
 
 /** Datos físicos guardados en el metadata privado del usuario (solo el dueño los
  *  ve, vía auth.getUser). No van a la tabla pública profiles por privacidad. */
@@ -146,7 +145,9 @@ export class SupabaseAuthService implements AuthService {
 
   async getAccount(id: string): Promise<Account | undefined> {
     const [{ data }, { data: userData }] = await Promise.all([
-      this.sb.from('profiles').select(PROFILE_COLS).eq('id', id).maybeSingle(),
+      // '*' en vez de columnas fijas: el login NO depende de que la migración de
+      // perfil social (avatar/ubicación) esté aplicada. toAccount toma lo que haya.
+      this.sb.from('profiles').select('*').eq('id', id).maybeSingle(),
       this.sb.auth.getUser(),
     ]);
     if (!data) return undefined;
