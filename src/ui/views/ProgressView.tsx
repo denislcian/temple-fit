@@ -250,23 +250,25 @@ export default function ProgressView() {
           <p className="chart-summary">
             Tu mejor marca en cada ejercicio. El 1RM se estima con las fórmulas de Epley y Brzycki.
           </p>
-          <ul className="item-list">
-            {allRecords.map((r) => (
-              <li key={r.exerciseId}>
-                <div style={{ flex: 1 }}>
+          <ol className="record-list">
+            {allRecords.map((r, i) => (
+              <li key={r.exerciseId} className="record-row">
+                <span className="record-rank" aria-hidden="true">
+                  {i === 0 ? '🏆' : i + 1}
+                </span>
+                <div className="record-main">
                   <span className="title">{nameById.get(r.exerciseId) ?? r.exerciseId}</span>
-                  <br />
                   <span className="meta num">
-                    Mejor serie {r.bestWeight.reps}×{formatKg(r.bestWeight.weightKg)} · 1RM{' '}
-                    {formatKg(r.best1RM.estimated1RM)}
+                    Mejor serie {r.bestWeight.reps}×{formatKg(r.bestWeight.weightKg)}
                   </span>
                 </div>
-                <span className="pr-badge" aria-hidden="true">
-                  🏆
+                <span className="record-1rm">
+                  <span className="num">{formatKg(r.best1RM.estimated1RM)}</span>
+                  <span className="record-1rm__label">1RM est.</span>
                 </span>
               </li>
             ))}
-          </ul>
+          </ol>
         </section>
       )}
 

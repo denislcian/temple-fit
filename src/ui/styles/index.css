@@ -846,10 +846,10 @@ p {
 }
 
 .stat {
-  background: var(--surface-2);
+  background: linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--accent) 5%, var(--surface-2)));
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
-  padding: 0.75rem;
+  padding: 0.8rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -860,7 +860,7 @@ p {
 .stat .value {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.75rem;
   letter-spacing: -0.01em;
   color: var(--accent-text);
   font-variant-numeric: tabular-nums;
@@ -3226,6 +3226,68 @@ dialog[open]::backdrop {
 .heatmap .cell.l2 {
   background: var(--accent);
   border-color: transparent;
+}
+
+/* ── Récords como clasificación (ranking) ───────────────── */
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.record-row {
+  display: grid;
+  grid-template-columns: 1.9rem 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.record-row:last-child {
+  border-bottom: 0;
+}
+.record-rank {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.record-row:first-child .record-rank {
+  background: linear-gradient(135deg, var(--accent), #d97706);
+  color: var(--on-accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.record-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+.record-1rm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.record-1rm .num {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--accent-text);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.record-1rm__label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Logros ─────────────────────────────────────────────── */
