@@ -1,6 +1,6 @@
 // CAPA 3 · Interfaz — Gestión de la cuenta en Ajustes.
 // Editar perfil, foto, privacidad, cambiar contraseña y borrar la cuenta (RGPD).
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { passwordStrength } from '../../data/authModels';
 import { authService } from '../../data/repositories/authRepo';
 import { compressImage } from '../utils/image';
@@ -60,6 +60,14 @@ function AccountEditor({
   const [curPwd, setCurPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
   const [pwdMsg, setPwdMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  // Proveedores de la cuenta: si entró solo por Google no tiene contraseña, así
+  // que ofrecemos "establecer una" (sin pedir la actual) en vez de "cambiar".
+  const [providers, setProviders] = useState<string[] | null>(null);
+  useEffect(() => {
+    void authService.getProviders().then(setProviders);
+  }, []);
+  const hasPassword =
+    providers === null || providers.includes('email') || providers.includes('local');
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -137,6 +145,21 @@ function AccountEditor({
       announce('Contraseña actualizada');
     } catch (e) {
       setPwdMsg({ kind: 'error', text: e instanceof Error ? e.message : 'No se pudo cambiar' });
+    }
+  }
+
+  async function establishPassword() {
+    try {
+      await authService.setPassword(accountId, newPwd);
+      setNewPwd('');
+      setProviders((p) => (p ? [...new Set([...p, 'email'])] : ['email']));
+      setPwdMsg({
+        kind: 'success',
+        text: 'Contraseña establecida. Ya puedes entrar también con tu email y contraseña.',
+      });
+      announce('Contraseña establecida');
+    } catch (e) {
+      setPwdMsg({ kind: 'error', text: e instanceof Error ? e.message : 'No se pudo establecer' });
     }
   }
 
@@ -250,13 +273,23 @@ function AccountEditor({
         )}
       </div>
 
-      <h3 style={{ marginTop: '1.25rem' }}>Cambiar contraseña</h3>
+      <h3 style={{ marginTop: '1.25rem' }}>
+        {hasPassword ? 'Cambiar contraseña' : 'Establecer una contraseña'}
+      </h3>
+      {!hasPassword && (
+        <p className="muted">
+          Entraste con Google, así que tu cuenta aún no tiene contraseña. Si estableces una, podrás
+          entrar también con tu email y contraseña (además de con Google).
+        </p>
+      )}
+      {hasPassword && (
+        <div className="field">
+          <label htmlFor="cur-pwd">Contraseña actual</label>
+          <input id="cur-pwd" className="input" type="password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} autoComplete="current-password" />
+        </div>
+      )}
       <div className="field">
-        <label htmlFor="cur-pwd">Contraseña actual</label>
-        <input id="cur-pwd" className="input" type="password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} autoComplete="current-password" />
-      </div>
-      <div className="field">
-        <label htmlFor="new-pwd">Nueva contraseña</label>
+        <label htmlFor="new-pwd">{hasPassword ? 'Nueva contraseña' : 'Contraseña'}</label>
         <p className="hint" id="new-pwd-hint">
           Mínimo 12 caracteres, con mayúscula, minúscula, número y símbolo.
         </p>
@@ -286,8 +319,13 @@ function AccountEditor({
         </p>
       )}
       <div className="btn-row">
-        <button type="button" className="btn" onClick={changePassword} disabled={!curPwd || !newPwd}>
-          Cambiar contraseña
+        <button
+          type="button"
+          className="btn"
+          onClick={hasPassword ? changePassword : establishPassword}
+          disabled={hasPassword ? !curPwd || !newPwd : !newPwd}
+        >
+          {hasPassword ? 'Cambiar contraseña' : 'Establecer contraseña'}
         </button>
       </div>
 

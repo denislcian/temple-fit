@@ -2,22 +2,13 @@
 // Export/import sin paywall: la queja nº 2 de los usuarios de apps
 // comerciales es el secuestro de sus datos.
 import { useCallback, useRef, useState } from 'react';
-import { AI_PROVIDER_IDS, AI_PROVIDERS, type AIProviderId } from '../../data/aiProviders';
 import { diaryToCsv, exportBundle, importBundle, sessionsToCsv } from '../../data/exportImport';
 import { db } from '../../data/db';
-import {
-  loadAIKey,
-  loadCoachProvider,
-  loadGeminiKey,
-  saveAIKey,
-  saveCoachProvider,
-  saveGeminiKey,
-} from '../../data/profile';
+import { loadGeminiKey, saveGeminiKey } from '../../data/profile';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { AccountCard } from '../components/AccountCard';
 import { useAnnounce } from '../components/Announcer';
-import { SelectField } from '../components/Field';
 import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
@@ -43,15 +34,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   const announce = useAnnounce();
   const fileInput = useRef<HTMLInputElement>(null);
   const [geminiKey, setGeminiKey] = useState(loadGeminiKey);
-  const [coachProvider, setCoachProvider] = useState<AIProviderId>(loadCoachProvider);
-  const [coachKey, setCoachKey] = useState(() => loadAIKey(loadCoachProvider()));
   const [weeklyGoal, setWeeklyGoalState] = useState(loadWeeklyGoal);
-
-  function changeCoachProvider(id: string) {
-    const p = id as AIProviderId;
-    setCoachProvider(p);
-    setCoachKey(loadAIKey(p));
-  }
   const [importMessage, setImportMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(
     null,
   );
@@ -298,70 +281,14 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       </section>
 
       <section className="card" aria-labelledby="coachai-heading">
-        <h2 id="coachai-heading">Coach con IA (opcional)</h2>
+        <h2 id="coachai-heading">Coach con IA</h2>
         <p className="muted">
-          El Coach funciona sin IA (todo el análisis es on-device). Si además quieres un consejo
-          redactado en lenguaje natural, elige un proveedor <strong>gratuito</strong> y pega tu clave.
-          Se guarda <strong>solo en este dispositivo</strong> y solo se envían datos agregados (RPE
-          medio, sueño medio…), nunca tus sesiones.
+          El Coach es <strong>global y no hay nada que configurar</strong>: todo el análisis funciona
+          siempre, y el consejo en lenguaje natural lo redacta una IA que corre{' '}
+          <strong>en tu propio dispositivo</strong> (WebGPU) — sin clave, sin cuenta y sin que ningún
+          dato salga de aquí. Lo activas desde la pantalla <a href="#/coach">Coach</a> (la primera vez
+          descarga el modelo; luego va offline).
         </p>
-        <div className="field">
-          <SelectField label="Proveedor de IA" value={coachProvider} onChange={changeCoachProvider}>
-            {AI_PROVIDER_IDS.map((id) => (
-              <option key={id} value={id}>
-                {AI_PROVIDERS[id].label}
-              </option>
-            ))}
-          </SelectField>
-        </div>
-        <p className="hint">
-          {AI_PROVIDERS[coachProvider].privacy === 'alta' ? '🔒 ' : '⚠️ '}
-          {AI_PROVIDERS[coachProvider].note}
-          {coachProvider !== 'ondevice' && (
-            <>
-              {' '}
-              Clave gratis en{' '}
-              <a href={AI_PROVIDERS[coachProvider].keyUrl} target="_blank" rel="noreferrer">
-                {AI_PROVIDERS[coachProvider].keyUrl.replace('https://', '')}
-              </a>
-              .
-            </>
-          )}
-        </p>
-        {coachProvider !== 'ondevice' && (
-          <div className="field">
-            <label htmlFor="coach-key">
-              Clave de {AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')}
-            </label>
-            <input
-              id="coach-key"
-              className="input"
-              type="password"
-              value={coachKey}
-              onChange={(e) => setCoachKey(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-        )}
-        <div className="btn-row">
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => {
-              saveCoachProvider(coachProvider);
-              saveAIKey(coachProvider, coachKey);
-              announce(
-                coachProvider === 'ondevice'
-                  ? 'Coach con IA en el dispositivo activado (sin clave)'
-                  : coachKey.trim()
-                    ? `Coach con ${AI_PROVIDERS[coachProvider].label.replace(' (recomendado)', '')} activado`
-                    : 'Clave del coach eliminada',
-              );
-            }}
-          >
-            Guardar
-          </button>
-        </div>
       </section>
 
       <section className="card" aria-labelledby="help-heading">

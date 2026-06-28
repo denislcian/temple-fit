@@ -71,6 +71,12 @@ export interface AuthService {
   /** Sube una foto de perfil (dataURL) y devuelve su URL final. */
   uploadAvatar(id: string, dataUrl: string): Promise<string>;
   changePassword(id: string, current: string, next: string): Promise<void>;
+  /** Establece una contraseña SIN pedir la actual (para cuentas que entraron por
+   *  Google y aún no tienen contraseña). */
+  setPassword(id: string, next: string): Promise<void>;
+  /** Proveedores de identidad de la cuenta actual ('email', 'google'…). Sirve
+   *  para saber si la cuenta tiene contraseña o entró solo por Google. */
+  getProviders(): Promise<string[]>;
   deleteAccount(id: string): Promise<void>;
   /** Suscripción a cambios de sesión (login/logout/confirmación). Opcional. */
   onAuthChange?(cb: () => void): () => void;
@@ -169,6 +175,18 @@ class LocalAuthService implements AuthService {
     if (pErr) throw new Error(pErr);
     const { hash, salt } = await hashPassword(next);
     await db.accounts.update(id, { passwordHash: hash, passwordSalt: salt });
+  }
+
+  async setPassword(id: string, next: string): Promise<void> {
+    const pErr = validatePassword(next);
+    if (pErr) throw new Error(pErr);
+    const { hash, salt } = await hashPassword(next);
+    await db.accounts.update(id, { passwordHash: hash, passwordSalt: salt });
+  }
+
+  /** En local la identidad ES usuario+contraseña, así que siempre "tiene". */
+  async getProviders(): Promise<string[]> {
+    return ['local'];
   }
 
   /** Borrado de cuenta (RGPD): elimina la cuenta, sus publicaciones y sus

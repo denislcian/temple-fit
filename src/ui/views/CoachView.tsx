@@ -5,10 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
-import { AI_PROVIDERS } from '../../data/aiProviders';
 import { generateCoachMessage, type CoachMessage } from '../../data/coach';
 import { isOnDeviceSupported, type DownloadProgress } from '../../data/onDeviceLLM';
-import { loadAIKey, loadCoachProvider } from '../../data/profile';
 import { buildCoachContext } from '../../domain/coach/coachContext';
 import { evaluateCoach, fatigueVerdict, type CoachTone } from '../../domain/coach/coachRules';
 import { suggestProgram } from '../../domain/coach/programs';
@@ -48,22 +46,17 @@ export function CoachView() {
   const [dl, setDl] = useState<DownloadProgress | null>(null);
   const [onDeviceOk, setOnDeviceOk] = useState<boolean | null>(null);
 
-  const provider = loadCoachProvider();
-
-  // Comprueba WebGPU una vez si el proveedor es la IA en el dispositivo.
+  // El coach IA es SIEMPRE on-device (sin clave, sin cuenta, sin configurar).
+  // Comprobamos una vez si el navegador soporta WebGPU.
   useEffect(() => {
     let alive = true;
-    if (provider === 'ondevice') {
-      void isOnDeviceSupported().then((ok) => {
-        if (alive) setOnDeviceOk(ok);
-      });
-    } else {
-      setOnDeviceOk(null);
-    }
+    void isOnDeviceSupported().then((ok) => {
+      if (alive) setOnDeviceOk(ok);
+    });
     return () => {
       alive = false;
     };
-  }, [provider]);
+  }, []);
 
   function changeGoal(g: string) {
     const next = (GOALS.includes(g as Goal) ? g : 'hipertrofia') as Goal;
@@ -95,8 +88,7 @@ export function CoachView() {
   const program = useMemo(() => suggestProgram(goal, level, days), [goal, level, days]);
   const nameById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e.name])), [exercises]);
 
-  const isOnDevice = provider === 'ondevice';
-  const canUseAi = isOnDevice ? onDeviceOk === true : loadAIKey(provider).trim().length > 0;
+  const canUseAi = onDeviceOk === true;
 
   async function askAi() {
     if (!ctx || !verdict) return;
@@ -106,8 +98,8 @@ export function CoachView() {
     setDl(null);
     try {
       const msg = await generateCoachMessage(
-        provider,
-        loadAIKey(provider),
+        'ondevice',
+        '',
         {
           verdict,
           recommendations: recs,
@@ -212,12 +204,8 @@ export function CoachView() {
         ) : (
           <p className="muted" style={{ marginTop: '0.25rem' }}>
             {canUseAi
-              ? isOnDevice
-                ? 'Consejo redactado por una IA que corre en TU dispositivo, sin clave ni cuenta. La primera vez descarga el modelo (~1,6 GB); luego es instantáneo y funciona offline. Nada sale de aquí.'
-                : `Pídele al coach (${AI_PROVIDERS[provider].label.replace(' (recomendado)', '')}) que resuma cómo estás y qué priorizar hoy, en lenguaje natural.`
-              : isOnDevice
-                ? 'Tu navegador no soporta IA en el dispositivo (WebGPU). En Ajustes → Coach con IA puedes elegir una clave gratuita en la nube. El análisis de abajo funciona igual.'
-                : 'Activa la IA en Ajustes con una clave gratuita (Groq, OpenRouter, Cerebras o Gemini) y tendrás un consejo redactado para ti. El análisis de abajo funciona igual sin clave.'}
+              ? 'Consejo redactado por una IA que corre en TU dispositivo, sin clave, sin cuenta y sin nada que configurar. La primera vez descarga el modelo (~1,6 GB); luego es instantáneo y funciona offline. Nada sale de aquí.'
+              : 'Tu navegador no soporta IA en el dispositivo (WebGPU), pero todo el análisis de abajo funciona igual — sin clave ni configuración.'}
           </p>
         )}
         {dl && dl.progress < 1 && (
@@ -244,9 +232,7 @@ export function CoachView() {
                   : 'Pensando…'
                 : ai
                   ? 'Volver a preguntar'
-                  : isOnDevice
-                    ? 'Activar IA y pedir consejo'
-                    : 'Pedir consejo al coach IA'}
+                  : 'Activar IA y pedir consejo'}
             </button>
           </div>
         )}

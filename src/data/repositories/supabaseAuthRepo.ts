@@ -206,6 +206,20 @@ export class SupabaseAuthService implements AuthService {
     if (error) throw new Error('No se pudo cambiar la contraseña');
   }
 
+  /** Establece una contraseña sin pedir la actual: para cuentas que entraron por
+   *  Google y aún no tienen contraseña. La sesión vigente ya autoriza el cambio. */
+  async setPassword(_id: string, next: string): Promise<void> {
+    const pErr = validatePassword(next);
+    if (pErr) throw new Error(pErr);
+    const { error } = await this.sb.auth.updateUser({ password: next });
+    if (error) throw new Error('No se pudo establecer la contraseña');
+  }
+
+  async getProviders(): Promise<string[]> {
+    const { data } = await this.sb.auth.getUser();
+    return (data.user?.identities ?? []).map((i) => i.provider);
+  }
+
   /** RGPD: borra el perfil (cascada → posts, seguidores, likes, comentarios) y
    *  cierra la sesión. El borrado total de auth.users requiere una Edge Function
    *  con service_role (pendiente para producción). */
