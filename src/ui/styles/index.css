@@ -1792,6 +1792,27 @@ legend {
   text-decoration: none;
 }
 
+/* Input + botón en línea (p. ej. ubicación). */
+.input-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.input-row .input {
+  flex: 1;
+  min-width: 10rem;
+}
+.input-row .btn {
+  flex-shrink: 0;
+}
+
+/* Tarjeta de bienvenida social (onboarding por ubicación). */
+.onboard-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
 /* ── Avatar y red social ────────────────────────────────── */
 .avatar {
   display: inline-flex;

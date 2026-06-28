@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { authService } from '../../data/repositories/authRepo';
 import { compressImage } from '../utils/image';
+import { detectLocation } from '../utils/geolocation';
 import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
 import { ConfirmDialog } from './AppDialog';
@@ -48,6 +49,12 @@ function AccountEditor({
   const [avatarUrl, setAvatarUrl] = useState(account?.avatarUrl ?? '');
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [location, setLocation] = useState(account?.location ?? '');
+  const [coords, setCoords] = useState<{ lat?: number; lng?: number }>({
+    lat: account?.lat,
+    lng: account?.lng,
+  });
+  const [geoBusy, setGeoBusy] = useState(false);
 
   const [curPwd, setCurPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
@@ -87,12 +94,30 @@ function AccountEditor({
     }
   }
 
+  async function detectMyLocation() {
+    setGeoBusy(true);
+    try {
+      const loc = await detectLocation();
+      setLocation(loc.city);
+      setCoords({ lat: loc.lat, lng: loc.lng });
+      setSavedMsg(null);
+      announce(loc.city ? `Ubicación detectada: ${loc.city}` : 'Ubicación detectada');
+    } catch (e) {
+      announce(e instanceof Error ? e.message : 'No se pudo obtener tu ubicación');
+    } finally {
+      setGeoBusy(false);
+    }
+  }
+
   async function saveProfile() {
     try {
       await authService.updateProfile(accountId, {
         displayName,
         bio: bio.trim(),
         privateProfile,
+        location: location.trim(),
+        ...(coords.lat != null ? { lat: coords.lat } : {}),
+        ...(coords.lng != null ? { lng: coords.lng } : {}),
       });
       await onChange();
       setSavedMsg('Perfil actualizado');
@@ -164,6 +189,26 @@ function AccountEditor({
       <h3>Perfil</h3>
       <TextField label="Nombre para mostrar" value={displayName} onChange={(v) => { setDisplayName(v); setSavedMsg(null); }} />
       <TextAreaField label="Biografía" value={bio} onChange={(v) => { setBio(v); setSavedMsg(null); }} hint="Una línea sobre ti (opcional)." />
+
+      <div className="field">
+        <label htmlFor="loc-input">Ubicación</label>
+        <div className="input-row">
+          <input
+            id="loc-input"
+            className="input"
+            value={location}
+            placeholder="Tu ciudad (opcional)"
+            onChange={(e) => { setLocation(e.target.value); setCoords({}); setSavedMsg(null); }}
+          />
+          <button type="button" className="btn btn--small" onClick={() => void detectMyLocation()} disabled={geoBusy}>
+            {geoBusy ? 'Buscando…' : '📍 Usar mi ubicación'}
+          </button>
+        </div>
+        <p className="hint">
+          Solo para sugerirte gente que entrena cerca. Se guarda aproximada (~1 km), nunca tu posición exacta.
+        </p>
+      </div>
+
       <label className="auto-rest">
         <input type="checkbox" checked={privateProfile} onChange={(e) => { setPrivateProfile(e.target.checked); setSavedMsg(null); }} />
         Perfil privado (tus publicaciones de «solo seguidores» no aparecen a desconocidos)

@@ -1,7 +1,7 @@
 // CAPA 3 · Interfaz — Comunidad: red social de fitness (modo local).
 // Requiere cuenta. Publica con visibilidad (pública / solo seguidores /
 // privada), sigue a otras personas y el feed respeta quién puede ver qué.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Account } from '../../data/authModels';
 import type { Post, Visibility } from '../../data/nutritionModels';
 import { VISIBILITY_LABELS } from '../../data/nutritionModels';
@@ -9,10 +9,13 @@ import { RECIPE_CATALOG } from '../../data/recipeCatalog';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllRoutines } from '../../data/repositories/routineRepo';
 import { notificationsRepo } from '../../data/repositories/notificationsRepo';
+import { authService } from '../../data/repositories/authRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { socialRepo } from '../../data/repositories/socialRepo';
 import { isSupabaseEnabled } from '../../data/supabase';
 import { visiblePosts } from '../../domain/feed';
+import { hasLocation, isNearby, rankByProximity } from '../../domain/proximity';
+import { detectLocation } from '../utils/geolocation';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { AuthScreen } from '../components/AuthScreen';
@@ -80,6 +83,7 @@ export function SocialView() {
 
 function Feed({ account, onLogout }: { account: Account; onLogout: () => void }) {
   const announce = useAnnounce();
+  const { refresh } = useAuth();
   const me = account.displayName;
   const myId = account.id;
 
@@ -110,7 +114,46 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const [feedSource, setFeedSource] = useState<'todos' | 'siguiendo'>('todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Account[]>([]);
+  const [geoBusy, setGeoBusy] = useState(false);
+  const [onboardHidden, setOnboardHidden] = useState(
+    () => localStorage.getItem('forjafit-social-onboard') === 'done',
+  );
   const photoInput = useRef<HTMLInputElement>(null);
+
+  // Sugerencias ordenadas por cercanía a mi ubicación (si la tengo).
+  const rankedDiscover = useMemo(
+    () => (discover ? rankByProximity(discover, account) : []),
+    [discover, account],
+  );
+  const nearbyCount = useMemo(
+    () => (hasLocation(account) ? rankedDiscover.filter((a) => isNearby(a, account)).length : 0),
+    [rankedDiscover, account],
+  );
+  const showOnboard = !onboardHidden && following.size === 0;
+
+  function dismissOnboard() {
+    localStorage.setItem('forjafit-social-onboard', 'done');
+    setOnboardHidden(true);
+  }
+
+  async function detectMyLocation() {
+    setGeoBusy(true);
+    try {
+      const loc = await detectLocation();
+      await authService.updateProfile(myId, {
+        location: loc.city,
+        ...(loc.lat != null ? { lat: loc.lat } : {}),
+        ...(loc.lng != null ? { lng: loc.lng } : {}),
+      });
+      await refresh();
+      await reloadDiscover();
+      announce(loc.city ? `Ubicación: ${loc.city}. Mira quién entrena cerca.` : 'Ubicación detectada');
+    } catch (e) {
+      announce(e instanceof Error ? e.message : 'No se pudo obtener tu ubicación');
+    } finally {
+      setGeoBusy(false);
+    }
+  }
 
   // Búsqueda de personas (con debounce ligero).
   useEffect(() => {
@@ -330,6 +373,41 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         </button>
       </div>
 
+      {showOnboard && (
+        <section className="card onboard-card" aria-labelledby="onboard-heading">
+          <h2 id="onboard-heading" style={{ marginTop: 0 }}>
+            👋 Encuentra a tu gente
+          </h2>
+          {hasLocation(account) ? (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              {nearbyCount > 0
+                ? `Hay ${nearbyCount} ${nearbyCount === 1 ? 'persona entrenando' : 'personas entrenando'} cerca de ti 👇 Empieza siguiendo a alguien.`
+                : 'Sigue a alguien de la lista para llenar tu feed.'}
+            </p>
+          ) : (
+            <>
+              <p className="muted">
+                Activa tu ubicación y te mostramos quién entrena cerca de ti. Es opcional y se guarda
+                aproximada (~1 km), nunca tu posición exacta.
+              </p>
+              <div className="btn-row">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => void detectMyLocation()}
+                  disabled={geoBusy}
+                >
+                  {geoBusy ? 'Buscando…' : '📍 Usar mi ubicación'}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={dismissOnboard}>
+                  Ahora no
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
       <section className="card" aria-labelledby="search-heading">
         <h2 id="search-heading">Buscar personas</h2>
         <div className="field" style={{ marginBottom: 0 }}>
@@ -357,10 +435,17 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           ))}
       </section>
 
-      {!searchQuery.trim() && discover && discover.length > 0 && (
+      {!searchQuery.trim() && rankedDiscover.length > 0 && (
         <section className="card" aria-labelledby="discover-heading">
-          <h2 id="discover-heading">Descubrir personas</h2>
-          <ul className="item-list">{discover.map(accountRow)}</ul>
+          <h2 id="discover-heading">
+            {nearbyCount > 0 ? '📍 Cerca de ti' : 'Descubrir personas'}
+          </h2>
+          {nearbyCount > 0 && (
+            <p className="meta" style={{ marginTop: 0 }}>
+              Ordenadas por cercanía a {account.location || 'tu zona'}.
+            </p>
+          )}
+          <ul className="item-list">{rankedDiscover.map(accountRow)}</ul>
         </section>
       )}
 
