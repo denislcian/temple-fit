@@ -12,18 +12,6 @@ export function useSoundscape() {
 
   useEffect(() => () => ref.current?.dispose(), []);
 
-  function toggle(id: string) {
-    const p = player();
-    if (current === id) {
-      p.stop();
-      setCurrent(null);
-      setSleepMin(0);
-    } else {
-      p.play(id);
-      setCurrent(id);
-    }
-  }
-
   function toggleTrack(id: string, url: string) {
     const p = player();
     if (current === id) {
@@ -59,7 +47,6 @@ export function useSoundscape() {
     volume,
     sleepMin,
     supported: player().isSupported,
-    toggle,
     toggleTrack,
     setVolume,
     startSleepTimer,

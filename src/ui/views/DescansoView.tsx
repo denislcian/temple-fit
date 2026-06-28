@@ -1,12 +1,12 @@
-// CAPA 3 · Interfaz — Descanso: sonidos para dormir (Web Audio procedural) y
-// respiración guiada. Sin ficheros, sin red: todo se genera en el dispositivo.
+// CAPA 3 · Interfaz — Descanso: música para dormir (pistas propias cacheadas
+// para offline) y respiración guiada.
 import { useCallback, useMemo, useState } from 'react';
 import type { SleepSession } from '../../data/sleepModels';
 import type { Visibility } from '../../data/nutritionModels';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { socialRepo } from '../../data/repositories/socialRepo';
 import { loadRecoveryDays, markRecoveryDay } from '../../data/recovery';
-import { MUSIC_TRACKS, SOUNDSCAPES, trackUrl } from '../audio/soundscapes';
+import { MUSIC_TRACKS, trackUrl } from '../audio/soundscapes';
 import { BREATH_PATTERNS } from '../../domain/breathing';
 import { recoveryStreak } from '../../domain/recoveryStreak';
 import { useAnnounce } from '../components/Announcer';
@@ -171,55 +171,18 @@ export function DescansoView() {
       </section>
 
       <section className="card" aria-labelledby="sounds-heading">
-        <h2 id="sounds-heading">Sonidos y música para dormir</h2>
+        <h2 id="sounds-heading">Música para dormir</h2>
         <p className="muted">
-          Paisajes sonoros que se generan en tu dispositivo (infinitos, sin descargar nada) y pistas
-          de relajación. Suena una cosa a la vez; el volumen y el apagado valen para todo.
+          Pistas de relajación creadas para Temple. Suena una a la vez; el volumen y el apagado
+          automático valen para todas.
         </p>
 
         {!sound.supported && (
           <p className="notice notice--error" role="status">
-            Tu navegador no permite generar audio. Prueba con otro navegador.
+            Tu navegador no permite reproducir audio. Prueba con otro navegador.
           </p>
         )}
 
-        <div className="sound-grid">
-          {SOUNDSCAPES.map((s) => {
-            const active = sound.current === s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                className={`sound-card ${active ? 'is-active' : ''}`}
-                aria-pressed={active}
-                onClick={() => sound.toggle(s.id)}
-                disabled={!sound.supported}
-              >
-                <span className="sound-emoji" aria-hidden="true">
-                  {s.hint}
-                </span>
-                <span className="sound-label">{s.label}</span>
-                <span className="sound-desc">{s.description}</span>
-                <span className="sound-state" aria-hidden="true">
-                  {active ? (
-                    <>
-                      <span className="eq">
-                        <i />
-                        <i />
-                        <i />
-                      </span>{' '}
-                      Sonando
-                    </>
-                  ) : (
-                    '▶ Reproducir'
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <h3 style={{ marginTop: '1.25rem' }}>Música de relajación</h3>
         <div className="sound-grid">
           {MUSIC_TRACKS.map((t) => {
             const active = sound.current === t.id;
@@ -269,6 +232,7 @@ export function DescansoView() {
             value={Math.round(sound.volume * 100)}
             onChange={(e) => sound.setVolume(Number(e.target.value) / 100)}
             aria-valuetext={`${Math.round(sound.volume * 100)} por ciento`}
+            style={{ ['--pct' as string]: `${Math.round(sound.volume * 100)}%` }}
           />
         </div>
 
