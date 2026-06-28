@@ -427,14 +427,29 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           <label htmlFor="user-search" className="visually-hidden">
             Buscar por nombre o usuario
           </label>
-          <input
-            id="user-search"
-            className="input"
-            type="search"
-            placeholder="Buscar por nombre o @usuario…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className="search-field">
+            <svg
+              className="search-field__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.4-3.4" />
+            </svg>
+            <input
+              id="user-search"
+              className="input input--search"
+              type="search"
+              placeholder="Buscar por nombre o @usuario…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
         {searchQuery.trim() &&
           (searchResults.length > 0 ? (
@@ -622,9 +637,11 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           onChange={setPostText}
           hint="Tu entrenamiento de hoy, un récord, una duda…"
         />
-        <SelectField
-          label="Adjuntar"
-          value={attach}
+        <fieldset className="post-options">
+          <legend>Opciones</legend>
+          <SelectField
+            label="Adjuntar"
+            value={attach}
           onChange={(v) => {
             setAttach(v);
             if (v !== 'foto') setPhoto('');
@@ -681,6 +698,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           <option value="seguidores">Solo mis seguidores</option>
           <option value="privada">Privada — solo yo</option>
         </SelectField>
+        </fieldset>
         <div className="btn-row">
           <button type="button" className="btn btn--primary" onClick={publish}>
             Publicar
