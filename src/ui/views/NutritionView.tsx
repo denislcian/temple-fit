@@ -20,19 +20,39 @@ import { DietDialog } from '../components/DietDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { addDays, formatDate, localDateISO } from '../utils/format';
 
-function MacroBar({ label, value, target, unit }: { label: string; value: number; target: number; unit: string }) {
+function MacroBar({
+  label,
+  value,
+  target,
+  unit,
+  tone,
+  hero,
+}: {
+  label: string;
+  value: number;
+  target: number;
+  unit: string;
+  tone: 'kcal' | 'protein' | 'carbs' | 'fat';
+  hero?: boolean;
+}) {
   const pct = Math.min(100, Math.round((value / Math.max(target, 1)) * 100));
   const over = value > target * 1.05;
+  const remaining = Math.max(0, Math.round(target - value));
   return (
-    <div className="macro-row">
+    <div className={`macro-row${hero ? ' macro-row--hero' : ''}`}>
       <span className="macro-label">
         {label}: <strong className="num">{Math.round(value)}</strong>
         <span className="muted num">
           {' '}
           / {target} {unit}
         </span>
+        {over ? (
+          <span className="macro-remaining macro-remaining--over"> · pasado</span>
+        ) : (
+          <span className="macro-remaining num"> · quedan {remaining}</span>
+        )}
       </span>
-      <div className="macro-bar" aria-hidden="true">
+      <div className={`macro-bar macro-bar--${tone}`} aria-hidden="true">
         <div className={`fill ${over ? 'over' : ''}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -127,10 +147,10 @@ export function NutritionView() {
 
         {targets ? (
           <div style={{ marginTop: '0.75rem' }}>
-            <MacroBar label="Calorías" value={totals.kcal} target={targets.kcal} unit="kcal" />
-            <MacroBar label="Proteína" value={totals.proteinG} target={targets.proteinG} unit="g" />
-            <MacroBar label="Carbohidratos" value={totals.carbsG} target={targets.carbsG} unit="g" />
-            <MacroBar label="Grasa" value={totals.fatG} target={targets.fatG} unit="g" />
+            <MacroBar label="Calorías" value={totals.kcal} target={targets.kcal} unit="kcal" tone="kcal" hero />
+            <MacroBar label="Proteína" value={totals.proteinG} target={targets.proteinG} unit="g" tone="protein" />
+            <MacroBar label="Carbohidratos" value={totals.carbsG} target={targets.carbsG} unit="g" tone="carbs" />
+            <MacroBar label="Grasa" value={totals.fatG} target={targets.fatG} unit="g" tone="fat" />
           </div>
         ) : (
           <p className="muted num" style={{ marginTop: '0.75rem' }}>

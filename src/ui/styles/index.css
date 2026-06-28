@@ -3366,8 +3366,45 @@ dialog[open]::backdrop {
     background-color var(--dur-2) var(--ease-out);
 }
 
+/* Color por macro (como las apps de nutrición): proteína, carbos y grasa con
+   su propio tono; calorías en acento de marca. El estado "pasado" manda. */
+.macro-bar--kcal .fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 75%, #fff), var(--accent));
+}
+.macro-bar--protein .fill {
+  background: linear-gradient(90deg, #fb7185, #e11d48);
+}
+.macro-bar--carbs .fill {
+  background: linear-gradient(90deg, #38bdf8, #0284c7);
+}
+.macro-bar--fat .fill {
+  background: linear-gradient(90deg, #fbbf24, #d97706);
+}
 .macro-bar .fill.over {
   background: var(--danger-strong);
+}
+
+/* Calorías = fila destacada (es el número que más se mira). */
+.macro-row--hero {
+  margin-bottom: 0.9rem;
+}
+.macro-row--hero .macro-label {
+  font-size: 0.95rem;
+}
+.macro-row--hero .macro-label strong {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--accent-text);
+}
+.macro-row--hero .macro-bar {
+  height: 0.85rem;
+}
+.macro-remaining {
+  color: var(--text-muted);
+}
+.macro-remaining--over {
+  color: var(--danger);
+  font-weight: 700;
 }
 
 /* ── Insignia Nutri-Score ───────────────────────────────── */
