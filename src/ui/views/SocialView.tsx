@@ -93,7 +93,9 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const { data: discover, reload: reloadDiscover } = useAsyncData(
     useCallback(() => socialRepo.discoverAccounts(myId), [myId]),
   );
-  const { data: unread } = useAsyncData(useCallback(() => notificationsRepo.countUnread(myId), [myId]));
+  const { data: unread, reload: reloadUnread } = useAsyncData(
+    useCallback(() => notificationsRepo.countUnread(myId), [myId]),
+  );
 
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const reloadFollowing = useCallback(async () => {
@@ -102,6 +104,17 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   useEffect(() => {
     reloadFollowing();
   }, [reloadFollowing]);
+
+  // Tiempo real (solo en la nube): el feed y el contador de notificaciones se
+  // refrescan solos cuando alguien publica o te notifica.
+  useEffect(() => {
+    const offFeed = socialRepo.subscribeFeed?.(() => void reload());
+    const offNotif = notificationsRepo.subscribe?.(myId, () => void reloadUnread());
+    return () => {
+      offFeed?.();
+      offNotif?.();
+    };
+  }, [reload, reloadUnread, myId]);
 
   const [publishing, setPublishing] = useState(false);
   const [postText, setPostText] = useState('');

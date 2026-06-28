@@ -117,3 +117,16 @@ alter table public.profiles add column if not exists lat double precision;
 alter table public.profiles add column if not exists lng double precision;
 -- El bucket de fotos pasa a público de lectura (avatares + fotos del feed).
 update storage.buckets set public = true where id = 'fotos';
+
+-- 7) Tiempo real: feed + notificaciones en vivo ─────────────────────────────
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='posts') then
+    alter publication supabase_realtime add table public.posts;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='notifications') then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end $$;

@@ -349,6 +349,17 @@ export class SupabaseSocialRepository implements SocialRepository {
     };
   }
 
+  subscribeFeed(onChange: () => void): () => void {
+    const channel = this.sb
+      .channel('feed-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, () => onChange())
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, () => onChange())
+      .subscribe();
+    return () => {
+      void this.sb.removeChannel(channel);
+    };
+  }
+
   async publishStats(_userId: string, stats: PublicStats): Promise<void> {
     const me = await this.uid();
     if (!me) return;

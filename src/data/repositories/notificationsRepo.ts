@@ -17,6 +17,9 @@ export interface NotificationsRepository {
   markAllRead(userId: string): Promise<void>;
   /** Crea una notificación (la dispara la UI al seguir/dar like/comentar). */
   create(input: NewNotification): Promise<void>;
+  /** Tiempo real: avisa cuando te llega una notificación. Devuelve una función
+   *  para cancelar. Opcional (solo en la nube). */
+  subscribe?(userId: string, onChange: () => void): () => void;
 }
 
 class LocalNotificationsRepository implements NotificationsRepository {

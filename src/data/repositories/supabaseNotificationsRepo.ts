@@ -68,4 +68,18 @@ export class SupabaseNotificationsRepository implements NotificationsRepository 
       // Una notificación que no se crea no debe romper la acción que la dispara.
     }
   }
+
+  subscribe(userId: string, onChange: () => void): () => void {
+    const channel = this.sb
+      .channel(`notif-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        () => onChange(),
+      )
+      .subscribe();
+    return () => {
+      void this.sb.removeChannel(channel);
+    };
+  }
 }

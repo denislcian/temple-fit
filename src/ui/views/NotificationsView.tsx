@@ -36,7 +36,7 @@ function describe(n: Notification): { text: string; href: string } {
 export function NotificationsView() {
   const { account } = useAuth();
   const userId = account?.id ?? '';
-  const { data: notifs } = useAsyncData(
+  const { data: notifs, reload } = useAsyncData(
     useCallback(() => (userId ? notificationsRepo.list(userId) : Promise.resolve([])), [userId]),
   );
 
@@ -44,6 +44,16 @@ export function NotificationsView() {
   useEffect(() => {
     if (userId) void notificationsRepo.markAllRead(userId);
   }, [userId]);
+
+  // Tiempo real (solo en la nube): aparece sola cuando te llega una nueva.
+  useEffect(() => {
+    if (!userId) return;
+    const off = notificationsRepo.subscribe?.(userId, () => {
+      void reload();
+      void notificationsRepo.markAllRead(userId);
+    });
+    return () => off?.();
+  }, [userId, reload]);
 
   if (!account) {
     return (

@@ -63,6 +63,9 @@ export interface SocialRepository {
   getUserPosts(userId: string, viewerId: string): Promise<Post[]>;
   /** Publica TU resumen de stats (agregado) para que tu perfil lo muestre. */
   publishStats(userId: string, stats: PublicStats): Promise<void>;
+  /** Tiempo real: avisa cuando cambia el feed. Devuelve una función para cancelar.
+   *  Opcional (solo en la nube); en local no existe. */
+  subscribeFeed?(onChange: () => void): () => void;
 }
 
 // Stats publicadas en modo local (en la nube van a la tabla profile_stats).
