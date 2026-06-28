@@ -23,6 +23,15 @@ export const CATEGORY_LABELS: Record<RecipeCategory, string> = {
   postre: 'Postre',
 };
 
+/** Nivel de dificultad de elaboración. */
+export type RecipeDifficulty = 'facil' | 'media' | 'dificil';
+
+export const DIFFICULTY_LABELS: Record<RecipeDifficulty, string> = {
+  facil: 'Fácil',
+  media: 'Media',
+  dificil: 'Avanzada',
+};
+
 export const RECIPE_TAGS: RecipeTag[] = [
   'alto-proteina',
   'rapido',
@@ -53,8 +62,13 @@ export interface RecipeIngredient {
 export interface Recipe {
   id: string;
   name: string;
-  /** Emoji de cabecera (placeholder de imagen). */
+  /** Emoji de cabecera (respaldo cuando no hay foto). */
   emoji: string;
+  /** Reseña breve estilo recetario: origen, por qué merece la pena. En nuestras palabras. */
+  description: string;
+  difficulty: RecipeDifficulty;
+  /** Truco del chef para que salga mejor. */
+  tip: string;
   category: RecipeCategory;
   tags: RecipeTag[];
   minutes: number;

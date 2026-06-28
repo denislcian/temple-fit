@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react';
 import type { Meal } from '../../data/nutritionModels';
 import { addDiaryEntryAbsolute } from '../../data/repositories/nutritionRepo';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
+import { RECIPE_PHOTO_CREDITS } from '../../data/recipePhotoCredits';
 import {
   CATEGORY_LABELS,
+  DIFFICULTY_LABELS,
   RECIPE_CATEGORIES,
   RECIPE_TAGS,
   TAG_LABELS,
@@ -19,6 +21,20 @@ import { SelectField, TextField } from '../components/Field';
 import { localDateISO } from '../utils/format';
 
 const MAX_TIMES = [10, 15, 30];
+
+// Fotos reales bundleadas (bancos con licencia libre / CC0). Vite las procesa y
+// hashea; al ser .webp entran en el precache de la PWA, así que se ven sin
+// conexión. Si una receta aún no tiene foto, la tarjeta cae a su emoji.
+const RECIPE_IMAGES = import.meta.glob('../../assets/recipes/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+function recipeImage(id: string): string | undefined {
+  const entry = Object.entries(RECIPE_IMAGES).find(([path]) => path.endsWith(`/${id}.webp`));
+  return entry?.[1];
+}
 
 /** Cada categoría de receta se registra en la comida equivalente del diario. */
 function mealFor(category: RecipeCategory): Meal {
@@ -116,38 +132,53 @@ export function RecipesView() {
         <p className="muted">Ninguna receta coincide con esos filtros. Prueba a quitar alguno.</p>
       ) : (
         <div className="recipe-grid">
-          {filtered.map((r) => (
-            <button key={r.id} type="button" className="recipe-card" onClick={() => setDetail(r)}>
-              <span className="recipe-hero" aria-hidden="true">
-                {r.emoji}
-              </span>
-              <span className="recipe-body">
-                <span className="title">{r.name}</span>
-                <span className="meta num">
-                  {CATEGORY_LABELS[r.category]} · {r.minutes} min · {r.kcal} kcal · {r.proteinG} g P
+          {filtered.map((r) => {
+            const img = recipeImage(r.id);
+            return (
+              <button key={r.id} type="button" className="recipe-card" onClick={() => setDetail(r)}>
+                <span className={`recipe-hero${img ? ' recipe-hero--photo' : ''}`} aria-hidden="true">
+                  {img ? <img src={img} alt="" loading="lazy" /> : r.emoji}
                 </span>
-                <span className="recipe-tags">
-                  {r.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="pr-badge badge--steel">
-                      {TAG_LABELS[t]}
-                    </span>
-                  ))}
+                <span className="recipe-body">
+                  <span className="title">{r.name}</span>
+                  <span className="meta num">
+                    {CATEGORY_LABELS[r.category]} · {r.minutes} min · {r.kcal} kcal · {r.proteinG} g P
+                  </span>
+                  <span className="recipe-tags">
+                    {r.tags.slice(0, 3).map((t) => (
+                      <span key={t} className="pr-badge badge--steel">
+                        {TAG_LABELS[t]}
+                      </span>
+                    ))}
+                  </span>
                 </span>
-              </span>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
 
       {detail && (
         <AppDialog open title={detail.name} onClose={() => setDetail(null)}>
           <div className="recipe-detail">
-            <span className="recipe-hero recipe-hero--big" aria-hidden="true">
-              {detail.emoji}
-            </span>
+            {(() => {
+              const img = recipeImage(detail.id);
+              return (
+                <span
+                  className={`recipe-hero recipe-hero--big${img ? ' recipe-hero--photo' : ''}`}
+                  aria-hidden="true"
+                >
+                  {img ? <img src={img} alt="" /> : detail.emoji}
+                </span>
+              );
+            })()}
+
+            <p className="recipe-description">{detail.description}</p>
+
             <p className="meta-line num">
               ⏱ {detail.minutes} min · 🍽 {detail.servings}{' '}
-              {detail.servings === 1 ? 'ración' : 'raciones'}
+              {detail.servings === 1 ? 'ración' : 'raciones'} ·{' '}
+              <span className="recipe-difficulty">{DIFFICULTY_LABELS[detail.difficulty]}</span>
             </p>
 
             <div className="stat-grid">
@@ -186,6 +217,14 @@ export function RecipesView() {
               ))}
             </ol>
 
+            <p className="recipe-tip">
+              <span className="recipe-tip__label" aria-hidden="true">
+                💡 Truco
+              </span>
+              <span className="visually-hidden">Truco del chef: </span>
+              {detail.tip}
+            </p>
+
             <div className="btn-row" style={{ marginTop: '1rem' }}>
               <button type="button" className="btn btn--primary" onClick={() => addToDiary(detail)}>
                 + Añadir al diario
@@ -194,6 +233,20 @@ export function RecipesView() {
                 Cerrar
               </button>
             </div>
+
+            {(() => {
+              const credit = recipeImage(detail.id) ? RECIPE_PHOTO_CREDITS[detail.id] : undefined;
+              if (!credit) return null;
+              return (
+                <p className="recipe-credit">
+                  Foto: {credit.author} ·{' '}
+                  <a href={credit.source} target="_blank" rel="noopener noreferrer">
+                    {credit.license}
+                  </a>{' '}
+                  · Wikimedia Commons
+                </p>
+              );
+            })()}
           </div>
         </AppDialog>
       )}

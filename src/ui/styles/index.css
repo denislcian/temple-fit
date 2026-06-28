@@ -3041,6 +3041,7 @@ dialog[open]::backdrop {
 
 .recipe-card {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 0;
   padding: 0;
@@ -3068,9 +3069,27 @@ dialog[open]::backdrop {
   display: grid;
   place-items: center;
   flex: none;
-  width: 4.5rem;
-  font-size: 2.2rem;
+  width: 100%;
+  height: 9rem;
+  font-size: 3rem;
+  overflow: hidden;
   background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+}
+
+/* La foto real ocupa todo el hero (recorte centrado). Un realce sutil
+   al pasar el ratón le da vida sin distraer. */
+.recipe-hero--photo {
+  font-size: 0;
+}
+.recipe-hero--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--dur-3) var(--ease-out);
+}
+.recipe-card:hover .recipe-hero--photo img {
+  transform: scale(1.04);
 }
 
 .recipe-hero--big {
@@ -3079,6 +3098,55 @@ dialog[open]::backdrop {
   font-size: 3.5rem;
   border-radius: var(--radius-m);
   margin-bottom: 0.75rem;
+}
+.recipe-hero--big.recipe-hero--photo {
+  height: 13rem;
+}
+.recipe-hero--big.recipe-hero--photo img {
+  border-radius: var(--radius-m);
+}
+
+.recipe-description {
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0 0 0.75rem;
+}
+
+.recipe-difficulty {
+  font-weight: 600;
+  color: var(--accent-text);
+  font-style: normal;
+}
+
+/* Truco del chef: caja destacada con barra de acento. */
+.recipe-tip {
+  text-align: left;
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.9rem;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2));
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-m) var(--radius-m) 0;
+  line-height: 1.5;
+}
+.recipe-tip__label {
+  display: block;
+  font-weight: 700;
+  color: var(--accent-text);
+  font-size: var(--fs-sm);
+  margin-bottom: 0.15rem;
+}
+
+/* Atribucion de la foto (licencia libre) — discreta al pie del detalle. */
+.recipe-credit {
+  margin: 1rem 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+.recipe-credit a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 .recipe-body {
