@@ -30,7 +30,7 @@ const COACH_ICON = (
 const TONE_ICON: Record<CoachTone, string> = {
   positivo: '✅',
   info: '💡',
-  ajuste: '🟠',
+  ajuste: '🔧',
   alerta: '⚠️',
 };
 
@@ -154,7 +154,7 @@ export function CoachView() {
       {/* Veredicto de cabecera. */}
       <section className={`card coach-verdict coach-verdict--${verdict.estado}`} aria-labelledby="verdict-heading">
         <span className="coach-fatiga" aria-hidden="true">
-          {verdict.estado === 'cargado' ? '🥵' : verdict.estado === 'descansado' ? '⚡' : verdict.estado === 'sin-datos' ? '🧭' : '💪'}
+          {verdict.estado === 'cargado' ? '🪫' : verdict.estado === 'descansado' ? '🔋' : verdict.estado === 'sin-datos' ? '🧭' : '💪'}
         </span>
         <div>
           <h2 id="verdict-heading" style={{ margin: 0 }}>

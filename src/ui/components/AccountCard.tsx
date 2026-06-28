@@ -151,7 +151,7 @@ function AccountEditor({
         >
           <Avatar id={account.id} name={account.displayName} size={56} photoUrl={avatarUrl || undefined} />
           <span className="avatar-edit__hint" aria-hidden="true">
-            {avatarBusy ? '…' : '📷'}
+            {avatarBusy ? '…' : '📸'}
           </span>
         </button>
         <input

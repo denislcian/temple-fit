@@ -17,8 +17,8 @@ export interface Soundscape {
 export const SOUNDSCAPES: Soundscape[] = [
   { id: 'lluvia', label: 'Lluvia', hint: '🌧️', description: 'Lluvia constante y envolvente.' },
   { id: 'olas', label: 'Olas del mar', hint: '🌊', description: 'Vaivén lento de las olas.' },
-  { id: 'marron', label: 'Ruido marrón', hint: '🟤', description: 'Grave y profundo, ideal para dormir.' },
-  { id: 'rosa', label: 'Ruido rosa', hint: '🎚️', description: 'Equilibrado, enmascara ruidos.' },
+  { id: 'marron', label: 'Ruido marrón', hint: '🪵', description: 'Grave y profundo, ideal para dormir.' },
+  { id: 'rosa', label: 'Ruido rosa', hint: '🌫️', description: 'Equilibrado, enmascara ruidos.' },
   { id: 'viento', label: 'Viento', hint: '🍃', description: 'Brisa suave entre los árboles.' },
 ];
 

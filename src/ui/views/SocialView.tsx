@@ -30,9 +30,9 @@ import { compressImage } from '../utils/image';
 /** Filtros del feed por tipo de publicación. */
 const FEED_FILTERS: Array<{ id: string; label: string; kinds: Post['kind'][] }> = [
   { id: 'todo', label: 'Todo', kinds: ['texto', 'rutina', 'sesion', 'receta', 'foto', 'sueno', 'meditacion'] },
-  { id: 'fotos', label: '📷 Fotos', kinds: ['foto'] },
-  { id: 'rutinas', label: '📋 Rutinas', kinds: ['rutina', 'sesion'] },
-  { id: 'recetas', label: '🍽️ Recetas', kinds: ['receta'] },
+  { id: 'fotos', label: '📸 Fotos', kinds: ['foto'] },
+  { id: 'rutinas', label: '🏋️ Rutinas', kinds: ['rutina', 'sesion'] },
+  { id: 'recetas', label: '🍃 Recetas', kinds: ['receta'] },
   { id: 'recuperacion', label: '🌙 Recuperación', kinds: ['sueno', 'meditacion'] },
 ];
 
@@ -394,7 +394,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           {hasLocation(account) ? (
             <p className="muted" style={{ marginBottom: 0 }}>
               {nearbyCount > 0
-                ? `Hay ${nearbyCount} ${nearbyCount === 1 ? 'persona entrenando' : 'personas entrenando'} cerca de ti 👇 Empieza siguiendo a alguien.`
+                ? `Hay ${nearbyCount} ${nearbyCount === 1 ? 'persona entrenando' : 'personas entrenando'} cerca de ti. Empieza siguiendo a alguien.`
                 : 'Sigue a alguien de la lista para llenar tu feed.'}
             </p>
           ) : (
@@ -632,7 +632,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           }}
         >
           <option value="nada">Nada, solo texto</option>
-          <option value="foto">📷 Una foto</option>
+          <option value="foto">📸 Una foto</option>
           <option value="ultima-sesion">Mi última sesión de entrenamiento</option>
           {(routines ?? []).map((r) => (
             <option key={r.id} value={`rutina:${r.id}`}>

@@ -13,7 +13,7 @@ const PILLARS: Pillar[] = [
   { icon: '📈', label: 'Progreso', desc: 'Peso, récords y gráficas' },
   { icon: '🥗', label: 'Nutrición', desc: 'Calorías y macros, por foto' },
   { icon: '🌙', label: 'Descanso', desc: 'Sonidos, respiración y sueño' },
-  { icon: '🍳', label: 'Recetas', desc: 'Saludables y filtrables' },
+  { icon: '🍃', label: 'Recetas', desc: 'Saludables y filtrables' },
   { icon: '👥', label: 'Comunidad', desc: 'Comparte y sigue a otros' },
 ];
 

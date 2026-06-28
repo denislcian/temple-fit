@@ -701,9 +701,8 @@ p {
   }
 }
 
-/* Tarjeta destacada: borde de brasa + lavado cálido de marca. */
+/* Tarjeta destacada: lavado cálido de marca (sin barra lateral). */
 .card--accent {
-  border-left: 4px solid var(--accent);
   background: linear-gradient(
     110deg,
     color-mix(in srgb, var(--accent) 7%, var(--surface)),
@@ -713,7 +712,6 @@ p {
 
 /* Variante fría (teal), complemento de card--accent. */
 .card--steel {
-  border-left: 4px solid var(--accent-2);
   background: linear-gradient(
     110deg,
     color-mix(in srgb, var(--accent-2) 6%, var(--surface)),
@@ -1606,14 +1604,13 @@ legend {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  border-left: 4px solid var(--accent);
 }
 
 .coach-verdict--cargado {
-  border-left-color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 8%, var(--surface));
 }
 .coach-verdict--descansado {
-  border-left-color: var(--success);
+  background: color-mix(in srgb, var(--success) 9%, var(--surface));
 }
 
 .coach-fatiga {
@@ -1637,22 +1634,22 @@ legend {
   gap: 0.6rem;
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--border);
-  border-left-width: 3px;
   border-radius: var(--radius-m);
   background: var(--surface-2);
 }
 
+/* El estado se distingue por un tinte de fondo suave (no por barra lateral). */
 .coach-rec--alerta {
-  border-left-color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 9%, var(--surface-2));
 }
 .coach-rec--ajuste {
-  border-left-color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 6%, var(--surface-2));
 }
 .coach-rec--positivo {
-  border-left-color: var(--success);
+  background: color-mix(in srgb, var(--success) 9%, var(--surface-2));
 }
 .coach-rec--info {
-  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2));
 }
 
 .coach-rec__icon {
@@ -1688,7 +1685,6 @@ legend {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  border-left: 4px solid var(--accent);
 }
 
 .recovery-streak__flame {
@@ -2796,7 +2792,6 @@ dialog[open]::backdrop {
 
 .chart-summary {
   background: var(--surface-2);
-  border-left: 3px solid var(--accent);
   border-radius: var(--radius-s);
   padding: 0.6rem 0.9rem;
   margin-bottom: 0.75rem;
