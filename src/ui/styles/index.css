@@ -1420,13 +1420,63 @@ legend {
 }
 
 /* ── Registro de series ─────────────────────────────────── */
+.set-header {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr var(--target) var(--target);
+  gap: 0.5rem;
+  padding: 0 0.4rem 0.2rem;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.set-header > span:nth-child(2),
+.set-header > span:nth-child(3) {
+  text-align: center;
+}
+.set-header > span:first-child {
+  font-size: 0.58rem;
+}
+
 .set-row {
   display: grid;
-  grid-template-columns: 2rem 1fr 1fr auto auto;
+  grid-template-columns: 2rem 1fr 1fr var(--target) var(--target);
   gap: 0.5rem;
-  align-items: end;
-  padding: 0.4rem 0;
+  align-items: center;
+  padding: 0.45rem 0.4rem;
+  border-radius: var(--radius-s);
   border-bottom: 1px dashed var(--border);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+/* La serie marcada como hecha se tiñe de verde: progreso de un vistazo. */
+.set-row.is-done {
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+}
+
+.set-remove {
+  width: var(--target);
+  height: var(--target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+.set-remove:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+.set-remove:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
 }
 
 /* El índice de serie es un botón: abre las opciones (tipo y RPE). */
@@ -1434,7 +1484,7 @@ legend {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 1px;
   font-family: var(--font-display);
   color: var(--text-muted);
@@ -1493,8 +1543,9 @@ legend {
 }
 
 @media (max-width: 47.9rem) {
-  .set-row {
-    grid-template-columns: 1.4rem 1fr 1fr auto auto;
+  .set-row,
+  .set-header {
+    grid-template-columns: 1.4rem 1fr 1fr var(--target) var(--target);
     gap: 0.4rem;
   }
 }

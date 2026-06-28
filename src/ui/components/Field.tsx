@@ -28,6 +28,9 @@ interface TextFieldProps extends BaseFieldProps {
   required?: boolean;
   /** Unidad mostrada dentro del campo (p. ej. "kg", "cm", "kcal"). */
   suffix?: string;
+  /** Oculta visualmente la etiqueta (la cabecera de columna hace de etiqueta);
+   *  sigue accesible para lectores de pantalla. */
+  labelHidden?: boolean;
   /**
    * Nombre accesible extendido cuando la etiqueta visible es corta (p. ej.
    * label="Reps", ariaLabel="Reps, serie 2 de Press de banca"). Para cumplir
@@ -46,6 +49,7 @@ export function TextField({
   autoComplete,
   required,
   suffix,
+  labelHidden,
   ariaLabel,
 }: TextFieldProps) {
   const id = useId();
@@ -73,7 +77,7 @@ export function TextField({
 
   return (
     <div className="field">
-      <label htmlFor={id}>
+      <label htmlFor={id} className={labelHidden ? 'visually-hidden' : undefined}>
         {label}
         {required && <span className="field-req" aria-hidden="true"> *</span>}
       </label>

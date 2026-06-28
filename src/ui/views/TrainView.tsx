@@ -505,11 +505,23 @@ export function TrainView() {
               />
             </div>
 
+            {entry.sets.length > 0 && (
+              <div className="set-header" aria-hidden="true">
+                <span>Serie</span>
+                <span>Reps</span>
+                <span>Kg</span>
+                <span />
+                <span />
+              </div>
+            )}
             {entry.sets.map((set, setIndex) => {
               const invalid = invalidSets.has(`${entryIndex}-${setIndex}`);
               const setType: SetType = set.type ?? 'normal';
               return (
-                <div className={`set-row set-row--${setType}`} key={setIndex}>
+                <div
+                  className={`set-row set-row--${setType}${set.done ? ' is-done' : ''}`}
+                  key={setIndex}
+                >
                   <button
                     type="button"
                     className="set-index"
@@ -532,6 +544,7 @@ export function TrainView() {
                       (WCAG 2.5.3 Label in Name). */}
                   <TextField
                     label="Reps"
+                    labelHidden
                     ariaLabel={`Reps, serie ${setIndex + 1} de ${exercise?.name ?? entry.exerciseId}`}
                     mode="int"
                     value={set.reps}
@@ -540,6 +553,7 @@ export function TrainView() {
                   />
                   <TextField
                     label="kg"
+                    labelHidden
                     ariaLabel={`kg, serie ${setIndex + 1} de ${exercise?.name ?? entry.exerciseId}`}
                     mode="decimal"
                     value={set.weight}
@@ -563,7 +577,7 @@ export function TrainView() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn--ghost"
+                    className="set-remove"
                     onClick={() => removeSet(entryIndex, setIndex)}
                   >
                     <span aria-hidden="true">✕</span>
