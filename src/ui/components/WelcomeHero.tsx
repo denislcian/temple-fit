@@ -25,16 +25,8 @@ export function WelcomeHero() {
   return (
     <div className="welcome">
       <span className="welcome__emblem" aria-hidden="true">
-        {/* Llama "brasa": emblema de marca en el lenguaje SVG dúotono. */}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path
-            d="M13 2.5c.5 2.9 3.6 4.3 3.6 7.9a4.6 4.6 0 0 1-9.2 0c0-1 .3-2 .9-2.8.3.9 1 1.4 1.8 1.5C9.4 6.5 11 4.2 13 2.5Z"
-            fill="currentColor"
-            fillOpacity="0.2"
-            stroke="none"
-          />
-          <path d="M13 2.5c.5 2.9 3.6 4.3 3.6 7.9a4.6 4.6 0 0 1-9.2 0c0-1 .3-2 .9-2.8.3.9 1 1.4 1.8 1.5C9.4 6.5 11 4.2 13 2.5Z" />
-        </svg>
+        {/* Chispa de marca (misma del logo): degradado brasa → ámbar. */}
+        <span className="spark" />
       </span>
       <h1 className="welcome__title">Bienvenido a Temple</h1>
       <p className="welcome__tagline">
