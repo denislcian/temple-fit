@@ -201,7 +201,18 @@ export function DescansoView() {
                 <span className="sound-label">{s.label}</span>
                 <span className="sound-desc">{s.description}</span>
                 <span className="sound-state" aria-hidden="true">
-                  {active ? '❚❚ Sonando' : '▶ Reproducir'}
+                  {active ? (
+                    <>
+                      <span className="eq">
+                        <i />
+                        <i />
+                        <i />
+                      </span>{' '}
+                      Sonando
+                    </>
+                  ) : (
+                    '▶ Reproducir'
+                  )}
                 </span>
               </button>
             );
@@ -226,7 +237,18 @@ export function DescansoView() {
                 </span>
                 <span className="sound-label">{t.label}</span>
                 <span className="sound-state" aria-hidden="true">
-                  {active ? '❚❚ Sonando' : '▶ Reproducir'}
+                  {active ? (
+                    <>
+                      <span className="eq">
+                        <i />
+                        <i />
+                        <i />
+                      </span>{' '}
+                      Sonando
+                    </>
+                  ) : (
+                    '▶ Reproducir'
+                  )}
                 </span>
               </button>
             );
