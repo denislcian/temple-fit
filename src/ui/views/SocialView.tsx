@@ -36,6 +36,16 @@ const FEED_FILTERS: Array<{ id: string; label: string; kinds: Post['kind'][] }> 
   { id: 'recuperacion', label: '🌙 Recuperación', kinds: ['sueno', 'meditacion'] },
 ];
 
+/** Etiqueta (chip) del tipo de publicación, mostrada en la cabecera de la tarjeta. */
+const KIND_LABEL: Partial<Record<Post['kind'], string>> = {
+  rutina: '🏋️ Rutina',
+  sesion: '🏋️ Sesión',
+  receta: '🍃 Receta',
+  foto: '📸 Foto',
+  sueno: '🌙 Sueño',
+  meditacion: '🧘 Meditación',
+};
+
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
 
 function relativeTime(iso: string): string {
@@ -122,6 +132,14 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const [visibility, setVisibility] = useState<Visibility>('publica');
   const [toDelete, setToDelete] = useState<Post | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+  const toggleComments = (id: string) =>
+    setOpenComments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const [photo, setPhoto] = useState<string>('');
   const [feedFilter, setFeedFilter] = useState('todo');
   const [feedSource, setFeedSource] = useState<'todos' | 'siguiendo'>('todos');
@@ -523,46 +541,46 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       {sourcedFeed
         .filter((p) => activeKinds.includes(p.kind))
         .map((post) => (
-        <article key={post.id} className="card" aria-label={`Publicación de ${post.author}`}>
-          <div className="post-head">
+        <article key={post.id} className="card post-card" aria-label={`Publicación de ${post.author}`}>
+          <header className="post-head">
             {post.authorId ? (
               <a href={`#/perfil/${encodeURIComponent(post.authorId)}`} aria-label={`Ver el perfil de ${post.author}`}>
-                <Avatar id={post.authorId} name={post.author} size={36} photoUrl={post.authorAvatar} />
+                <Avatar id={post.authorId} name={post.author} size={42} photoUrl={post.authorAvatar} />
               </a>
             ) : (
-              <Avatar id={post.id} name={post.author} size={36} photoUrl={post.authorAvatar} />
+              <Avatar id={post.id} name={post.author} size={42} photoUrl={post.authorAvatar} />
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="post-head__id">
               {post.authorId ? (
                 <a className="author-link" href={`#/perfil/${encodeURIComponent(post.authorId)}`}>
                   <strong>{post.author}</strong>
                 </a>
               ) : (
                 <strong>{post.author}</strong>
-              )}{' '}
-              <span className="muted">· {relativeTime(post.createdAt)}</span>
-              {post.visibility && post.visibility !== 'publica' && (
-                <span className="pr-badge badge--steel" style={{ marginLeft: '0.4rem' }}>
-                  {post.visibility === 'privada' ? 'privada' : 'seguidores'}
-                </span>
               )}
-              {post.isDemo && (
-                <span className="pr-badge badge--steel" style={{ marginLeft: '0.4rem' }}>
-                  ejemplo
-                </span>
-              )}
+              <span className="post-head__meta">
+                {relativeTime(post.createdAt)}
+                {post.visibility && post.visibility !== 'publica' && (
+                  <span className="post-tag">
+                    {post.visibility === 'privada' ? '🔒 privada' : '👥 seguidores'}
+                  </span>
+                )}
+                {post.isDemo && <span className="post-tag">ejemplo</span>}
+              </span>
             </div>
-          </div>
-          {post.text && <p>{post.text}</p>}
+            {KIND_LABEL[post.kind] && <span className="post-kind">{KIND_LABEL[post.kind]}</span>}
+          </header>
+
+          {post.text && <p className="post-text">{post.text}</p>}
 
           {post.image && (
             <img className="post-photo" src={post.image} alt={`Foto de ${post.author}`} loading="lazy" />
           )}
 
           {post.payload && (
-            <div className="card" style={{ background: 'var(--surface-2)', marginBottom: '0.75rem' }}>
-              <h2 style={{ fontSize: '1rem' }}>{post.payload.title}</h2>
-              <ul>
+            <div className="post-payload">
+              <h3 className="post-payload__title">{post.payload.title}</h3>
+              <ul className="post-payload__lines">
                 {post.payload.lines.map((line, i) => (
                   <li key={i} className="num">
                     {line}
@@ -572,61 +590,76 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
             </div>
           )}
 
-          <div className="btn-row">
+          <div className="post-actions">
             <button
               type="button"
-              className={`btn btn--small ${post.likedByMe ? 'btn--primary' : ''}`}
+              className={`post-action${post.likedByMe ? ' is-liked' : ''}`}
               aria-pressed={post.likedByMe}
               onClick={() => like(post)}
             >
-              <span aria-hidden="true">{post.likedByMe ? '❤️' : '🤍'}</span> {post.likes}
+              <span aria-hidden="true">{post.likedByMe ? '❤️' : '🤍'}</span>
+              <span className="num">{post.likes}</span>
               <span className="visually-hidden">
                 {' '}
                 me gusta. {post.likedByMe ? 'Quitar tu me gusta' : 'Dar me gusta'} a la publicación de{' '}
                 {post.author}
               </span>
             </button>
+            <button
+              type="button"
+              className="post-action"
+              aria-expanded={openComments.has(post.id)}
+              onClick={() => toggleComments(post.id)}
+            >
+              <span aria-hidden="true">💬</span>
+              <span className="num">{post.comments.length}</span>
+              <span className="visually-hidden"> comentarios</span>
+            </button>
             {!post.isDemo && post.authorId === myId && (
-              <button type="button" className="btn btn--small btn--danger" onClick={() => setToDelete(post)}>
+              <button type="button" className="post-action post-action--danger" onClick={() => setToDelete(post)}>
                 Eliminar<span className="visually-hidden"> tu publicación</span>
               </button>
             )}
           </div>
 
-          <details style={{ marginTop: '0.5rem' }}>
-            <summary className="btn btn--small btn--ghost">Comentarios ({post.comments.length})</summary>
-            <ul className="item-list">
-              {post.comments.map((c) => (
-                <li key={c.id}>
-                  <div>
-                    <span className="title">{c.author}</span>{' '}
-                    <span className="muted">· {relativeTime(c.createdAt)}</span>
-                    <br />
-                    {c.text}
-                  </div>
-                </li>
-              ))}
-              {post.comments.length === 0 && <li className="muted">Sé el primero en comentar.</li>}
-            </ul>
-            <div className="field" style={{ marginTop: '0.5rem' }}>
-              <label htmlFor={`comment-${post.id}`}>Añadir comentario</label>
-              <input
-                id={`comment-${post.id}`}
-                className="input"
-                type="text"
-                value={commentDrafts[post.id] ?? ''}
-                onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') comment(post);
-                }}
-              />
-              <div className="btn-row" style={{ marginTop: '0.4rem' }}>
-                <button type="button" className="btn btn--small" onClick={() => comment(post)}>
-                  Comentar
-                </button>
+          {openComments.has(post.id) && (
+            <div className="post-comments">
+              <ul className="item-list">
+                {post.comments.map((c) => (
+                  <li key={c.id}>
+                    <div>
+                      <span className="title">{c.author}</span>{' '}
+                      <span className="muted">· {relativeTime(c.createdAt)}</span>
+                      <br />
+                      {c.text}
+                    </div>
+                  </li>
+                ))}
+                {post.comments.length === 0 && <li className="muted">Sé el primero en comentar.</li>}
+              </ul>
+              <div className="field" style={{ marginTop: '0.5rem' }}>
+                <label htmlFor={`comment-${post.id}`} className="visually-hidden">
+                  Añadir comentario
+                </label>
+                <input
+                  id={`comment-${post.id}`}
+                  className="input"
+                  type="text"
+                  placeholder="Escribe un comentario…"
+                  value={commentDrafts[post.id] ?? ''}
+                  onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') comment(post);
+                  }}
+                />
+                <div className="btn-row" style={{ marginTop: '0.4rem' }}>
+                  <button type="button" className="btn btn--small btn--primary" onClick={() => comment(post)}>
+                    Comentar
+                  </button>
+                </div>
               </div>
             </div>
-          </details>
+          )}
         </article>
       ))}
 
