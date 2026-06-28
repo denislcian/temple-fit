@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   avatarHue,
+  computeAge,
   initials,
   normalizeUsername,
   passwordStrength,
+  validateBirthdate,
   validateDisplayName,
+  validateHeightCm,
   validatePassword,
   validateUsername,
+  validateWeightKg,
 } from './authModels';
 
 describe('authModels — validación', () => {
@@ -61,5 +65,38 @@ describe('authModels — avatar', () => {
     expect(initials('Dani')).toBe('DA');
     expect(initials('Marta Ruiz')).toBe('MR');
     expect(initials('  ')).toBe('?');
+  });
+});
+
+describe('authModels — datos físicos (registro)', () => {
+  const today = '2026-06-28';
+
+  it('computeAge calcula la edad respecto a hoy', () => {
+    expect(computeAge('1996-06-28', today)).toBe(30);
+    expect(computeAge('1996-06-29', today)).toBe(29); // aún no cumple
+    expect(computeAge(undefined, today)).toBeNull();
+    expect(computeAge('no-fecha', today)).toBeNull();
+  });
+
+  it('validateBirthdate: opcional, rango 13-120 y sin futuro', () => {
+    expect(validateBirthdate('', today)).toBeNull(); // opcional
+    expect(validateBirthdate('2030-01-01', today)).toMatch(/futura/);
+    expect(validateBirthdate('2020-01-01', today)).toMatch(/13 años/);
+    expect(validateBirthdate('1850-01-01', today)).toMatch(/Revisa/);
+    expect(validateBirthdate('1995-03-10', today)).toBeNull();
+  });
+
+  it('validateHeightCm: opcional, 100-250', () => {
+    expect(validateHeightCm(undefined)).toBeNull();
+    expect(validateHeightCm(50)).toMatch(/100 y 250/);
+    expect(validateHeightCm(260)).toMatch(/100 y 250/);
+    expect(validateHeightCm(178)).toBeNull();
+  });
+
+  it('validateWeightKg: opcional, 30-300', () => {
+    expect(validateWeightKg(undefined)).toBeNull();
+    expect(validateWeightKg(10)).toMatch(/30 y 300/);
+    expect(validateWeightKg(400)).toMatch(/30 y 300/);
+    expect(validateWeightKg(74.5)).toBeNull();
   });
 });

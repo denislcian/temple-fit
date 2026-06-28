@@ -1,5 +1,21 @@
 // CAPA 1 · Datos — Modelos e identidad de las cuentas (red social).
 
+/** Sexo biológico (para estimar el gasto calórico). Opcional. */
+export type Sex = 'mujer' | 'hombre' | 'otro';
+/** Objetivo principal de entrenamiento. Opcional. */
+export type Goal = 'perder' | 'ganar' | 'mantener';
+
+export const SEX_LABELS: Record<Sex, string> = {
+  mujer: 'Mujer',
+  hombre: 'Hombre',
+  otro: 'Prefiero no decirlo',
+};
+export const GOAL_LABELS: Record<Goal, string> = {
+  perder: 'Perder grasa',
+  ganar: 'Ganar músculo',
+  mantener: 'Mantenerme',
+};
+
 export interface Account {
   id: string;
   /** Handle único en minúsculas, p. ej. "dani_lift". */
@@ -19,6 +35,12 @@ export interface Account {
   /** Coordenadas aproximadas (opcionales, para ordenar por cercanía). */
   lat?: number;
   lng?: number;
+  /** Datos físicos (opcionales): personalizan el coach y la nutrición. */
+  birthdate?: string; // YYYY-MM-DD
+  sex?: Sex;
+  heightCm?: number;
+  weightKg?: number;
+  goal?: Goal;
 }
 
 /** Cuenta sin los campos sensibles, para mostrar en la UI. */
@@ -67,6 +89,43 @@ export function validateDisplayName(raw: string): string | null {
   const n = raw.trim();
   if (n.length < 1) return 'Escribe un nombre para mostrar';
   if (n.length > 40) return 'El nombre no puede superar los 40 caracteres';
+  return null;
+}
+
+// ── Datos físicos (todos opcionales) ──────────────────────
+
+/** Edad en años a partir de la fecha de nacimiento (YYYY-MM-DD), o null. */
+export function computeAge(birthdate: string | undefined, todayISO?: string): number | null {
+  if (!birthdate) return null;
+  const b = new Date(birthdate);
+  if (Number.isNaN(b.getTime())) return null;
+  const today = todayISO ? new Date(todayISO) : new Date();
+  let age = today.getFullYear() - b.getFullYear();
+  const m = today.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+  return age;
+}
+
+/** Valida la fecha de nacimiento (opcional). Error o null. */
+export function validateBirthdate(raw: string, todayISO?: string): string | null {
+  if (!raw) return null;
+  const age = computeAge(raw, todayISO);
+  if (age === null) return 'Fecha no válida';
+  if (age < 0) return 'La fecha no puede ser futura';
+  if (age < 13) return 'Debes tener al menos 13 años';
+  if (age > 120) return 'Revisa la fecha de nacimiento';
+  return null;
+}
+
+export function validateHeightCm(cm: number | undefined): string | null {
+  if (cm === undefined) return null;
+  if (!Number.isFinite(cm) || cm < 100 || cm > 250) return 'Altura entre 100 y 250 cm';
+  return null;
+}
+
+export function validateWeightKg(kg: number | undefined): string | null {
+  if (kg === undefined) return null;
+  if (!Number.isFinite(kg) || kg < 30 || kg > 300) return 'Peso entre 30 y 300 kg';
   return null;
 }
 

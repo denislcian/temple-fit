@@ -4,12 +4,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   normalizeUsername,
+  validateBirthdate,
   validateDisplayName,
+  validateHeightCm,
   validatePassword,
   validateUsername,
+  validateWeightKg,
   type Account,
 } from '../authModels';
-import type { AuthService } from './authRepo';
+import type { AuthService, RegisterInput } from './authRepo';
 
 interface ProfileRow {
   id: string;
@@ -24,7 +27,27 @@ interface ProfileRow {
   lng: number | null;
 }
 
-const PROFILE_COLS = 'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
+const PROFILE_COLS =
+  'id, username, display_name, bio, private_profile, created_at, avatar_url, location, lat, lng';
+
+/** Datos físicos guardados en el metadata privado del usuario (solo el dueño los
+ *  ve, vía auth.getUser). No van a la tabla pública profiles por privacidad. */
+function physicalFromMeta(meta: Record<string, unknown> | undefined): Partial<Account> {
+  if (!meta) return {};
+  const num = (v: unknown): number | undefined => {
+    const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const out: Partial<Account> = {};
+  if (typeof meta.birthdate === 'string' && meta.birthdate) out.birthdate = meta.birthdate;
+  if (meta.sex === 'mujer' || meta.sex === 'hombre' || meta.sex === 'otro') out.sex = meta.sex;
+  const h = num(meta.height_cm);
+  if (h !== undefined) out.heightCm = h;
+  const w = num(meta.weight_kg);
+  if (w !== undefined) out.weightKg = w;
+  if (meta.goal === 'perder' || meta.goal === 'ganar' || meta.goal === 'mantener') out.goal = meta.goal;
+  return out;
+}
 
 /** URL base de la app (sin hash) a la que Supabase debe devolver tras OAuth o
  *  confirmar el email. En GitHub Pages incluye la subruta (/temple-fit/); en
@@ -53,12 +76,7 @@ function toAccount(p: ProfileRow): Account {
 export class SupabaseAuthService implements AuthService {
   constructor(private sb: SupabaseClient) {}
 
-  async register(input: {
-    email: string;
-    username: string;
-    displayName: string;
-    password: string;
-  }): Promise<Account | null> {
+  async register(input: RegisterInput): Promise<Account | null> {
     const username = normalizeUsername(input.username);
     const uErr = validateUsername(username);
     if (uErr) throw new Error(uErr);
@@ -66,13 +84,29 @@ export class SupabaseAuthService implements AuthService {
     if (nErr) throw new Error(nErr);
     const pErr = validatePassword(input.password);
     if (pErr) throw new Error(pErr);
-    if (!/.+@.+\..+/.test(input.email)) throw new Error('Escribe un email válido');
+    if (!input.email || !/.+@.+\..+/.test(input.email)) throw new Error('Escribe un email válido');
+    const bErr = validateBirthdate(input.birthdate ?? '');
+    if (bErr) throw new Error(bErr);
+    const hErr = validateHeightCm(input.heightCm);
+    if (hErr) throw new Error(hErr);
+    const wErr = validateWeightKg(input.weightKg);
+    if (wErr) throw new Error(wErr);
 
+    // Los datos físicos viajan como metadata; el trigger handle_new_user los
+    // copia al perfil (ver supabase/migration-perfil-fisico.sql).
     const { data, error } = await this.sb.auth.signUp({
       email: input.email.trim(),
       password: input.password,
       options: {
-        data: { username, display_name: input.displayName.trim() },
+        data: {
+          username,
+          display_name: input.displayName.trim(),
+          ...(input.birthdate ? { birthdate: input.birthdate } : {}),
+          ...(input.sex ? { sex: input.sex } : {}),
+          ...(input.heightCm !== undefined ? { height_cm: input.heightCm } : {}),
+          ...(input.weightKg !== undefined ? { weight_kg: input.weightKg } : {}),
+          ...(input.goal ? { goal: input.goal } : {}),
+        },
         emailRedirectTo: appReturnUrl(),
       },
     });
@@ -111,8 +145,17 @@ export class SupabaseAuthService implements AuthService {
   }
 
   async getAccount(id: string): Promise<Account | undefined> {
-    const { data } = await this.sb.from('profiles').select(PROFILE_COLS).eq('id', id).maybeSingle();
-    return data ? toAccount(data as ProfileRow) : undefined;
+    const [{ data }, { data: userData }] = await Promise.all([
+      this.sb.from('profiles').select(PROFILE_COLS).eq('id', id).maybeSingle(),
+      this.sb.auth.getUser(),
+    ]);
+    if (!data) return undefined;
+    const account = toAccount(data as ProfileRow);
+    // Datos físicos: solo se ven para tu propia cuenta (metadata privado).
+    if (userData.user?.id === id) {
+      Object.assign(account, physicalFromMeta(userData.user.user_metadata));
+    }
+    return account;
   }
 
   async updateProfile(

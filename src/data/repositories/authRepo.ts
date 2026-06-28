@@ -7,25 +7,57 @@
 import { hashPassword, verifyPassword } from '../crypto';
 import {
   normalizeUsername,
+  validateBirthdate,
   validateDisplayName,
+  validateHeightCm,
   validatePassword,
   validateUsername,
+  validateWeightKg,
   type Account,
+  type Goal,
   type PublicAccount,
+  type Sex,
 } from '../authModels';
 import { db } from '../db';
 import { newId } from '../models';
 
 const SESSION_KEY = 'forjafit-session';
 
+/** Datos del registro. Email solo en la nube; los físicos son opcionales. */
+export interface RegisterInput {
+  email?: string;
+  username: string;
+  displayName: string;
+  password: string;
+  birthdate?: string;
+  sex?: Sex;
+  heightCm?: number;
+  weightKg?: number;
+  goal?: Goal;
+}
+
+/** Construye los campos físicos opcionales validados (compartido local/nube). */
+export function buildPhysicalFields(
+  input: Pick<RegisterInput, 'birthdate' | 'sex' | 'heightCm' | 'weightKg' | 'goal'>,
+): Partial<Pick<Account, 'birthdate' | 'sex' | 'heightCm' | 'weightKg' | 'goal'>> {
+  const bErr = validateBirthdate(input.birthdate ?? '');
+  if (bErr) throw new Error(bErr);
+  const hErr = validateHeightCm(input.heightCm);
+  if (hErr) throw new Error(hErr);
+  const wErr = validateWeightKg(input.weightKg);
+  if (wErr) throw new Error(wErr);
+  return {
+    ...(input.birthdate ? { birthdate: input.birthdate } : {}),
+    ...(input.sex ? { sex: input.sex } : {}),
+    ...(input.heightCm !== undefined ? { heightCm: input.heightCm } : {}),
+    ...(input.weightKg !== undefined ? { weightKg: input.weightKg } : {}),
+    ...(input.goal ? { goal: input.goal } : {}),
+  };
+}
+
 export interface AuthService {
   /** Devuelve la cuenta, o null si el registro requiere confirmar el email. */
-  register(input: {
-    email?: string;
-    username: string;
-    displayName: string;
-    password: string;
-  }): Promise<Account | null>;
+  register(input: RegisterInput): Promise<Account | null>;
   login(emailOrUsername: string, password: string): Promise<Account>;
   logout(): void;
   currentAccountId(): Promise<string | null>;
@@ -47,12 +79,7 @@ export interface AuthService {
 }
 
 class LocalAuthService implements AuthService {
-  async register(input: {
-    email?: string;
-    username: string;
-    displayName: string;
-    password: string;
-  }): Promise<Account> {
+  async register(input: RegisterInput): Promise<Account> {
     const username = normalizeUsername(input.username);
     const uErr = validateUsername(username);
     if (uErr) throw new Error(uErr);
@@ -60,6 +87,7 @@ class LocalAuthService implements AuthService {
     if (nErr) throw new Error(nErr);
     const pErr = validatePassword(input.password);
     if (pErr) throw new Error(pErr);
+    const physical = buildPhysicalFields(input);
 
     const existing = await db.accounts.where('username').equals(username).first();
     if (existing) throw new Error('Ese nombre de usuario ya está en uso');
@@ -72,6 +100,7 @@ class LocalAuthService implements AuthService {
       passwordHash: hash,
       passwordSalt: salt,
       createdAt: new Date().toISOString(),
+      ...physical,
     };
     await db.accounts.add(account);
     localStorage.setItem(SESSION_KEY, account.id);

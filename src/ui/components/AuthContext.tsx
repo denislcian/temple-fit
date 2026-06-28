@@ -3,14 +3,7 @@
 // que es local o Supabase según haya credenciales (la UI no cambia).
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Account } from '../../data/authModels';
-import { authService } from '../../data/repositories/authRepo';
-
-interface RegisterInput {
-  email?: string;
-  username: string;
-  displayName: string;
-  password: string;
-}
+import { authService, type RegisterInput } from '../../data/repositories/authRepo';
 
 interface AuthContextValue {
   account: Account | null;

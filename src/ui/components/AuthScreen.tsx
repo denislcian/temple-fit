@@ -3,11 +3,17 @@
 // autocompletar (gestores de contraseñas), sin CAPTCHA cognitivo.
 // En la nube (Supabase) el acceso es por email + contraseña con confirmación.
 import { useState } from 'react';
-import { passwordStrength } from '../../data/authModels';
+import {
+  GOAL_LABELS,
+  passwordStrength,
+  SEX_LABELS,
+  type Goal,
+  type Sex,
+} from '../../data/authModels';
 import { isSupabaseEnabled } from '../../data/supabase';
 import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
-import { TextField } from './Field';
+import { SelectField, TextField } from './Field';
 
 type Mode = 'login' | 'register';
 
@@ -29,9 +35,16 @@ export function AuthScreen() {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  // Datos físicos opcionales (solo en el registro).
+  const [birthdate, setBirthdate] = useState('');
+  const [sex, setSex] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [goal, setGoal] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
 
   function switchMode(m: Mode) {
     setMode(m);
@@ -50,6 +63,11 @@ export function AuthScreen() {
           username,
           displayName,
           password,
+          ...(birthdate ? { birthdate } : {}),
+          ...(sex ? { sex: sex as Sex } : {}),
+          ...(height ? { heightCm: Number(height) } : {}),
+          ...(weight ? { weightKg: Number(weight) } : {}),
+          ...(goal ? { goal: goal as Goal } : {}),
         });
         if (needsConfirmation) {
           setInfo('Te hemos enviado un email para confirmar tu cuenta. Ábrelo y luego inicia sesión.');
@@ -72,6 +90,11 @@ export function AuthScreen() {
   return (
     <div className="card card--accent" style={{ maxWidth: '26rem', margin: '0 auto' }}>
       <div className="segmented" role="group" aria-label="Acceder o crear cuenta">
+        <span
+          className="segmented__thumb"
+          aria-hidden="true"
+          style={{ transform: mode === 'register' ? 'translateX(calc(100% + 2px))' : 'translateX(0)' }}
+        />
         <button type="button" aria-pressed={mode === 'login'} onClick={() => switchMode('login')}>
           Iniciar sesión
         </button>
@@ -101,7 +124,8 @@ export function AuthScreen() {
           </div>
         )}
 
-        {(!cloud || mode === 'register') && (
+        {/* En local el usuario es la identidad: también visible al iniciar sesión. */}
+        {!cloud && (
           <TextField
             label="Nombre de usuario"
             value={username}
@@ -112,12 +136,59 @@ export function AuthScreen() {
         )}
 
         {mode === 'register' && (
-          <TextField
-            label="Nombre para mostrar"
-            value={displayName}
-            onChange={setDisplayName}
-            autoComplete="nickname"
-          />
+          <div className="auth-extra">
+            {cloud && (
+              <TextField
+                label="Nombre de usuario"
+                value={username}
+                onChange={setUsername}
+                autoComplete="username"
+                hint="3-20 caracteres: letras, números, _ o ."
+              />
+            )}
+            <TextField
+              label="Nombre para mostrar"
+              value={displayName}
+              onChange={setDisplayName}
+              autoComplete="nickname"
+            />
+
+            <fieldset className="auth-about">
+              <legend>
+                Sobre ti <span className="auth-about__opt">opcional</span>
+              </legend>
+              <p className="hint">
+                Personaliza tu coach y tu nutrición. Puedes rellenarlo ahora o más tarde.
+              </p>
+              <div className="field">
+                <label htmlFor="auth-birthdate">Fecha de nacimiento</label>
+                <input
+                  id="auth-birthdate"
+                  className="input"
+                  type="date"
+                  max={today}
+                  value={birthdate}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  autoComplete="bday"
+                />
+              </div>
+              <SelectField label="Sexo" value={sex} onChange={setSex}>
+                <option value="">Prefiero no decirlo</option>
+                <option value="mujer">{SEX_LABELS.mujer}</option>
+                <option value="hombre">{SEX_LABELS.hombre}</option>
+              </SelectField>
+              <div className="field-grid">
+                <TextField label="Altura (cm)" value={height} onChange={setHeight} mode="int" />
+                <TextField label="Peso (kg)" value={weight} onChange={setWeight} mode="decimal" />
+              </div>
+              <SelectField label="Objetivo" value={goal} onChange={setGoal}>
+                <option value="">Sin objetivo concreto</option>
+                <option value="perder">{GOAL_LABELS.perder}</option>
+                <option value="ganar">{GOAL_LABELS.ganar}</option>
+                <option value="mantener">{GOAL_LABELS.mantener}</option>
+              </SelectField>
+            </fieldset>
+          </div>
         )}
 
         <div className="field">
