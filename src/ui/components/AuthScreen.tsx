@@ -17,6 +17,23 @@ import { SelectField, TextField } from './Field';
 
 type Mode = 'login' | 'register';
 
+const MONTHS = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+].map((label, i) => ({ value: String(i + 1).padStart(2, '0'), label }));
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
 export function AuthScreen() {
   const announce = useAnnounce();
   const { login, register, signInWithGoogle } = useAuth();
@@ -36,7 +53,9 @@ export function AuthScreen() {
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   // Datos físicos opcionales (solo en el registro).
-  const [birthdate, setBirthdate] = useState('');
+  const [bDay, setBDay] = useState('');
+  const [bMonth, setBMonth] = useState('');
+  const [bYear, setBYear] = useState('');
   const [sex, setSex] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
@@ -44,7 +63,13 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+
+  // Fecha de nacimiento compuesta de los tres selectores (mejor que el calendario
+  // nativo, que abre en el mes actual y obliga a retroceder décadas).
+  const nowYear = new Date().getFullYear();
+  const birthYears = Array.from({ length: 88 }, (_, i) => String(nowYear - 13 - i)); // 13–100 años
+  const birthDays = Array.from({ length: 31 }, (_, i) => pad2(i + 1));
+  const birthdate = bDay && bMonth && bYear ? `${bYear}-${bMonth}-${bDay}` : '';
 
   function switchMode(m: Mode) {
     setMode(m);
@@ -161,16 +186,50 @@ export function AuthScreen() {
                 Personaliza tu coach y tu nutrición. Puedes rellenarlo ahora o más tarde.
               </p>
               <div className="field">
-                <label htmlFor="auth-birthdate">Fecha de nacimiento</label>
-                <input
-                  id="auth-birthdate"
-                  className="input"
-                  type="date"
-                  max={today}
-                  value={birthdate}
-                  onChange={(e) => setBirthdate(e.target.value)}
-                  autoComplete="bday"
-                />
+                <span className="field-label" id="auth-bd-label">
+                  Fecha de nacimiento
+                </span>
+                <div className="birthdate" role="group" aria-labelledby="auth-bd-label">
+                  <select
+                    className="input"
+                    aria-label="Día"
+                    value={bDay}
+                    onChange={(e) => setBDay(e.target.value)}
+                  >
+                    <option value="">Día</option>
+                    {birthDays.map((d) => (
+                      <option key={d} value={d}>
+                        {Number(d)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="input"
+                    aria-label="Mes"
+                    value={bMonth}
+                    onChange={(e) => setBMonth(e.target.value)}
+                  >
+                    <option value="">Mes</option>
+                    {MONTHS.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="input"
+                    aria-label="Año"
+                    value={bYear}
+                    onChange={(e) => setBYear(e.target.value)}
+                  >
+                    <option value="">Año</option>
+                    {birthYears.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <SelectField label="Sexo" value={sex} onChange={setSex}>
                 <option value="">Prefiero no decirlo</option>
