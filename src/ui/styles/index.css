@@ -1001,6 +1001,11 @@ p {
   align-items: center;
 }
 
+/* Botón a todo el ancho (acción principal de un formulario). */
+.btn--block {
+  width: 100%;
+}
+
 /* Cabecera de tarjeta: título + controles sin romper en móvil. */
 .card-head {
   display: flex;

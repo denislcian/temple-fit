@@ -159,11 +159,9 @@ export function AuthScreen() {
           </p>
         )}
 
-        <div className="btn-row">
-          <button type="submit" className="btn btn--primary" disabled={busy}>
-            {busy ? 'Un momento…' : mode === 'register' ? 'Crear mi cuenta' : 'Entrar'}
-          </button>
-        </div>
+        <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
+          {busy ? 'Un momento…' : mode === 'register' ? 'Crear mi cuenta' : 'Entrar'}
+        </button>
       </form>
 
       {cloud && signInWithGoogle && (
