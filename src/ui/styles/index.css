@@ -1217,6 +1217,89 @@ select.input::-ms-expand {
   display: none;
 }
 
+/* ── Desplegable propio (CustomSelect) ──────────────────────
+   Reemplaza el menú nativo del SO (que no se puede estilar) por uno premium,
+   con teclado y lector de pantalla. El <select> nativo se conserva solo para la
+   fecha de nacimiento (muchas opciones → mejor el selector del sistema). */
+.cselect {
+  position: relative;
+}
+button.cselect__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+.cselect__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cselect__chevron {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.cselect.is-open .cselect__chevron {
+  transform: rotate(180deg);
+}
+.cselect__trigger--invalid {
+  border-color: var(--danger);
+  border-width: 2px;
+}
+.cselect__list {
+  /* La posición (fixed) la fija la UI con estilo inline; aquí solo el aspecto. */
+  z-index: 60;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-lg);
+  animation: cselectIn var(--dur-2) var(--ease-out);
+}
+@keyframes cselectIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.cselect__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  color: var(--text);
+  line-height: 1.35;
+}
+.cselect__opt.is-active {
+  background: var(--surface-2);
+}
+.cselect__opt.is-selected {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.cselect__opt.is-selected.is-active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.cselect__check {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
 .input:hover:not(:focus-visible) {
   border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
   background: color-mix(in srgb, var(--accent) 4%, var(--surface));
