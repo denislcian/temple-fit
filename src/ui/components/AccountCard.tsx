@@ -1,6 +1,7 @@
 // CAPA 3 · Interfaz — Gestión de la cuenta en Ajustes.
 // Editar perfil, foto, privacidad, cambiar contraseña y borrar la cuenta (RGPD).
 import { useRef, useState } from 'react';
+import { passwordStrength } from '../../data/authModels';
 import { authService } from '../../data/repositories/authRepo';
 import { compressImage } from '../utils/image';
 import { detectLocation } from '../utils/geolocation';
@@ -200,8 +201,33 @@ function AccountEditor({
             placeholder="Tu ciudad (opcional)"
             onChange={(e) => { setLocation(e.target.value); setCoords({}); setSavedMsg(null); }}
           />
-          <button type="button" className="btn btn--small" onClick={() => void detectMyLocation()} disabled={geoBusy}>
-            {geoBusy ? 'Buscando…' : '📍 Usar mi ubicación'}
+          <button
+            type="button"
+            className="btn btn--small btn--primary"
+            onClick={() => void detectMyLocation()}
+            disabled={geoBusy}
+          >
+            {geoBusy ? (
+              'Buscando…'
+            ) : (
+              <>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10Z" />
+                  <circle cx="12" cy="11" r="2.2" />
+                </svg>
+                Usar mi ubicación
+              </>
+            )}
           </button>
         </div>
         <p className="hint">
@@ -231,7 +257,28 @@ function AccountEditor({
       </div>
       <div className="field">
         <label htmlFor="new-pwd">Nueva contraseña</label>
-        <input id="new-pwd" className="input" type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" />
+        <p className="hint" id="new-pwd-hint">
+          Mínimo 12 caracteres, con mayúscula, minúscula, número y símbolo.
+        </p>
+        <input
+          id="new-pwd"
+          className="input"
+          type="password"
+          value={newPwd}
+          onChange={(e) => setNewPwd(e.target.value)}
+          autoComplete="new-password"
+          aria-describedby="new-pwd-hint"
+        />
+        {newPwd.length > 0 && (
+          <div className="pw-strength" data-score={passwordStrength(newPwd).score}>
+            <div className="pw-bars" aria-hidden="true">
+              <span /> <span /> <span /> <span />
+            </div>
+            <span className="pw-label" role="status">
+              Seguridad: {passwordStrength(newPwd).label}
+            </span>
+          </div>
+        )}
       </div>
       {pwdMsg && (
         <p className={`notice notice--${pwdMsg.kind}`} role={pwdMsg.kind === 'error' ? 'alert' : 'status'}>

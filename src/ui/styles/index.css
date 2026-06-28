@@ -1259,6 +1259,19 @@ select.input::-ms-expand {
   font-weight: 700;
 }
 
+/* Etiqueta con valor a la derecha (p. ej. "Volumen ———— 65%"). */
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.field-value {
+  font-weight: 700;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Campo de búsqueda con icono (lupa SVG) integrado a la izquierda. */
 .search-field {
   position: relative;

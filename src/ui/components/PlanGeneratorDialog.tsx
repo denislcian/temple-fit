@@ -67,7 +67,9 @@ export function PlanGeneratorDialog({
 
   return (
     <AppDialog open={open} title="Generar plan según tu objetivo" onClose={onClose}>
-      <SelectField label="Objetivo" value={goal} onChange={(v) => setGoal(v as Goal)}>
+      <fieldset className="form-section">
+        <legend>Configura tu plan</legend>
+        <SelectField label="Objetivo" value={goal} onChange={(v) => setGoal(v as Goal)}>
         <option value="fuerza">Fuerza (pesos altos, pocas repeticiones)</option>
         <option value="hipertrofia">Hipertrofia (ganar músculo)</option>
         <option value="definicion">Definición (perder grasa manteniendo músculo)</option>
@@ -91,6 +93,7 @@ export function PlanGeneratorDialog({
         <option value="principiante">Principiante (menos de 1 año entrenando)</option>
         <option value="intermedio">Intermedio</option>
       </SelectField>
+      </fieldset>
 
       <div className="btn-row">
         <button type="button" className="btn btn--primary" onClick={generate}>

@@ -234,7 +234,10 @@ export function DescansoView() {
         </div>
 
         <div className="field" style={{ marginTop: '1rem' }}>
-          <label htmlFor="vol">Volumen</label>
+          <label htmlFor="vol" className="field-label-row">
+            <span>Volumen</span>
+            <span className="field-value num">{Math.round(sound.volume * 100)}%</span>
+          </label>
           <input
             id="vol"
             className="range"
@@ -243,6 +246,7 @@ export function DescansoView() {
             max={100}
             value={Math.round(sound.volume * 100)}
             onChange={(e) => sound.setVolume(Number(e.target.value) / 100)}
+            aria-valuetext={`${Math.round(sound.volume * 100)} por ciento`}
           />
         </div>
 
