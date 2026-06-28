@@ -63,12 +63,12 @@ export function BodyMeasureDialog({ open, onSaved, onClose }: BodyMeasureDialogP
 
   return (
     <AppDialog open={open} title="Registrar medidas de hoy" onClose={onClose}>
-      <TextField label="Peso (kg)" mode="decimal" value={form.weight} onChange={set('weight')} error={error} required />
-      <TextField label="Grasa corporal (%) — opcional" mode="decimal" value={form.fat} onChange={set('fat')} />
-      <TextField label="Cintura (cm) — opcional" mode="decimal" value={form.waist} onChange={set('waist')} />
-      <TextField label="Pecho (cm) — opcional" mode="decimal" value={form.chest} onChange={set('chest')} />
-      <TextField label="Brazo (cm) — opcional" mode="decimal" value={form.arm} onChange={set('arm')} />
-      <TextField label="Muslo (cm) — opcional" mode="decimal" value={form.thigh} onChange={set('thigh')} />
+      <TextField label="Peso" suffix="kg" mode="decimal" value={form.weight} onChange={set('weight')} error={error} required />
+      <TextField label="Grasa corporal — opcional" suffix="%" mode="decimal" value={form.fat} onChange={set('fat')} />
+      <TextField label="Cintura — opcional" suffix="cm" mode="decimal" value={form.waist} onChange={set('waist')} />
+      <TextField label="Pecho — opcional" suffix="cm" mode="decimal" value={form.chest} onChange={set('chest')} />
+      <TextField label="Brazo — opcional" suffix="cm" mode="decimal" value={form.arm} onChange={set('arm')} />
+      <TextField label="Muslo — opcional" suffix="cm" mode="decimal" value={form.thigh} onChange={set('thigh')} />
       <div className="btn-row">
         <button type="button" className="btn btn--primary" onClick={save}>
           Guardar medidas

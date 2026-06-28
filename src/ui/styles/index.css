@@ -1050,7 +1050,7 @@ p {
   bottom: 3px;
   left: 3px;
   width: calc(50% - 4px);
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #000));
   border-radius: calc(var(--radius-m) - 3px);
   box-shadow: var(--shadow-sm);
   transition: transform var(--dur-2) var(--ease-spring);
@@ -1084,7 +1084,7 @@ p {
 }
 
 .segmented button[aria-pressed='true'] {
-  color: var(--accent-text);
+  color: var(--on-accent);
 }
 
 /* Bloque extra del registro: aparece con una transición suave (no de golpe). */
@@ -1219,6 +1219,7 @@ select.input::-ms-expand {
 
 .input:hover:not(:focus-visible) {
   border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
 }
 
 .input:focus-visible {
@@ -1232,6 +1233,30 @@ select.input::-ms-expand {
 .input[aria-invalid='true'] {
   border-color: var(--danger);
   border-width: 2px;
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+}
+
+/* Sufijo de unidad dentro del campo (kg, cm, kcal…) + asterisco de obligatorio. */
+.input-affix {
+  position: relative;
+}
+.input--has-suffix {
+  padding-right: 3rem;
+}
+.field-suffix {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.field-req {
+  color: var(--danger);
+  font-weight: 700;
 }
 
 /* iOS hace zoom al enfocar inputs < 16px: forzamos 16px en móvil. */
@@ -1263,10 +1288,10 @@ fieldset {
 
 legend {
   font-family: var(--font-display);
-  font-size: var(--fs-sm);
+  font-size: 0.9rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--accent-text);
   padding: 0 0.4rem;
 }
 
@@ -1446,10 +1471,45 @@ legend {
   cursor: pointer;
 }
 
-.auto-rest input {
-  width: 1.35rem;
-  height: 1.35rem;
-  accent-color: var(--accent);
+.auto-rest input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+.auto-rest input[type='checkbox']::before {
+  content: '';
+  width: 0.78rem;
+  height: 0.78rem;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform var(--dur-1) var(--ease-spring);
+  background: var(--on-accent);
+  clip-path: polygon(14% 44%, 0 60%, 40% 100%, 100% 18%, 84% 4%, 38% 70%);
+}
+.auto-rest input[type='checkbox']:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.auto-rest input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+.auto-rest input[type='checkbox']:hover:not(:checked) {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+.auto-rest input[type='checkbox']:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 
 /* ── Ilustraciones de músculos ──────────────────────────── */

@@ -530,10 +530,10 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
       {mode === 'manual' && !selected && (
         <>
           <TextField label="Nombre del alimento" value={manual.name} onChange={(name) => setManual({ ...manual, name })} required />
-          <TextField label="Calorías por 100 g" mode="decimal" value={manual.kcal} onChange={(kcal) => setManual({ ...manual, kcal })} />
-          <TextField label="Proteínas por 100 g" mode="decimal" value={manual.protein} onChange={(protein) => setManual({ ...manual, protein })} />
-          <TextField label="Carbohidratos por 100 g" mode="decimal" value={manual.carbs} onChange={(carbs) => setManual({ ...manual, carbs })} />
-          <TextField label="Grasas por 100 g" mode="decimal" value={manual.fat} onChange={(fat) => setManual({ ...manual, fat })} />
+          <TextField label="Calorías por 100 g" suffix="kcal" mode="decimal" value={manual.kcal} onChange={(kcal) => setManual({ ...manual, kcal })} />
+          <TextField label="Proteínas por 100 g" suffix="g" mode="decimal" value={manual.protein} onChange={(protein) => setManual({ ...manual, protein })} />
+          <TextField label="Carbohidratos por 100 g" suffix="g" mode="decimal" value={manual.carbs} onChange={(carbs) => setManual({ ...manual, carbs })} />
+          <TextField label="Grasas por 100 g" suffix="g" mode="decimal" value={manual.fat} onChange={(fat) => setManual({ ...manual, fat })} />
           <div className="btn-row">
             <button type="button" className="btn btn--primary" onClick={selectManual}>
               Guardar y elegir
@@ -551,7 +551,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
               Cambiar
             </button>
           </p>
-          <TextField label="Gramos consumidos" mode="decimal" value={grams} onChange={setGrams} />
+          <TextField label="Gramos consumidos" suffix="g" mode="decimal" value={grams} onChange={setGrams} />
           {preview && (
             <p className="chart-summary num">
               Eso son ~{preview.kcal} kcal y {preview.p} g de proteína.

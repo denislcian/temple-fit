@@ -237,8 +237,8 @@ export function AuthScreen() {
                 <option value="hombre">{SEX_LABELS.hombre}</option>
               </SelectField>
               <div className="field-grid">
-                <TextField label="Altura (cm)" value={height} onChange={setHeight} mode="int" />
-                <TextField label="Peso (kg)" value={weight} onChange={setWeight} mode="decimal" />
+                <TextField label="Altura" value={height} onChange={setHeight} mode="int" suffix="cm" />
+                <TextField label="Peso" value={weight} onChange={setWeight} mode="decimal" suffix="kg" />
               </div>
               <SelectField label="Objetivo" value={goal} onChange={setGoal}>
                 <option value="">Sin objetivo concreto</option>

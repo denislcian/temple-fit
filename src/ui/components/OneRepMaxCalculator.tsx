@@ -31,9 +31,10 @@ export function OneRepMaxCalculator({ initialWeight = '' }: { initialWeight?: st
   return (
     <>
       <div className="field-row">
-        <TextField label="Peso (kg)" mode="decimal" value={weight} onChange={setWeight} />
+        <TextField label="Peso" suffix="kg" mode="decimal" value={weight} onChange={setWeight} />
         <TextField
           label="Repeticiones"
+          suffix="reps"
           mode="int"
           value={reps}
           onChange={setReps}

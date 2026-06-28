@@ -43,7 +43,8 @@ export function WeightGoalCard({ currentKg }: { currentKg: number | undefined })
         <>
           <p className="muted num">Tu peso actual registrado: {currentKg} kg.</p>
           <TextField
-            label="Peso objetivo (kg)"
+            label="Peso objetivo"
+            suffix="kg"
             mode="decimal"
             value={target}
             onChange={(v) => {

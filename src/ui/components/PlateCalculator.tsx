@@ -22,7 +22,8 @@ export function PlateCalculator({ initialWeight = '' }: PlateCalculatorProps) {
   return (
     <>
       <TextField
-        label="Peso de trabajo (kg)"
+        label="Peso de trabajo"
+        suffix="kg"
         mode="decimal"
         value={weight}
         onChange={setWeight}

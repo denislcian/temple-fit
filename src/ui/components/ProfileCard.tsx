@@ -105,21 +105,24 @@ export function ProfileCard({ onSaved }: { onSaved?: () => void }) {
         <option value="mujer">Mujer</option>
       </SelectField>
       <TextField
-        label="Edad (años)"
+        label="Edad"
+        suffix="años"
         mode="int"
         value={form.age}
         onChange={(age) => update({ age })}
         error={errors.age}
       />
       <TextField
-        label="Altura (cm)"
+        label="Altura"
+        suffix="cm"
         mode="decimal"
         value={form.heightCm}
         onChange={(heightCm) => update({ heightCm })}
         error={errors.heightCm}
       />
       <TextField
-        label="Peso (kg)"
+        label="Peso"
+        suffix="kg"
         mode="decimal"
         value={form.weightKg}
         onChange={(weightKg) => update({ weightKg })}

@@ -18,7 +18,7 @@ describe('ToolsView', () => {
     await screen.findByRole('heading', { level: 1, name: /herramientas/i });
 
     // 100 kg × 5 reps → media de Epley (116,7) y Brzycki (112,5) = 114,6 kg.
-    fireEvent.change(screen.getByLabelText(/^Peso \(kg\)$/i), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/^Peso$/i), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/^Repeticiones$/i), { target: { value: '5' } });
 
     expect(screen.getByText(/1RM estimado/i)).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe('ToolsView', () => {
     render(<App />);
     await screen.findByRole('heading', { level: 1, name: /herramientas/i });
 
-    fireEvent.change(screen.getByLabelText(/^Peso \(kg\)$/i), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/^Peso$/i), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/^Repeticiones$/i), { target: { value: '40' } });
 
     expect(screen.queryByText(/1RM estimado/i)).not.toBeInTheDocument();
