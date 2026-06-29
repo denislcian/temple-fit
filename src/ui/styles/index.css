@@ -1430,6 +1430,21 @@ legend {
 }
 
 /* ── Registro de series ─────────────────────────────────── */
+/* Cabecera de la tarjeta de ejercicio en sesión: el nombre ocupa lo que pueda
+   (envuelve si hace falta) y las acciones (subir/bajar/quitar) van compactas a
+   la derecha, sin desbordar ni envolver feo en móvil. */
+.exercise-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.exercise-head h2 {
+  min-width: 0;
+  margin: 0;
+}
+
 .set-header {
   display: grid;
   grid-template-columns: 2rem 1fr 1fr var(--target);
@@ -2610,6 +2625,15 @@ legend {
 
 .icon-btn:active {
   transform: scale(0.92);
+}
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.icon-btn:disabled:hover {
+  color: inherit;
+  background: transparent;
+  border-color: var(--border);
 }
 
 /* Acción destructiva: realce en rojo solo al interactuar. */

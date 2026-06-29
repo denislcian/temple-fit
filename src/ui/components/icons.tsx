@@ -51,3 +51,11 @@ export const ProgressIcon = svg(
     <path d="m7 14 3.5-3.5 3 3L20 7" strokeLinecap="round" strokeLinejoin="round" />
   </>,
 );
+
+export const ChevronUpIcon = svg(
+  <path d="m6 15 6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />,
+);
+
+export const ChevronDownIcon = svg(
+  <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />,
+);

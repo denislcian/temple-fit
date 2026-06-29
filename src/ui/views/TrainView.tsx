@@ -21,6 +21,7 @@ import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextAreaField, TextField } from '../components/Field';
 import { GymToolsDialog } from '../components/GymToolsDialog';
+import { ChevronDownIcon, ChevronUpIcon, TrashIcon } from '../components/icons';
 import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -420,33 +421,37 @@ export function TrainView() {
         const suggestion = last && last.length > 0 ? suggestProgression(last) : null;
         return (
           <section key={entry.exerciseId} className="card" aria-label={exercise?.name}>
-            <div className="btn-row" style={{ justifyContent: 'space-between' }}>
+            <div className="exercise-head">
               <h2>{exercise?.name ?? entry.exerciseId}</h2>
-              <div className="btn-row">
+              <div className="row-actions">
                 <button
                   type="button"
-                  className="btn btn--small btn--ghost"
+                  className="icon-btn"
                   disabled={entryIndex === 0}
                   onClick={() => moveExercise(entryIndex, -1)}
+                  title="Subir"
+                  aria-label={`Subir ${exercise?.name ?? entry.exerciseId}`}
                 >
-                  <span aria-hidden="true">↑</span>
-                  <span className="visually-hidden">Subir {exercise?.name}</span>
+                  {ChevronUpIcon}
                 </button>
                 <button
                   type="button"
-                  className="btn btn--small btn--ghost"
+                  className="icon-btn"
                   disabled={entryIndex === draft.entries.length - 1}
                   onClick={() => moveExercise(entryIndex, 1)}
+                  title="Bajar"
+                  aria-label={`Bajar ${exercise?.name ?? entry.exerciseId}`}
                 >
-                  <span aria-hidden="true">↓</span>
-                  <span className="visually-hidden">Bajar {exercise?.name}</span>
+                  {ChevronDownIcon}
                 </button>
                 <button
                   type="button"
-                  className="btn btn--small btn--danger"
+                  className="icon-btn icon-btn--danger"
                   onClick={() => removeExercise(entryIndex)}
+                  title="Quitar"
+                  aria-label={`Quitar ${exercise?.name ?? entry.exerciseId}`}
                 >
-                  Quitar<span className="visually-hidden"> {exercise?.name}</span>
+                  {TrashIcon}
                 </button>
               </div>
             </div>
