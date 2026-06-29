@@ -322,7 +322,7 @@ async function ensureSeeded(): Promise<void> {
   const demoPosts: Post[] = [
     {
       id: 'demo-bienvenida',
-      author: 'Equipo Temple',
+      author: 'Equipo TMPL',
       createdAt: hoursAgo(50),
       kind: 'texto',
       visibility: 'publica',

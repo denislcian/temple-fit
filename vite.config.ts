@@ -30,8 +30,8 @@ export default defineConfig({
         id: './',
         scope: './',
         start_url: './',
-        name: 'Temple — Cuaderno de gimnasio',
-        short_name: 'Temple',
+        name: 'TMPL — Cuaderno de gimnasio',
+        short_name: 'TMPL',
         description:
           'Registro de entrenamientos de fuerza. Gratis, sin cuentas, 100% offline y accesible.',
         lang: 'es',

@@ -62,7 +62,7 @@ function Brand() {
     <a className="brand" href="#/entrenar">
       <span className="spark" aria-hidden="true" />
       <span>
-        Temp<em>le</em>
+        TM<em>PL</em>
       </span>
     </a>
   );
@@ -114,7 +114,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
 
   // Título de la pestaña del navegador acorde a la vista actual.
   useEffect(() => {
-    document.title = `${ROUTE_LABELS[route]} — Temple`;
+    document.title = `${ROUTE_LABELS[route]} — TMPL`;
   }, [route]);
 
   // Gestión de foco + transición + anuncio al navegar (no en la carga inicial).

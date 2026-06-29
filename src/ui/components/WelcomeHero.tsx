@@ -28,7 +28,7 @@ export function WelcomeHero() {
         {/* Chispa de marca (misma del logo): degradado brasa → ámbar. */}
         <span className="spark" />
       </span>
-      <h1 className="welcome__title">Bienvenido a Temple</h1>
+      <h1 className="welcome__title">Bienvenido a TMPL</h1>
       <p className="welcome__tagline">
         Tu plataforma de salud y entrenamiento. Todo en un sitio, contigo siempre.
       </p>

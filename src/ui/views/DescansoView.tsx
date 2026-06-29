@@ -173,7 +173,7 @@ export function DescansoView() {
       <section className="card" aria-labelledby="sounds-heading">
         <h2 id="sounds-heading">Música para dormir</h2>
         <p className="muted">
-          Pistas de relajación creadas para Temple. Suena una a la vez; el volumen y el apagado
+          Pistas de relajación creadas para TMPL. Suena una a la vez; el volumen y el apagado
           automático valen para todas.
         </p>
 

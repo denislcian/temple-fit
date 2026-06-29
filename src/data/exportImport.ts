@@ -196,7 +196,7 @@ function parseBundle(raw: unknown): ExportBundle {
   }
   if (!isRecord(raw)) throw new Error('El archivo no tiene el formato esperado');
   if (raw.schema !== 'forjafit') {
-    throw new Error('El archivo no es una exportación de Temple');
+    throw new Error('El archivo no es una exportación de TMPL');
   }
   // Las versiones antiguas siguen siendo importables: las colecciones que
   // no existían en su época simplemente llegan vacías.

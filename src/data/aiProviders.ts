@@ -146,7 +146,7 @@ export async function callLLM(
         'Content-Type': 'application/json',
         // OpenRouter pide identificar la app (opcional pero recomendado).
         ...(providerId === 'openrouter'
-          ? { 'HTTP-Referer': window.location.origin, 'X-Title': 'Temple' }
+          ? { 'HTTP-Referer': window.location.origin, 'X-Title': 'TMPL' }
           : {}),
       },
       body: JSON.stringify({

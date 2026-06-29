@@ -44,14 +44,14 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   async function exportJson() {
     const bundle = await exportBundle();
     const date = new Date().toISOString().slice(0, 10);
-    download(`temple-${date}.json`, JSON.stringify(bundle, null, 2), 'application/json');
+    download(`tmpl-${date}.json`, JSON.stringify(bundle, null, 2), 'application/json');
     announce('Copia de seguridad JSON descargada');
   }
 
   async function exportCsv() {
     const [allSessions, exercises] = await Promise.all([getAllSessions(), getAllExercises()]);
     const date = new Date().toISOString().slice(0, 10);
-    download(`temple-historial-${date}.csv`, sessionsToCsv(allSessions, exercises), 'text/csv');
+    download(`tmpl-historial-${date}.csv`, sessionsToCsv(allSessions, exercises), 'text/csv');
     announce('Historial CSV descargado');
   }
 
@@ -62,7 +62,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       return;
     }
     const date = new Date().toISOString().slice(0, 10);
-    download(`temple-nutricion-${date}.csv`, diaryToCsv(diary), 'text/csv');
+    download(`tmpl-nutricion-${date}.csv`, diaryToCsv(diary), 'text/csv');
     announce('Diario de nutrición CSV descargado');
   }
 
@@ -137,7 +137,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
 
       {install.state !== 'instalada' && (
         <section className="card card--accent" aria-labelledby="install-heading">
-          <h2 id="install-heading">Instalar Temple</h2>
+          <h2 id="install-heading">Instalar TMPL</h2>
           {install.state === 'instalable' && (
             <>
               <p className="muted">
@@ -161,13 +161,13 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
           {install.state === 'ios' && (
             <p className="muted">
               En iPhone/iPad: toca el botón <strong>Compartir</strong> de Safari y elige{' '}
-              <strong>«Añadir a pantalla de inicio»</strong>. Temple se abrirá como una app
+              <strong>«Añadir a pantalla de inicio»</strong>. TMPL se abrirá como una app
               independiente.
             </p>
           )}
           {install.state === 'no-disponible' && (
             <p className="muted">
-              Tu navegador instalará Temple desde su menú (busca «Instalar app» o «Añadir a pantalla
+              Tu navegador instalará TMPL desde su menú (busca «Instalar app» o «Añadir a pantalla
               de inicio»). En el móvil es donde más brilla.
             </p>
           )}
@@ -307,14 +307,14 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
             serie. Es una estimación para seguir tu progreso, no un objetivo para probar máximos.
           </li>
           <li>
-            <strong>Offline</strong>: tras la primera visita, Temple funciona sin conexión. Puedes
+            <strong>Offline</strong>: tras la primera visita, TMPL funciona sin conexión. Puedes
             instalarla desde el menú del navegador («Añadir a pantalla de inicio»).
           </li>
         </ul>
       </section>
 
       <section className="card" aria-labelledby="about-heading">
-        <h2 id="about-heading">Acerca de Temple</h2>
+        <h2 id="about-heading">Acerca de TMPL</h2>
         <p className="muted">
           Proyecto personal de código abierto (licencia MIT). Construido con React, TypeScript e
           IndexedDB, sin rastreadores ni analítica: tu entrenamiento es asunto tuyo.
