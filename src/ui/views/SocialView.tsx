@@ -370,6 +370,8 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         Comunidad
       </h1>
 
+      <div className="feed-layout">
+        <div className="feed-main">
       <div className="card session-bar">
         <a href={`#/perfil/${encodeURIComponent(myId)}`} aria-label="Ver mi perfil">
           <Avatar id={myId} name={me} photoUrl={account.avatarUrl} />
@@ -482,7 +484,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       </section>
 
       {!searchQuery.trim() && rankedDiscover.length > 0 && (
-        <section className="card" aria-labelledby="discover-heading">
+        <section className="card discover-inline" aria-labelledby="discover-heading">
           <h2 id="discover-heading">
             {nearbyCount > 0 ? '📍 Cerca de ti' : 'Descubrir personas'}
           </h2>
@@ -662,6 +664,43 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           )}
         </article>
       ))}
+        </div>
+
+        <aside className="feed-rail" aria-label="Tu perfil y sugerencias">
+          <div className="card rail-profile">
+            <a href={`#/perfil/${encodeURIComponent(myId)}`} aria-label="Ver mi perfil">
+              <Avatar id={myId} name={me} size={64} photoUrl={account.avatarUrl} />
+            </a>
+            <a className="author-link" href={`#/perfil/${encodeURIComponent(myId)}`}>
+              <strong>{me}</strong>
+            </a>
+            <span className="meta">@{account.username}</span>
+            <a className="btn btn--small btn--block" href={`#/perfil/${encodeURIComponent(myId)}`}>
+              Ver tu perfil
+            </a>
+            <div className="rail-profile__actions">
+              <a
+                href="#/notificaciones"
+                className="notif-bell"
+                aria-label={`Notificaciones${unread ? ` (${unread} sin leer)` : ''}`}
+              >
+                <span aria-hidden="true">🔔</span>
+                {unread ? <span className="notif-badge num">{unread}</span> : null}
+              </a>
+              <button type="button" className="btn btn--small btn--ghost" onClick={onLogout}>
+                Salir
+              </button>
+            </div>
+          </div>
+
+          {rankedDiscover.length > 0 && (
+            <div className="card">
+              <h2 className="rail-heading">Atletas sugeridos</h2>
+              <ul className="item-list">{rankedDiscover.slice(0, 5).map(accountRow)}</ul>
+            </div>
+          )}
+        </aside>
+      </div>
 
       <AppDialog open={publishing} title="Publicar en la comunidad" onClose={() => setPublishing(false)}>
         <TextAreaField
