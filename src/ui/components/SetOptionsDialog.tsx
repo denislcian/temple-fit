@@ -35,6 +35,7 @@ interface SetOptionsDialogProps {
   rpe: number | undefined;
   onChangeType: (type: SetType) => void;
   onChangeRpe: (rpe: number | undefined) => void;
+  onRemove: () => void;
   onClose: () => void;
 }
 
@@ -46,6 +47,7 @@ export function SetOptionsDialog({
   rpe,
   onChangeType,
   onChangeRpe,
+  onRemove,
   onClose,
 }: SetOptionsDialogProps) {
   return (
@@ -96,7 +98,10 @@ export function SetOptionsDialog({
         </div>
       </fieldset>
 
-      <div className="btn-row">
+      <div className="btn-row" style={{ justifyContent: 'space-between' }}>
+        <button type="button" className="btn btn--ghost btn--danger" onClick={onRemove}>
+          Eliminar serie
+        </button>
         <button type="button" className="btn btn--primary" onClick={onClose}>
           Listo
         </button>

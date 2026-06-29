@@ -1432,7 +1432,7 @@ legend {
 /* ── Registro de series ─────────────────────────────────── */
 .set-header {
   display: grid;
-  grid-template-columns: 2rem 1fr 1fr var(--target) var(--target);
+  grid-template-columns: 2rem 1fr 1fr var(--target);
   gap: 0.5rem;
   padding: 0 0.4rem 0.2rem;
   font-size: var(--fs-xs);
@@ -1451,7 +1451,7 @@ legend {
 
 .set-row {
   display: grid;
-  grid-template-columns: 2rem 1fr 1fr var(--target) var(--target);
+  grid-template-columns: 2rem 1fr 1fr var(--target);
   gap: 0.5rem;
   align-items: center;
   padding: 0.45rem 0.4rem;
@@ -1464,30 +1464,6 @@ legend {
   background: color-mix(in srgb, var(--success) 8%, transparent);
 }
 
-.set-remove {
-  width: var(--target);
-  height: var(--target);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: var(--radius-m);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  cursor: pointer;
-  transition:
-    background-color var(--dur-1) var(--ease-out),
-    color var(--dur-1) var(--ease-out);
-}
-.set-remove:hover {
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
-  color: var(--danger);
-}
-.set-remove:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 1px;
-}
 
 /* El índice de serie es un botón: abre las opciones (tipo y RPE). */
 .set-row .set-index {
@@ -1555,7 +1531,7 @@ legend {
 @media (max-width: 47.9rem) {
   .set-row,
   .set-header {
-    grid-template-columns: 1.4rem 1fr 1fr var(--target) var(--target);
+    grid-template-columns: 1.6rem 1fr 1fr var(--target);
     gap: 0.4rem;
   }
 }
@@ -1654,6 +1630,86 @@ legend {
   color: var(--text-muted);
   min-height: var(--target);
   cursor: pointer;
+}
+
+/* Cuenta atrás FLOTANTE del descanso: aparece mientras corre el temporizador,
+   siempre visible (sobre la barra de navegación inferior), para no perderla de
+   vista mientras registras series arriba. */
+.rest-float {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 2rem));
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: restFloatIn var(--dur-2) var(--ease-spring);
+}
+@media (max-width: 47.9rem) {
+  .rest-float {
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    transform: none;
+    bottom: calc(4.6rem + env(safe-area-inset-bottom));
+  }
+}
+@keyframes restFloatIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+@media (max-width: 47.9rem) {
+  @keyframes restFloatIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+.rest-float__bar {
+  height: 4px;
+  background: var(--accent);
+  width: var(--pct, 100%);
+  transition: width 1s linear;
+}
+.rest-float__body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+.rest-float__label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.rest-float__time {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--accent-text);
+  margin-right: auto;
+}
+.rest-float__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rest-float {
+    animation: none;
+  }
+  .rest-float__bar {
+    transition: none;
+  }
 }
 
 .auto-rest input[type='checkbox'] {

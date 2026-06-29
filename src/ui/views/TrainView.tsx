@@ -511,7 +511,6 @@ export function TrainView() {
                 <span>Reps</span>
                 <span>Kg</span>
                 <span />
-                <span />
               </div>
             )}
             {entry.sets.map((set, setIndex) => {
@@ -573,16 +572,6 @@ export function TrainView() {
                     <span aria-hidden="true">✓</span>
                     <span className="visually-hidden">
                       Serie {setIndex + 1} de {exercise?.name} completada
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="set-remove"
-                    onClick={() => removeSet(entryIndex, setIndex)}
-                  >
-                    <span aria-hidden="true">✕</span>
-                    <span className="visually-hidden">
-                      Eliminar serie {setIndex + 1} de {exercise?.name}
                     </span>
                   </button>
                 </div>
@@ -663,6 +652,10 @@ export function TrainView() {
                 updateSet(entryIndex, setIndex, { type: type === 'normal' ? undefined : type })
               }
               onChangeRpe={(rpe) => updateSet(entryIndex, setIndex, { rpe })}
+              onRemove={() => {
+                removeSet(entryIndex, setIndex);
+                setSetOptions(null);
+              }}
               onClose={() => setSetOptions(null)}
             />
           );
