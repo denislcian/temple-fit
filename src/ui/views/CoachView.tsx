@@ -133,19 +133,19 @@ export function CoachView() {
 
   if (!ctx || !verdict) {
     return (
-      <>
+      <div className="view-narrow">
         <h1 id="view-title" tabIndex={-1}>
           Coach
         </h1>
         <p className="muted" role="status">
           Analizando tu entrenamiento…
         </p>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="view-narrow">
       <span className="kicker">Tu entrenador adaptativo</span>
       <h1 id="view-title" tabIndex={-1}>
         Coach
@@ -292,6 +292,6 @@ export function CoachView() {
           molestias o lesiones.
         </p>
       </section>
-    </>
+    </div>
   );
 }

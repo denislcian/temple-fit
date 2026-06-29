@@ -1519,7 +1519,8 @@ legend {
    columna estrecha y centrada (estilo app de gimnasio), tabla de series
    compacta y centrada, y temporizador de descanso también centrado. */
 @media (min-width: 48rem) {
-  .train-live {
+  .train-live,
+  .view-narrow {
     max-width: 44rem;
     margin-inline: auto;
   }
