@@ -17,10 +17,10 @@
   --border: #d4e0d9;
   --text: #14201a;
   --text-muted: #55655d; /* ~5.6:1 sobre --bg */
-  --accent: #047857; /* esmeralda; blanco encima ~5.5:1 */
-  --accent-text: #047857; /* ~5.1:1 sobre --bg */
+  --accent: #33614e; /* verde apagado (sobrio); blanco encima ~5.3:1 */
+  --accent-text: #2e5a47; /* ~5.7:1 sobre --bg */
   --on-accent: #ffffff;
-  --accent-2: #b45309; /* ámbar complementario; ~4.7:1 sobre --bg */
+  --accent-2: #7e5530; /* bronce apagado; ~5.2:1 sobre --bg */
   --on-accent-2: #fffbeb;
   --danger: #b91c1c;
   --danger-strong: #b91c1c;
@@ -83,10 +83,10 @@
   --border: #3a404b;
   --text: #edeef0;
   --text-muted: #aab1bc;
-  --accent: #f97316; /* brasa */
-  --accent-text: #fb923c; /* ~7.9:1 sobre --bg oscuro */
+  --accent: #cf7c45; /* brasa apagada (sobria) */
+  --accent-text: #dd9a63; /* claro para contraste sobre --bg oscuro */
   --on-accent: #1c1006;
-  --accent-2: #2dd4bf; /* acero templado (teal): ~9.7:1 sobre --bg */
+  --accent-2: #6fb3a6; /* teal apagado */
   --on-accent-2: #042f2a;
   --danger: #f87171;
   --danger-strong: #dc2626;
@@ -913,16 +913,10 @@ p {
 }
 
 /* Primario: relleno con gradiente del acento, canto luminoso y sombra de color. */
-/* Degradado de acento "vibrante" (mismo tono + un toque cálido de ámbar),
-   relativo al acento de cada tema: verde esmeralda en claro, brasa en oscuro.
-   Da vida a botones y barras sin chocar con la paleta. */
+/* Acento plano (look profesional sobrio): botones y barras sin degradado.
+   Se mantiene la variable para no tocar cada uso; antes era un degradado. */
 :root {
-  --accent-grad: linear-gradient(
-    105deg,
-    color-mix(in srgb, var(--accent) 90%, white),
-    var(--accent) 50%,
-    color-mix(in srgb, var(--accent) 82%, #fbbf24)
-  );
+  --accent-grad: var(--accent);
 }
 
 .btn--primary {
@@ -1650,9 +1644,9 @@ legend {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: linear-gradient(135deg, var(--accent), #d97706);
+  background: var(--accent);
   color: var(--on-accent);
-  font-weight: 800;
+  font-weight: 700;
   font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   padding: 0.2rem 0.6rem;
@@ -1662,10 +1656,15 @@ legend {
   animation: prPop var(--dur-3) var(--ease-spring) both;
 }
 
-/* Variante acero (teal): etiquetas informativas, p. ej. ejercicio "propio". */
+/* Variante sobria: etiquetas informativas en gris/contorno (look profesional),
+   sin relleno de color. */
 .badge--steel {
-  background: var(--accent-2);
-  color: var(--on-accent-2);
+  background: transparent;
+  color: var(--text-secondary, var(--text-muted));
+  border: 1px solid var(--border-strong, var(--border));
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .last-time {
