@@ -1016,6 +1016,73 @@ p {
   width: 100%;
 }
 
+.auth-card {
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+/* ── Registro: wizard deslizable (una pantalla por paso) ── */
+.auth-wizard {
+  margin-top: 0.5rem;
+}
+.auth-progress {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+}
+.auth-dot {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+.auth-dot.is-done {
+  background: var(--accent);
+}
+.auth-progress__label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+.auth-step {
+  animation: authStepIn var(--dur-3) var(--ease-out);
+}
+.auth-step[data-dir='back'] {
+  animation-name: authStepInBack;
+}
+.auth-step__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+}
+@keyframes authStepIn {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+}
+@keyframes authStepInBack {
+  from {
+    opacity: 0;
+    transform: translateX(-26px);
+  }
+}
+.auth-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.auth-nav .btn--primary {
+  min-width: 9rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-step {
+    animation: none;
+  }
+}
+
 /* Cabecera de tarjeta: título + controles sin romper en móvil. */
 .card-head {
   display: flex;
