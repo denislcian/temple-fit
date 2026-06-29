@@ -377,11 +377,6 @@ p {
   flex: none;
 }
 
-.brand em {
-  font-style: normal;
-  color: var(--accent-text);
-}
-
 .app-main {
   max-width: 60rem;
   margin: 0 auto;

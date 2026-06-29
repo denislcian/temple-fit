@@ -69,9 +69,7 @@ function Brand() {
           <path d="M44 71 H67 V61" />
         </g>
       </svg>
-      <span>
-        TM<em>PL</em>
-      </span>
+      <span>TMPL</span>
     </a>
   );
 }
