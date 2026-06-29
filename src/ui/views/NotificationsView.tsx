@@ -1,10 +1,11 @@
 // CAPA 3 · Interfaz — Notificaciones (te siguen / like / comentario).
 // Al abrirlas se marcan como leídas. Cada una enlaza al perfil del actor o al feed.
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import type { Notification } from '../../data/notificationModels';
 import { notificationsRepo } from '../../data/repositories/notificationsRepo';
 import { useAuth } from '../components/AuthContext';
 import { Avatar } from '../components/Avatar';
+import { BellIcon, CommentIcon, HeartIcon, UserIcon } from '../components/icons';
 import { useAsyncData } from '../hooks/useAsyncData';
 
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
@@ -16,10 +17,10 @@ function relativeTime(iso: string): string {
   return timeFormat.format(Math.round(hours / 24), 'day');
 }
 
-const ICON: Record<Notification['kind'], string> = {
-  follow: '👤',
-  like: '❤️',
-  comment: '💬',
+const ICON: Record<Notification['kind'], ReactNode> = {
+  follow: UserIcon,
+  like: HeartIcon,
+  comment: CommentIcon,
 };
 
 function describe(n: Notification): { text: string; href: string } {
@@ -80,7 +81,7 @@ export function NotificationsView() {
       {notifs && notifs.length === 0 && (
         <p className="empty-state" role="status">
           <span className="empty-state__icon" aria-hidden="true">
-            🔔
+            {BellIcon}
           </span>
           Aquí verás cuando alguien te siga, te dé me gusta o te comente.
         </p>

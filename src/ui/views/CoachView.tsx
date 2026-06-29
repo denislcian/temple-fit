@@ -10,6 +10,8 @@ import { isOnDeviceSupported, type DownloadProgress } from '../../data/onDeviceL
 import { buildCoachContext } from '../../domain/coach/coachContext';
 import { evaluateCoach, fatigueVerdict, type CoachTone } from '../../domain/coach/coachRules';
 import { suggestProgram } from '../../domain/coach/programs';
+import type { ReactNode } from 'react';
+import { AlertIcon, CheckIcon, HowToIcon, RepeatIcon, TargetIcon } from '../components/icons';
 import { GOAL_LABELS, type Goal } from '../../domain/routineGenerator';
 import { EmptyState } from '../components/EmptyState';
 import { SelectField } from '../components/Field';
@@ -25,11 +27,17 @@ const COACH_ICON = (
   </svg>
 );
 
-const TONE_ICON: Record<CoachTone, string> = {
-  positivo: '✅',
-  info: '💡',
-  ajuste: '🔧',
-  alerta: '⚠️',
+const TONE_ICON: Record<CoachTone, ReactNode> = {
+  positivo: CheckIcon,
+  info: HowToIcon,
+  ajuste: RepeatIcon,
+  alerta: AlertIcon,
+};
+
+const VERDICT_ICON: Record<string, ReactNode> = {
+  cargado: AlertIcon,
+  descansado: CheckIcon,
+  'sin-datos': HowToIcon,
 };
 
 export function CoachView() {
@@ -146,7 +154,7 @@ export function CoachView() {
       {/* Veredicto de cabecera. */}
       <section className={`card coach-verdict coach-verdict--${verdict.estado}`} aria-labelledby="verdict-heading">
         <span className="coach-fatiga" aria-hidden="true">
-          {verdict.estado === 'cargado' ? '🪫' : verdict.estado === 'descansado' ? '🔋' : verdict.estado === 'sin-datos' ? '🧭' : '💪'}
+          {VERDICT_ICON[verdict.estado] ?? TargetIcon}
         </span>
         <div>
           <h2 id="verdict-heading" style={{ margin: 0 }}>
@@ -196,7 +204,7 @@ export function CoachView() {
           <>
             {ai.foco && (
               <p className="coach-foco">
-                <span aria-hidden="true">🎯</span> {ai.foco}
+                <span className="coach-foco__icon" aria-hidden="true">{TargetIcon}</span> {ai.foco}
               </p>
             )}
             <p style={{ margin: '0.5rem 0 0' }}>{ai.mensaje}</p>

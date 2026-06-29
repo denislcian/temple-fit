@@ -14,6 +14,7 @@ import {
   removeDiaryEntry,
 } from '../../data/repositories/nutritionRepo';
 import { macroTargets } from '../../domain/nutritionTargets';
+import { DropletIcon } from '../components/icons';
 import { useAnnounce } from '../components/Announcer';
 import { AddFoodDialog } from '../components/AddFoodDialog';
 import { DietDialog } from '../components/DietDialog';
@@ -182,7 +183,7 @@ export function NutritionView() {
           <span className="water-cups" aria-hidden="true">
             {Array.from({ length: WATER_GOAL_GLASSES }, (_, i) => (
               <span key={i} className={`cup ${i < (waterGlasses ?? 0) ? 'full' : ''}`}>
-                💧
+                {DropletIcon}
               </span>
             ))}
           </span>

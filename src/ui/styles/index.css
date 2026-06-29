@@ -2140,6 +2140,20 @@ legend {
   background: color-mix(in srgb, var(--success) 9%, var(--surface));
 }
 
+.coach-fatiga svg {
+  width: 2rem;
+  height: 2rem;
+}
+.coach-rec__icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+.coach-foco__icon svg {
+  width: 1rem;
+  height: 1rem;
+  vertical-align: -2px;
+}
 .coach-fatiga {
   font-size: 2.4rem;
   line-height: 1;
@@ -2434,6 +2448,15 @@ legend {
 .empty-state__icon {
   font-size: 2rem;
   opacity: 0.7;
+}
+.empty-state__icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+.notif-kind svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  display: block;
 }
 
 /* ── Avatar y red social ────────────────────────────────── */
@@ -3765,7 +3788,12 @@ dialog[open]::backdrop {
 }
 
 .achievements .medal {
-  font-size: 1.2rem;
+  color: var(--accent);
+}
+.achievements .medal svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: block;
 }
 
 .achievements .title {
@@ -3928,17 +3956,33 @@ dialog[open]::backdrop {
   color: var(--accent-text);
 }
 
+.water-cups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-width: 13rem;
+}
 .water-cups .cup {
-  filter: grayscale(1) opacity(0.35);
+  display: inline-flex;
+  align-items: center;
+  color: var(--border-strong, var(--text-muted));
   transition:
-    filter var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
     transform var(--dur-1) var(--ease-spring);
+}
+.water-cups .cup svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  display: block;
 }
 
 .water-cups .cup.full {
-  filter: none;
+  color: var(--accent);
   /* Pequeña recompensa al "rellenar" un vaso (reutiliza el pop del check). */
   animation: setPop var(--dur-2) var(--ease-spring);
+}
+.water-cups .cup.full svg {
+  fill: currentColor;
 }
 
 /* ── Gráficas ───────────────────────────────────────────── */

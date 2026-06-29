@@ -457,7 +457,7 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
                     onClick={speech.toggle}
                     aria-pressed={speech.listening}
                   >
-                    {speech.listening ? '● Escuchando… (toca para parar)' : '🎤 Dictar'}
+                    {speech.listening ? '● Escuchando… (toca para parar)' : 'Dictar'}
                   </button>
                 )}
                 <button
@@ -488,10 +488,10 @@ export function AddFoodDialog({ open, date, meal, onAdded, onClose }: AddFoodDia
               </p>
               <div className="btn-row">
                 <button type="button" className="btn" onClick={() => photoInput.current?.click()} disabled={busy}>
-                  {busy ? 'Analizando…' : '📸 Foto del plato'}
+                  {busy ? 'Analizando…' : 'Foto del plato'}
                 </button>
                 <button type="button" className="btn" onClick={() => labelInput.current?.click()} disabled={busy}>
-                  🏷️ Foto de la etiqueta
+                  Foto de la etiqueta
                 </button>
                 <input
                   ref={photoInput}

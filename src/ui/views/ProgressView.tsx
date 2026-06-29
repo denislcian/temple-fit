@@ -12,6 +12,7 @@ import { computeRecords } from '../../domain/records';
 import { exerciseProgression, summarizeProgress, totals } from '../../domain/stats';
 import { weeklyVolume } from '../../domain/volume';
 import { BodyMeasureDialog } from '../components/BodyMeasureDialog';
+import { AwardIcon, LockIcon } from '../components/icons';
 import { EmptyState } from '../components/EmptyState';
 import { WeightGoalCard } from '../components/WeightGoalCard';
 import { ChartBlock } from '../components/ChartBlock';
@@ -222,7 +223,7 @@ export default function ProgressView() {
             {badges.map((badge) => (
               <li key={badge.id} className={badge.achieved ? 'achieved' : ''}>
                 <span className="medal" aria-hidden="true">
-                  {badge.achieved ? '🏅' : '🔒'}
+                  {badge.achieved ? AwardIcon : LockIcon}
                 </span>
                 <span>
                   <span className="title">{badge.title}</span>
@@ -254,7 +255,7 @@ export default function ProgressView() {
             {allRecords.map((r, i) => (
               <li key={r.exerciseId} className="record-row">
                 <span className="record-rank" aria-hidden="true">
-                  {i === 0 ? '🏆' : i + 1}
+                  {i + 1}
                 </span>
                 <div className="record-main">
                   <span className="title">{nameById.get(r.exerciseId) ?? r.exerciseId}</span>
