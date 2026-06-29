@@ -806,7 +806,7 @@ p {
 .goal-bar .fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--accent-grad);
   transition: width var(--dur-3) var(--ease-out);
 }
 
@@ -920,12 +920,20 @@ p {
 }
 
 /* Primario: relleno con gradiente del acento, canto luminoso y sombra de color. */
-.btn--primary {
-  background: linear-gradient(
-    180deg,
+/* Degradado de acento "vibrante" (mismo tono + un toque cálido de ámbar),
+   relativo al acento de cada tema: verde esmeralda en claro, brasa en oscuro.
+   Da vida a botones y barras sin chocar con la paleta. */
+:root {
+  --accent-grad: linear-gradient(
+    105deg,
     color-mix(in srgb, var(--accent) 90%, white),
-    var(--accent)
+    var(--accent) 50%,
+    color-mix(in srgb, var(--accent) 82%, #fbbf24)
   );
+}
+
+.btn--primary {
+  background: var(--accent-grad);
   border-color: transparent;
   color: var(--on-accent);
   font-weight: 700;
@@ -935,11 +943,8 @@ p {
 }
 
 .btn--primary:hover {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 78%, white),
-    var(--accent)
-  );
+  background: var(--accent-grad);
+  filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow: var(--glow-accent);
 }
@@ -1756,7 +1761,7 @@ legend {
 }
 .rest-float__bar {
   height: 4px;
-  background: var(--accent);
+  background: var(--accent-grad);
   width: var(--pct, 100%);
   transition: width 1s linear;
 }
