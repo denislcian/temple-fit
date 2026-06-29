@@ -281,13 +281,13 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       </section>
 
       <section className="card" aria-labelledby="coachai-heading">
-        <h2 id="coachai-heading">Coach con IA</h2>
+        <h2 id="coachai-heading">Coach</h2>
         <p className="muted">
-          El Coach es <strong>global y no hay nada que configurar</strong>: todo el análisis funciona
-          siempre, y el consejo en lenguaje natural lo redacta una IA que corre{' '}
-          <strong>en tu propio dispositivo</strong> (WebGPU) — sin clave, sin cuenta y sin que ningún
-          dato salga de aquí. Lo activas desde la pantalla <a href="#/coach">Coach</a> (la primera vez
-          descarga el modelo; luego va offline).
+          El Coach es <strong>global y no hay nada que configurar ni que descargar</strong>: cruza tu
+          RPE, volumen, frecuencia y descanso para darte un veredicto, recomendaciones con su base
+          científica, un consejo redactado al momento y un programa que te encaja. Todo el cálculo es{' '}
+          <strong>local, instantáneo y offline</strong> — sin clave, sin cuenta y sin que ningún dato
+          salga de aquí. Lo tienes en la pantalla <a href="#/coach">Coach</a>.
         </p>
       </section>
 

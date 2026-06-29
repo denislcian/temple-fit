@@ -21,7 +21,6 @@
   "dependencies": {
     "@fontsource/archivo": "^5.2.8",
     "@fontsource/archivo-black": "^5.2.8",
-    "@mlc-ai/web-llm": "^0.2.84",
     "@supabase/supabase-js": "^2.108.2",
     "dexie": "^4.4.3",
     "react": "^19.2.0",

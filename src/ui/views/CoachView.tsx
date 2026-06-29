@@ -1,14 +1,17 @@
 // CAPA 3 · Interfaz — Coach adaptativo.
 // Siempre muestra el análisis determinista (funciona sin red y sin clave). Si
 // el usuario tiene clave de Gemini, ofrece un consejo redactado por IA encima.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
-import { generateCoachMessage, type CoachMessage } from '../../data/coach';
-import { isOnDeviceSupported, type DownloadProgress } from '../../data/onDeviceLLM';
 import { buildCoachContext } from '../../domain/coach/coachContext';
-import { evaluateCoach, fatigueVerdict, type CoachTone } from '../../domain/coach/coachRules';
+import {
+  composeCoachAdvice,
+  evaluateCoach,
+  fatigueVerdict,
+  type CoachTone,
+} from '../../domain/coach/coachRules';
 import { suggestProgram } from '../../domain/coach/programs';
 import type { ReactNode } from 'react';
 import { AlertIcon, CheckIcon, HowToIcon, RepeatIcon, TargetIcon } from '../components/icons';
@@ -48,30 +51,10 @@ export function CoachView() {
   const [goal, setGoal] = useState<Goal>(
     () => (localStorage.getItem(COACH_GOAL_KEY) as Goal) || 'hipertrofia',
   );
-  const [ai, setAi] = useState<CoachMessage | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState('');
-  const [dl, setDl] = useState<DownloadProgress | null>(null);
-  const [onDeviceOk, setOnDeviceOk] = useState<boolean | null>(null);
-
-  // El coach IA es SIEMPRE on-device (sin clave, sin cuenta, sin configurar).
-  // Comprobamos una vez si el navegador soporta WebGPU.
-  useEffect(() => {
-    let alive = true;
-    void isOnDeviceSupported().then((ok) => {
-      if (alive) setOnDeviceOk(ok);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
   function changeGoal(g: string) {
     const next = (GOALS.includes(g as Goal) ? g : 'hipertrofia') as Goal;
     setGoal(next);
     localStorage.setItem(COACH_GOAL_KEY, next);
-    setAi(null);
-    setAiError('');
   }
 
   const today = localDateISO();
@@ -90,46 +73,15 @@ export function CoachView() {
 
   const verdict = ctx ? fatigueVerdict(ctx) : null;
   const recs = useMemo(() => (ctx ? evaluateCoach(ctx, goal) : []), [ctx, goal]);
+  const advice = useMemo(
+    () => (ctx && verdict ? composeCoachAdvice(ctx, verdict, recs, goal) : null),
+    [ctx, verdict, recs, goal],
+  );
 
   const level = (ctx?.sessionCount ?? 0) < 16 ? 'principiante' : 'intermedio';
   const days = Math.min(6, Math.max(2, Math.round(ctx?.sessionsPerWeek || 3)));
   const program = useMemo(() => suggestProgram(goal, level, days), [goal, level, days]);
   const nameById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e.name])), [exercises]);
-
-  const canUseAi = onDeviceOk === true;
-
-  async function askAi() {
-    if (!ctx || !verdict) return;
-    setAiLoading(true);
-    setAiError('');
-    setAi(null);
-    setDl(null);
-    try {
-      const msg = await generateCoachMessage(
-        'ondevice',
-        '',
-        {
-          verdict,
-          recommendations: recs,
-          context: {
-            goal,
-            avgRpe7d: ctx.avgRpe7d,
-            avgSleepHours:
-              ctx.avgSleepMin === null ? null : Math.round((ctx.avgSleepMin / 60) * 10) / 10,
-            sessionsPerWeek: ctx.sessionsPerWeek,
-            fatigueScore: ctx.fatigueScore,
-          },
-        },
-        (p) => setDl(p),
-      );
-      setAi(msg);
-    } catch (e) {
-      setAiError(e instanceof Error ? e.message : 'No se pudo generar el consejo.');
-    } finally {
-      setAiLoading(false);
-      setDl(null);
-    }
-  }
 
   if (!ctx || !verdict) {
     return (
@@ -197,54 +149,21 @@ export function CoachView() {
         </SelectField>
       </div>
 
-      {/* Consejo con IA (opcional). */}
-      <section className="card card--accent" aria-labelledby="ai-heading">
-        <h2 id="ai-heading">Consejo personalizado</h2>
-        {ai ? (
-          <>
-            {ai.foco && (
-              <p className="coach-foco">
-                <span className="coach-foco__icon" aria-hidden="true">{TargetIcon}</span> {ai.foco}
-              </p>
-            )}
-            <p style={{ margin: '0.5rem 0 0' }}>{ai.mensaje}</p>
-          </>
-        ) : (
-          <p className="muted" style={{ marginTop: '0.25rem' }}>
-            {canUseAi
-              ? 'Consejo redactado por una IA que corre en TU dispositivo, sin clave, sin cuenta y sin nada que configurar. La primera vez descarga el modelo (~1,6 GB); luego es instantáneo y funciona offline. Nada sale de aquí.'
-              : 'Tu navegador no soporta IA en el dispositivo (WebGPU), pero todo el análisis de abajo funciona igual — sin clave ni configuración.'}
-          </p>
-        )}
-        {dl && dl.progress < 1 && (
-          <div style={{ marginTop: '0.75rem' }}>
-            <div className="goal-bar">
-              <span className="fill" style={{ width: `${Math.round(dl.progress * 100)}%` }} />
-            </div>
-            <p className="meta num" style={{ marginTop: '0.3rem' }} role="status">
-              Descargando el modelo… {Math.round(dl.progress * 100)}% (solo la primera vez)
+      {/* Consejo personalizado, redactado EN LOCAL (sin IA, sin red, sin descargas). */}
+      {advice && (
+        <section className="card card--accent" aria-labelledby="ai-heading">
+          <h2 id="ai-heading">Consejo personalizado</h2>
+          {advice.foco && (
+            <p className="coach-foco">
+              <span className="coach-foco__icon" aria-hidden="true">
+                {TargetIcon}
+              </span>{' '}
+              {advice.foco}
             </p>
-          </div>
-        )}
-        {aiError && (
-          <p className="notice notice--error" role="alert" style={{ marginTop: '0.75rem' }}>
-            {aiError}
-          </p>
-        )}
-        {canUseAi && (
-          <div className="btn-row" style={{ marginTop: '0.75rem' }}>
-            <button type="button" className="btn btn--primary" onClick={askAi} disabled={aiLoading}>
-              {aiLoading
-                ? dl && dl.progress < 1
-                  ? `Descargando… ${Math.round(dl.progress * 100)}%`
-                  : 'Pensando…'
-                : ai
-                  ? 'Volver a preguntar'
-                  : 'Activar IA y pedir consejo'}
-            </button>
-          </div>
-        )}
-      </section>
+          )}
+          <p style={{ margin: '0.5rem 0 0' }}>{advice.mensaje}</p>
+        </section>
+      )}
 
       {/* Recomendaciones deterministas (siempre). */}
       <section className="card" aria-labelledby="recs-heading">

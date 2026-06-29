@@ -208,3 +208,55 @@ function prescriptionRec(goal: Goal): CoachRecommendation {
     fuente: citation('acsm2026'),
   };
 }
+
+function lowerFirst(s: string): string {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * Consejo en lenguaje natural redactado EN LOCAL: sin IA, sin red y sin
+ * descargas. Sintetiza el estado de hoy + la prioridad del momento + el
+ * objetivo; no repite la lista de recomendaciones, la INTRODUCE. Determinista:
+ * mismo contexto + objetivo = mismo consejo.
+ */
+export function composeCoachAdvice(
+  ctx: CoachContext,
+  verdict: CoachVerdict,
+  recs: CoachRecommendation[],
+  goal: Goal,
+): { foco: string; mensaje: string } {
+  if (verdict.estado === 'sin-datos' || ctx.sessionCount === 0) {
+    return {
+      foco: 'Empieza a registrar',
+      mensaje:
+        'Todavía no tengo datos tuyos. Registra unas sesiones con su RPE — y, si quieres, tu sueño — y cruzaré tu esfuerzo, volumen y descanso para darte ajustes concretos. Genera un plan según tu objetivo y arranca por ahí.',
+    };
+  }
+
+  // La acción más relevante: alerta > ajuste > positivo > info, dejando fuera la
+  // pauta de objetivo y las invitaciones a registrar datos (son de referencia).
+  const RANK: Record<CoachTone, number> = { alerta: 0, ajuste: 1, positivo: 2, info: 3 };
+  const top = recs
+    .filter((r) => r.kind !== 'objetivo' && r.kind !== 'datos')
+    .sort((a, b) => RANK[a.tone] - RANK[b.tone])[0];
+
+  const estado: Record<CoachVerdict['estado'], string> = {
+    cargado: 'Hoy vienes cargado, así que la prioridad es recuperar antes que sumar',
+    descansado: 'Estás fresco y con margen: buen día para apretar un poco',
+    normal: 'Estás listo para entrenar con normalidad',
+    'sin-datos': '',
+  };
+
+  const objetivo: Record<Goal, string> = {
+    fuerza: 'tu objetivo de fuerza pide calidad en las series pesadas más que acumular trabajo',
+    hipertrofia: 'en hipertrofia, sostener el volumen semana a semana es lo que mueve la aguja',
+    definicion: 'en definición, mantener la intensidad protege tu músculo mientras pierdes grasa',
+  };
+
+  const foco = top ? top.titulo : verdict.titulo;
+  const punta = top
+    ? ` Lo primero a atender: ${lowerFirst(top.titulo)} — lo tienes detallado justo abajo.`
+    : ' Mantén la pauta y registra cómo te sientan las series.';
+
+  return { foco, mensaje: `${estado[verdict.estado]}.${punta} Recuerda que ${objetivo[goal]}.` };
+}

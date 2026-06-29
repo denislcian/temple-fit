@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Exercise, Session, WorkoutSet } from '../../data/models';
 import type { SleepSession } from '../../data/sleepModels';
 import { buildCoachContext } from './coachContext';
-import { evaluateCoach, fatigueVerdict } from './coachRules';
+import { composeCoachAdvice, evaluateCoach, fatigueVerdict } from './coachRules';
 
 const TODAY = '2026-06-24';
 
@@ -113,5 +113,26 @@ describe('coach: reglas', () => {
     const c = ctx([session(daysAgo(1), [{ exerciseId: 'press-banca', sets: [set(8, 60)] }])]);
     expect(c.rpeSampleSize).toBe(0);
     expect(evaluateCoach(c, 'fuerza').some((r) => r.id === 'datos-rpe')).toBe(true);
+  });
+});
+
+describe('coach: consejo local (sin IA, sin descargas)', () => {
+  it('sin datos → invita a registrar y no menciona descargas ni modelos', () => {
+    const c = ctx([]);
+    const advice = composeCoachAdvice(c, fatigueVerdict(c), evaluateCoach(c, 'hipertrofia'), 'hipertrofia');
+    expect(advice.foco).toBe('Empieza a registrar');
+    expect(advice.mensaje).not.toMatch(/descarg|modelo|GB|WebGPU/i);
+  });
+
+  it('con fatiga alta → el foco es la acción prioritaria y el mensaje cita estado y objetivo', () => {
+    const hard = [set(5, 100, 9), set(5, 100, 10)];
+    const c = ctx([
+      session(daysAgo(0), [{ exerciseId: 'press-banca', sets: hard }]),
+      session(daysAgo(2), [{ exerciseId: 'press-banca', sets: hard }]),
+    ]);
+    const advice = composeCoachAdvice(c, fatigueVerdict(c), evaluateCoach(c, 'fuerza'), 'fuerza');
+    expect(advice.foco).toBe('Baja la intensidad hoy'); // la alerta tiene prioridad
+    expect(advice.mensaje).toContain('cargado');
+    expect(advice.mensaje).toContain('fuerza');
   });
 });

@@ -4,7 +4,6 @@
 // Cuando llegue la fase Supabase (roadmap v2), este módulo será la
 // implementación local detrás de la misma interfaz.
 import type { BodyProfile } from '../domain/nutritionTargets';
-import type { AIProviderId } from './aiProviders';
 
 export interface UserProfile extends BodyProfile {
   /** Nombre para mostrar en la comunidad. */
@@ -84,39 +83,4 @@ export function saveGeminiKey(key: string): void {
   } else {
     localStorage.removeItem(GEMINI_KEY);
   }
-}
-
-// ── Coach con IA: proveedor + claves (todo opcional, solo local) ────────────
-const COACH_PROVIDER_KEY = 'forjafit-coach-provider';
-
-export function loadCoachProvider(): AIProviderId {
-  const v = localStorage.getItem(COACH_PROVIDER_KEY);
-  if (v === 'ondevice' || v === 'groq' || v === 'openrouter' || v === 'cerebras' || v === 'gemini') {
-    return v;
-  }
-  // Por defecto: IA integrada en el dispositivo (sin clave). El usuario puede
-  // cambiar a una clave en la nube si prefiere no descargar el modelo.
-  return 'ondevice';
-}
-
-export function saveCoachProvider(id: AIProviderId): void {
-  localStorage.setItem(COACH_PROVIDER_KEY, id);
-}
-
-/** Clave de un proveedor. 'ondevice' no usa clave; Gemini reutiliza la del escáner. */
-export function loadAIKey(provider: AIProviderId): string {
-  if (provider === 'ondevice') return '';
-  if (provider === 'gemini') return loadGeminiKey();
-  return localStorage.getItem(`forjafit-ai-key-${provider}`) ?? '';
-}
-
-export function saveAIKey(provider: AIProviderId, key: string): void {
-  if (provider === 'ondevice') return;
-  if (provider === 'gemini') {
-    saveGeminiKey(key);
-    return;
-  }
-  const storageKey = `forjafit-ai-key-${provider}`;
-  if (key.trim()) localStorage.setItem(storageKey, key.trim());
-  else localStorage.removeItem(storageKey);
 }
