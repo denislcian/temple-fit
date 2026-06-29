@@ -139,22 +139,32 @@ export class SupabaseAuthService implements AuthService {
   }
 
   async currentAccountId(): Promise<string | null> {
-    const { data } = await this.sb.auth.getUser();
-    return data.user?.id ?? null;
+    // getSession() lee la sesión PERSISTIDA en localStorage (sin pedir nada al
+    // servidor) y refresca el token por detrás. Antes usábamos getUser(), que
+    // valida el JWT contra el servidor en cada arranque: en el móvil, con
+    // cobertura intermitente al abrir la PWA, esa llamada fallaba y la app creía
+    // que no había sesión → "se pierde la sesión". getSession() la mantiene.
+    const { data } = await this.sb.auth.getSession();
+    return data.session?.user?.id ?? null;
   }
 
   async getAccount(id: string): Promise<Account | undefined> {
-    const [{ data }, { data: userData }] = await Promise.all([
-      // '*' en vez de columnas fijas: el login NO depende de que la migración de
-      // perfil social (avatar/ubicación) esté aplicada. toAccount toma lo que haya.
-      this.sb.from('profiles').select('*').eq('id', id).maybeSingle(),
-      this.sb.auth.getUser(),
-    ]);
+    // '*' en vez de columnas fijas: el login NO depende de que la migración de
+    // perfil social (avatar/ubicación) esté aplicada. toAccount toma lo que haya.
+    const { data } = await this.sb.from('profiles').select('*').eq('id', id).maybeSingle();
     if (!data) return undefined;
     const account = toAccount(data as ProfileRow);
-    // Datos físicos: solo se ven para tu propia cuenta (metadata privado).
-    if (userData.user?.id === id) {
-      Object.assign(account, physicalFromMeta(userData.user.user_metadata));
+    // Datos físicos del metadata privado (solo tu propia cuenta). Tolerante a la
+    // red: si getUser falla (móvil con cobertura intermitente), el perfil sigue
+    // cargando y los datos físicos llegan cuando vuelva la conexión — nunca tira
+    // la sesión por un fallo transitorio de getUser.
+    try {
+      const { data: userData } = await this.sb.auth.getUser();
+      if (userData.user?.id === id) {
+        Object.assign(account, physicalFromMeta(userData.user.user_metadata));
+      }
+    } catch {
+      /* offline o fallo transitorio: los datos físicos se cargan luego */
     }
     return account;
   }

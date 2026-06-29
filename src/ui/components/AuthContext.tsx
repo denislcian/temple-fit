@@ -30,8 +30,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const id = await authService.currentAccountId();
-    setAccount(id ? ((await authService.getAccount(id)) ?? null) : null);
+    try {
+      const id = await authService.currentAccountId();
+      if (!id) {
+        setAccount(null);
+        return;
+      }
+      const acc = await authService.getAccount(id);
+      // Si la carga del perfil falla de forma transitoria (red intermitente), se
+      // conserva la sesión actual en vez de cerrarla.
+      setAccount((prev) => acc ?? prev);
+    } catch {
+      /* fallo transitorio: no tiramos la sesión */
+    }
   }, []);
 
   useEffect(() => {
