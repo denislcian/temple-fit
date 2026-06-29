@@ -98,7 +98,7 @@ export function ChallengesSection({ account }: { account: Account }) {
     <section className="card" aria-labelledby="challenges-heading">
       <div className="btn-row" style={{ justifyContent: 'space-between' }}>
         <h2 id="challenges-heading" style={{ margin: 0 }}>
-          🏆 Retos
+          Retos
         </h2>
         <button type="button" className="btn btn--small btn--primary" onClick={() => setCreating(true)}>
           + Crear reto

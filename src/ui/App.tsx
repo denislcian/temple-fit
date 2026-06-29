@@ -43,6 +43,7 @@ import { ToolsView } from './views/ToolsView';
 import { TrainView } from './views/TrainView';
 import { DRAFT_KEY } from './trainDraft';
 import { ICONS } from './icons';
+import { MoonIcon, SunIcon } from './components/icons';
 
 // Recharts solo se descarga si el usuario entra en Progreso (code splitting).
 const ProgressView = lazy(() => import('./views/ProgressView'));
@@ -93,7 +94,9 @@ function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) =
       onClick={() => setTheme(next)}
       aria-label={next === 'light' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
     >
-      <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+      <span className="theme-toggle__icon" aria-hidden="true">
+        {theme === 'dark' ? SunIcon : MoonIcon}
+      </span>
     </button>
   );
 }

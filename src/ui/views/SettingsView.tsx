@@ -153,7 +153,7 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
                     announce('Abriendo el diálogo de instalación');
                   }}
                 >
-                  ⬇ Instalar la app
+                  Instalar la app
                 </button>
               </div>
             </>

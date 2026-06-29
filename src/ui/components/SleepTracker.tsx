@@ -198,7 +198,7 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
       </p>
       <div className="btn-row">
         <button type="button" className="btn btn--primary" onClick={startNight}>
-          🌙 Empezar la noche
+          Empezar la noche
         </button>
       </div>
     </div>

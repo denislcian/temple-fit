@@ -334,7 +334,7 @@ export function TrainView() {
           <div className="card goal-card">
             <div className="goal-head">
               <span className="goal-title">
-                {goalMet ? '🔥 Objetivo de la semana cumplido' : 'Tu semana'}
+                {goalMet ? 'Objetivo de la semana cumplido' : 'Tu semana'}
               </span>
               <span className="num">
                 <strong>{thisWeekSessions}</strong>
@@ -491,7 +491,7 @@ export function TrainView() {
                   })
                 }
               >
-                🏋 Barra y calentamiento
+                Barra y calentamiento
                 <span className="visually-hidden"> para {exercise?.name}</span>
               </button>
             </div>

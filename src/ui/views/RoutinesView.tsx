@@ -114,7 +114,7 @@ export function RoutinesView() {
           + Nueva rutina
         </button>
         <button type="button" className="btn" onClick={() => setGeneratorOpen(true)}>
-          ✦ Generar plan según tu objetivo
+          Generar plan según tu objetivo
         </button>
       </div>
 
@@ -124,7 +124,7 @@ export function RoutinesView() {
           title="Crea tu primera rutina"
           action={
             <button type="button" className="btn btn--primary" onClick={() => setGeneratorOpen(true)}>
-              ✦ Generar plan según tu objetivo
+              Generar plan según tu objetivo
             </button>
           }
         >

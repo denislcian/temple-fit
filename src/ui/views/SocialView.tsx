@@ -22,6 +22,7 @@ import { AuthScreen } from '../components/AuthScreen';
 import { useAuth } from '../components/AuthContext';
 import { Avatar } from '../components/Avatar';
 import { ChallengesSection } from '../components/ChallengesSection';
+import { BellIcon, CommentIcon, HeartIcon } from '../components/icons';
 import { SelectField, TextAreaField } from '../components/Field';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg } from '../utils/format';
@@ -30,20 +31,20 @@ import { compressImage } from '../utils/image';
 /** Filtros del feed por tipo de publicación. */
 const FEED_FILTERS: Array<{ id: string; label: string; kinds: Post['kind'][] }> = [
   { id: 'todo', label: 'Todo', kinds: ['texto', 'rutina', 'sesion', 'receta', 'foto', 'sueno', 'meditacion'] },
-  { id: 'fotos', label: '📸 Fotos', kinds: ['foto'] },
-  { id: 'rutinas', label: '🏋️ Rutinas', kinds: ['rutina', 'sesion'] },
-  { id: 'recetas', label: '🍃 Recetas', kinds: ['receta'] },
-  { id: 'recuperacion', label: '🌙 Recuperación', kinds: ['sueno', 'meditacion'] },
+  { id: 'fotos', label: 'Fotos', kinds: ['foto'] },
+  { id: 'rutinas', label: 'Entrenos', kinds: ['rutina', 'sesion'] },
+  { id: 'recetas', label: 'Recetas', kinds: ['receta'] },
+  { id: 'recuperacion', label: 'Recuperación', kinds: ['sueno', 'meditacion'] },
 ];
 
 /** Etiqueta (chip) del tipo de publicación, mostrada en la cabecera de la tarjeta. */
 const KIND_LABEL: Partial<Record<Post['kind'], string>> = {
-  rutina: '🏋️ Rutina',
-  sesion: '🏋️ Sesión',
-  receta: '🍃 Receta',
-  foto: '📸 Foto',
-  sueno: '🌙 Sueño',
-  meditacion: '🧘 Meditación',
+  rutina: 'Rutina',
+  sesion: 'Sesión',
+  receta: 'Receta',
+  foto: 'Foto',
+  sueno: 'Sueño',
+  meditacion: 'Meditación',
 };
 
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
@@ -384,7 +385,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           <span className="meta">@{account.username}</span>
         </div>
         <a href="#/notificaciones" className="notif-bell" aria-label={`Notificaciones${unread ? ` (${unread} sin leer)` : ''}`}>
-          <span aria-hidden="true">🔔</span>
+          <span className="notif-bell__icon" aria-hidden="true">{BellIcon}</span>
           {unread ? <span className="notif-badge num">{unread}</span> : null}
         </a>
         <button type="button" className="btn btn--small btn--ghost" onClick={onLogout}>
@@ -409,7 +410,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       {showOnboard && (
         <section className="card onboard-card" aria-labelledby="onboard-heading">
           <h2 id="onboard-heading" style={{ marginTop: 0 }}>
-            👋 Encuentra a tu gente
+            Encuentra a tu gente
           </h2>
           {hasLocation(account) ? (
             <p className="muted" style={{ marginBottom: 0 }}>
@@ -430,7 +431,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                   onClick={() => void detectMyLocation()}
                   disabled={geoBusy}
                 >
-                  {geoBusy ? 'Buscando…' : '📍 Usar mi ubicación'}
+                  {geoBusy ? 'Buscando…' : 'Usar mi ubicación'}
                 </button>
                 <button type="button" className="btn btn--ghost" onClick={dismissOnboard}>
                   Ahora no
@@ -486,7 +487,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       {!searchQuery.trim() && rankedDiscover.length > 0 && (
         <section className="card discover-inline" aria-labelledby="discover-heading">
           <h2 id="discover-heading">
-            {nearbyCount > 0 ? '📍 Cerca de ti' : 'Descubrir personas'}
+            {nearbyCount > 0 ? 'Cerca de ti' : 'Descubrir personas'}
           </h2>
           {nearbyCount > 0 && (
             <p className="meta" style={{ marginTop: 0 }}>
@@ -564,7 +565,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                 {relativeTime(post.createdAt)}
                 {post.visibility && post.visibility !== 'publica' && (
                   <span className="post-tag">
-                    {post.visibility === 'privada' ? '🔒 privada' : '👥 seguidores'}
+                    {post.visibility === 'privada' ? 'Privada' : 'Seguidores'}
                   </span>
                 )}
                 {post.isDemo && <span className="post-tag">ejemplo</span>}
@@ -599,7 +600,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
               aria-pressed={post.likedByMe}
               onClick={() => like(post)}
             >
-              <span aria-hidden="true">{post.likedByMe ? '❤️' : '🤍'}</span>
+              <span className="post-action__icon" aria-hidden="true">{HeartIcon}</span>
               <span className="num">{post.likes}</span>
               <span className="visually-hidden">
                 {' '}
@@ -613,7 +614,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
               aria-expanded={openComments.has(post.id)}
               onClick={() => toggleComments(post.id)}
             >
-              <span aria-hidden="true">💬</span>
+              <span className="post-action__icon" aria-hidden="true">{CommentIcon}</span>
               <span className="num">{post.comments.length}</span>
               <span className="visually-hidden"> comentarios</span>
             </button>
@@ -684,7 +685,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                 className="notif-bell"
                 aria-label={`Notificaciones${unread ? ` (${unread} sin leer)` : ''}`}
               >
-                <span aria-hidden="true">🔔</span>
+                <span className="notif-bell__icon" aria-hidden="true">{BellIcon}</span>
                 {unread ? <span className="notif-badge num">{unread}</span> : null}
               </a>
               <button type="button" className="btn btn--small btn--ghost" onClick={onLogout}>
@@ -721,7 +722,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           }}
         >
           <option value="nada">Nada, solo texto</option>
-          <option value="foto">📸 Una foto</option>
+          <option value="foto">Una foto</option>
           <option value="ultima-sesion">Mi última sesión de entrenamiento</option>
           {(routines ?? []).map((r) => (
             <option key={r.id} value={`rutina:${r.id}`}>

@@ -161,11 +161,11 @@ export function NutritionView() {
         <div className="btn-row" style={{ marginTop: '0.75rem' }}>
           {targets && (
             <button type="button" className="btn" onClick={() => setDietOpen(true)}>
-              ✦ Generar menú del día
+              Generar menú del día
             </button>
           )}
           <button type="button" className="btn btn--ghost" onClick={copyYesterday}>
-            ⧉ Copiar el día anterior
+            Copiar el día anterior
           </button>
         </div>
 

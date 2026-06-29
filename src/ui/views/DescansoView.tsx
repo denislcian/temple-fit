@@ -160,7 +160,7 @@ export function DescansoView() {
                 {account && (
                   <div className="btn-row" style={{ marginTop: '0.5rem' }}>
                     <button type="button" className="btn btn--small" onClick={() => shareSleep(n)}>
-                      🌙 Compartir en la comunidad
+                      Compartir en la comunidad
                     </button>
                   </div>
                 )}
@@ -303,7 +303,7 @@ export function DescansoView() {
         {account && lastBreath && (
           <div className="btn-row" style={{ justifyContent: 'center', marginTop: '0.5rem' }}>
             <button type="button" className="btn btn--small" onClick={shareBreath}>
-              🧘 Compartir esta sesión
+              Compartir esta sesión
             </button>
           </div>
         )}

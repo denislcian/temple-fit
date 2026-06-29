@@ -176,7 +176,7 @@ export function RecipesView() {
             <p className="recipe-description">{detail.description}</p>
 
             <p className="meta-line num">
-              ⏱ {detail.minutes} min · 🍽 {detail.servings}{' '}
+              {detail.minutes} min · {detail.servings}{' '}
               {detail.servings === 1 ? 'ración' : 'raciones'} ·{' '}
               <span className="recipe-difficulty">{DIFFICULTY_LABELS[detail.difficulty]}</span>
             </p>
@@ -219,7 +219,7 @@ export function RecipesView() {
 
             <p className="recipe-tip">
               <span className="recipe-tip__label" aria-hidden="true">
-                💡 Truco
+                Truco
               </span>
               <span className="visually-hidden">Truco del chef: </span>
               {detail.tip}
