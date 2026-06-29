@@ -407,6 +407,7 @@ export function TrainView() {
 
   return (
     <>
+      <div className="train-live">
       <span className="kicker">
         Entrenamiento en curso · <span className="num">{elapsedMin} min</span>
         {screenAwake && <span className="muted"> · pantalla siempre encendida</span>}
@@ -509,6 +510,13 @@ export function TrainView() {
                 onChange={(e) => setNote(entryIndex, e.target.value)}
               />
             </div>
+
+            {exercise?.equipment === 'mancuernas' && (
+              <p className="set-hint">
+                El <strong>kg</strong> es el de <strong>una</strong> mancuerna (lo que sostienes en
+                una mano), no la suma de las dos.
+              </p>
+            )}
 
             {entry.sets.length > 0 && (
               <div className="set-header" aria-hidden="true">
@@ -622,6 +630,7 @@ export function TrainView() {
         <button type="button" className="btn btn--danger" onClick={() => setConfirmDiscard(true)}>
           Descartar entrenamiento
         </button>
+      </div>
       </div>
 
       <ExercisePicker

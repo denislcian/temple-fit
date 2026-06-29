@@ -1503,6 +1503,31 @@ legend {
   margin: 0;
 }
 
+/* Aclaración de la convención de peso (p. ej. mancuernas: peso de UNA). */
+.set-hint {
+  margin: 0 0 0.6rem;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.set-hint strong {
+  color: var(--text-secondary, var(--text));
+  font-weight: 700;
+}
+
+/* La sesión de entrenamiento, en escritorio, no se estira por los 60rem:
+   columna estrecha y centrada (estilo app de gimnasio), tabla de series
+   compacta y centrada, y temporizador de descanso también centrado. */
+@media (min-width: 48rem) {
+  .train-live {
+    max-width: 44rem;
+    margin-inline: auto;
+  }
+  .timer {
+    justify-content: center;
+  }
+}
+
 .set-header {
   display: grid;
   grid-template-columns: 2rem 1fr 1fr var(--target);
@@ -1606,6 +1631,16 @@ legend {
   .set-header {
     grid-template-columns: 1.6rem 1fr 1fr var(--target);
     gap: 0.4rem;
+  }
+}
+
+/* Escritorio: columnas Reps/kg acotadas y grupo centrado (no estirado). */
+@media (min-width: 48rem) {
+  .set-row,
+  .set-header {
+    grid-template-columns: 2.4rem minmax(0, 8rem) minmax(0, 8rem) var(--target);
+    justify-content: center;
+    gap: 0.85rem;
   }
 }
 
