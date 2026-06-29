@@ -60,7 +60,14 @@ const NAV_GROUPS: Array<{ label: string; routes: Route[] }> = [
 function Brand() {
   return (
     <a className="brand" href="#/entrenar">
-      <span className="spark" aria-hidden="true" />
+      <svg className="brand-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M30 41 V31 H70 V41" />
+          <path d="M50 31 V71" />
+          <path d="M42 51 H58" />
+          <path d="M44 71 H67 V61" />
+        </g>
+      </svg>
       <span>
         TM<em>PL</em>
       </span>
