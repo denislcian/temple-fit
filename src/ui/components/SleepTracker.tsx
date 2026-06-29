@@ -22,6 +22,19 @@ function nextAlarm(hhmm: string): number | null {
   return d.getTime();
 }
 
+/** Intervalos rápidos: cuánto dormir desde ahora (en minutos). */
+const INTERVALS = [
+  { min: 20, label: 'Siesta 20 min' },
+  { min: 90, label: '1 h 30' },
+  { min: 360, label: '6 h' },
+  { min: 420, label: '7 h' },
+  { min: 480, label: '8 h' },
+];
+
+function clockOf(ms: number): string {
+  return new Date(ms).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
 export function SleepTracker({ onSaved }: { onSaved: () => void }) {
   const [ringing, setRinging] = useState(false);
   const onAlarm = useCallback(() => setRinging(true), []);
@@ -29,6 +42,9 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
   useWakeLock(tracker.phase === 'tracking');
 
   const [alarm, setAlarm] = useState('07:30');
+  const [alarmMode, setAlarmMode] = useState<'hora' | 'intervalo'>('hora');
+  const [intervalMin, setIntervalMin] = useState(420); // 7 h por defecto
+  const [wakeAt, setWakeAt] = useState<number | null>(null);
   const [finished, setFinished] = useState<SleepSession | null>(null);
   const [clock, setClock] = useState(timeNow());
   const chimeRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -59,6 +75,12 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
     }
   }
 
+  function startNight() {
+    const at = alarmMode === 'hora' ? nextAlarm(alarm) : Date.now() + intervalMin * 60000;
+    setWakeAt(at);
+    tracker.start(at);
+  }
+
   const snore = tracker.events.filter((e) => e.kind === 'ronquido').length;
   const noise = tracker.events.length - snore;
   const mins = Math.floor(tracker.elapsedMs / 60000);
@@ -86,7 +108,7 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
         {ringing ? (
           <p className="sleep-wake">⏰ ¡Buenos días!</p>
         ) : (
-          <p className="muted">Alarma a las {alarm} · pantalla encendida</p>
+          <p className="muted">Alarma a las {wakeAt ? clockOf(wakeAt) : alarm} · pantalla encendida</p>
         )}
 
         <div className="sleep-meter" aria-hidden="true">
@@ -111,7 +133,32 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
           {tracker.error}
         </p>
       )}
-      <div className="field-row">
+      <div
+        className="segmented"
+        role="group"
+        aria-label="Tipo de alarma"
+        style={{ marginBottom: '0.75rem' }}
+      >
+        <span
+          className="segmented__thumb"
+          aria-hidden="true"
+          style={{
+            transform: alarmMode === 'intervalo' ? 'translateX(calc(100% + 2px))' : 'translateX(0)',
+          }}
+        />
+        <button type="button" aria-pressed={alarmMode === 'hora'} onClick={() => setAlarmMode('hora')}>
+          A una hora
+        </button>
+        <button
+          type="button"
+          aria-pressed={alarmMode === 'intervalo'}
+          onClick={() => setAlarmMode('intervalo')}
+        >
+          En un rato
+        </button>
+      </div>
+
+      {alarmMode === 'hora' ? (
         <div className="field">
           <label htmlFor="alarm-time">Hora de la alarma</label>
           <input
@@ -122,14 +169,35 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
             onChange={(e) => setAlarm(e.target.value)}
           />
         </div>
-      </div>
+      ) : (
+        <div className="field">
+          <span className="field-label" id="alarm-interval-label">
+            Despiértame en…
+          </span>
+          <div className="btn-row" role="group" aria-labelledby="alarm-interval-label">
+            {INTERVALS.map((iv) => (
+              <button
+                key={iv.min}
+                type="button"
+                className={`btn btn--small ${intervalMin === iv.min ? 'btn--primary' : 'btn--ghost'}`}
+                aria-pressed={intervalMin === iv.min}
+                onClick={() => setIntervalMin(iv.min)}
+              >
+                {iv.label}
+              </button>
+            ))}
+          </div>
+          <p className="hint num">Sonará a las {clockOf(Date.now() + intervalMin * 60000)}</p>
+        </div>
+      )}
+
       <p className="hint">
         Deja el teléfono cerca, boca arriba. El micrófono escucha la noche y detecta ruidos y
         ronquidos, y guarda un clip corto de los más sonoros para que puedas oírlos.{' '}
         <strong>Todo se procesa en tu dispositivo; nada se sube a ningún sitio.</strong>
       </p>
       <div className="btn-row">
-        <button type="button" className="btn btn--primary" onClick={() => tracker.start(nextAlarm(alarm))}>
+        <button type="button" className="btn btn--primary" onClick={startNight}>
           🌙 Empezar la noche
         </button>
       </div>
