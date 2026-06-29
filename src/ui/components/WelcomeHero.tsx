@@ -25,8 +25,15 @@ export function WelcomeHero() {
   return (
     <div className="welcome">
       <span className="welcome__emblem" aria-hidden="true">
-        {/* Chispa de marca (misma del logo): degradado brasa → ámbar. */}
-        <span className="spark" />
+        {/* Monograma de marca (mismo del logo/icono): T+L en trazo continuo. */}
+        <svg className="welcome__mark" viewBox="0 0 100 100" fill="none">
+          <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M30 41 V31 H70 V41" />
+            <path d="M50 31 V71" />
+            <path d="M42 51 H58" />
+            <path d="M44 71 H67 V61" />
+          </g>
+        </svg>
       </span>
       <h1 className="welcome__title">Bienvenido a TMPL</h1>
       <p className="welcome__tagline">

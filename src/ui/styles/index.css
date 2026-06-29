@@ -1982,11 +1982,9 @@ legend {
 .welcome__emblem {
   color: var(--accent-text);
 }
-.welcome__emblem .spark {
-  width: 2.5rem;
-  height: 2.5rem;
-  background: linear-gradient(135deg, var(--accent) 0%, #fbbf24 100%);
-  clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%);
+.welcome__emblem .welcome__mark {
+  width: 2.9rem;
+  height: 2.9rem;
 }
 .welcome__privacy-icon {
   width: 1rem;
