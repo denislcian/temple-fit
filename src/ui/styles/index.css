@@ -653,20 +653,13 @@ p {
     flex-shrink: 0;
   }
 
-  /* Sección activa: barra lateral de brasa + fondo sutil. */
+  /* Sección activa: píldora redondeada (estilo Hevy/Instagram), sin barra lateral. */
   .nav-sections a[aria-current='page'] {
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent-text);
   }
-
-  .nav-sections a[aria-current='page']::before {
-    content: '';
-    position: absolute;
-    left: -0.9rem;
-    top: 20%;
-    bottom: 20%;
-    width: 3px;
-    border-radius: 0 3px 3px 0;
-    background: linear-gradient(180deg, var(--accent), #fbbf24);
+  .nav-sections li {
+    margin-bottom: 0.1rem;
   }
 
   /* Empuja Ajustes y el botón de tema al pie de la barra. */

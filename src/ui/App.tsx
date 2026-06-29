@@ -187,20 +187,15 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
           <div className="nav-brand">
             <Brand />
           </div>
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
-              <span className="nav-kicker" aria-hidden="true">
-                {group.label}
-              </span>
-              <ul aria-label={group.label}>
-                {group.routes.map((r) => (
-                  <li key={r}>
-                    <NavLink to={r} route={route} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Lista plana estilo Hevy: una sola columna de secciones, sin
+              cabeceras de grupo, con el activo en píldora. */}
+          <ul aria-label="Secciones">
+            {NAV_GROUPS.flatMap((group) => group.routes).map((r) => (
+              <li key={r}>
+                <NavLink to={r} route={route} />
+              </li>
+            ))}
+          </ul>
           <div className="nav-footer">
             <ul aria-label="Aplicación">
               <li>
