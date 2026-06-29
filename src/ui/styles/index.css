@@ -3793,6 +3793,97 @@ dialog[open]::backdrop {
   margin-bottom: 0.75rem;
 }
 
+/* ── Calculadora nutricional ────────────────────────────── */
+.calc-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+  padding: 1.1rem 1rem;
+  margin: 1rem 0;
+  border-radius: var(--radius-l);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+.calc-hero__value {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--accent-text);
+}
+.calc-hero__label {
+  font-weight: 600;
+}
+.calc-hero__sub {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.calc-hero--bf {
+  background: color-mix(in srgb, var(--accent-2) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent-2) 30%, var(--border));
+}
+
+.source-link {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.source-link:hover {
+  color: var(--text);
+}
+
+.macro-split {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.macro-split__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.macro-split__item .num {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--accent-text);
+}
+.macro-split__item > span:last-child {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.calc-bodyfat {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.calc-refs {
+  margin-top: 1.25rem;
+}
+.calc-refs summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent-text);
+  min-height: var(--target);
+  display: flex;
+  align-items: center;
+}
+.calc-refs .meta em {
+  font-style: italic;
+}
+
 .chart-frame {
   height: 260px;
 }
