@@ -1904,14 +1904,10 @@ legend {
   width: 5rem;
   height: 5rem;
   margin-bottom: var(--space-3);
-  font-size: 2.6rem;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle at 50% 32%,
-    color-mix(in srgb, var(--accent) 22%, var(--surface)),
-    color-mix(in srgb, var(--accent) 9%, var(--surface-2))
-  );
-  box-shadow: var(--glow-accent);
+  /* Azulejo del icono de app: gris hierro, esquinas redondeadas (squircle). */
+  border-radius: 1.25rem;
+  background: #14161a;
+  box-shadow: var(--shadow-md);
 }
 
 .welcome__title {
@@ -1980,11 +1976,12 @@ legend {
 }
 /* Emblema y "nube" de privacidad: SVG dúotono en color de marca. */
 .welcome__emblem {
-  color: var(--accent-text);
+  /* Brasa sobre el azulejo oscuro, igual que el icono de app (fijo en ambos temas). */
+  color: #f97316;
 }
 .welcome__emblem .welcome__mark {
-  width: 2.9rem;
-  height: 2.9rem;
+  width: 3rem;
+  height: 3rem;
 }
 .welcome__privacy-icon {
   width: 1rem;
