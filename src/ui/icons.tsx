@@ -164,4 +164,13 @@ export const ICONS: Record<Route, ReactNode> = {
       <path d="M10 19a2 2 0 0 0 4 0" />
     </svg>
   ),
+  inicio: (
+    // Casa rellena: portada / landing.
+    <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
+      <path d="M5 10.5 12 4l7 6.5V20H5Z" {...FILL_SOFT} />
+      <path d="M4 11.2 12 4l8 7.2" />
+      <path d="M5 10.5V20h14v-9.5" />
+      <path d="M9.5 20v-5h5v5" />
+    </svg>
+  ),
 };

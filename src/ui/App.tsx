@@ -29,6 +29,7 @@ import {
 import { useTheme, type Theme } from './hooks/useTheme';
 import { ExercisesView } from './views/ExercisesView';
 import { HistoryView } from './views/HistoryView';
+import { LandingView } from './views/LandingView';
 import { MoreView } from './views/MoreView';
 import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
@@ -60,7 +61,7 @@ const NAV_GROUPS: Array<{ label: string; routes: Route[] }> = [
 
 function Brand() {
   return (
-    <a className="brand" href="#/entrenar">
+    <a className="brand" href="#/inicio">
       <svg className="brand-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true">
         <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M30 41 V31 H70 V41" />
@@ -233,6 +234,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
           // efecto de navegación (arriba). Cada vista sigue montándose/desmontándose
           // por ruta (render condicional), igual que antes.
           <div className="app-view" data-route={route}>
+            {route === 'inicio' && <LandingView />}
             {route === 'entrenar' && <TrainView />}
             {route === 'coach' && <CoachView />}
             {route === 'nutricion' && <NutritionView />}

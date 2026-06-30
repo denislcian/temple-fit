@@ -38,6 +38,7 @@ export const ROUTES = [
   'perfil',
   'notificaciones',
   'mas',
+  'inicio',
 ] as const;
 
 export type Route = (typeof ROUTES)[number];
@@ -58,6 +59,7 @@ export const ROUTE_LABELS: Record<Route, string> = {
   perfil: 'Perfil',
   notificaciones: 'Notificaciones',
   mas: 'Más',
+  inicio: 'Inicio',
 };
 
 /** Pestañas principales (siempre visibles). */
