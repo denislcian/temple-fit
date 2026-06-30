@@ -3167,6 +3167,31 @@ dialog[open]::backdrop {
   color: var(--text-muted);
 }
 
+/* Iconos de línea de Descanso (racha, música, reproducir). */
+.recovery-streak__flame {
+  color: var(--accent);
+}
+.recovery-streak__flame svg {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+.sound-emoji {
+  color: var(--text-muted);
+}
+.sound-emoji svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.sound-card.is-active .sound-emoji {
+  color: var(--accent-text);
+}
+.sound-play svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: currentColor;
+  vertical-align: -1px;
+}
+
 /* Slider propio (volumen): pista redondeada con relleno de acento hasta el
    pulgar y un pulgar redondo con sombra. Cross-browser (WebKit + Firefox). */
 .range {

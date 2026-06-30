@@ -153,3 +153,20 @@ export const UtensilsIcon = svg(
     <path d="M6 3v6a2 2 0 0 0 2 2v10M8 3v6M16 3c-1.4 0-2.3 1.8-2.3 4.5S14.6 12 16 12v9" strokeLinecap="round" strokeLinejoin="round" />
   </>,
 );
+
+export const FlameIcon = svg(
+  <path
+    d="M12 22a7 7 0 0 0 7-7c0-3-2-5.4-3.6-7.4-.6 1.3-1.6 2-2.6 1.9.6-2.6-.6-5.2-3.3-7.5.2 3.6-3 5.2-4.5 8.2A7 7 0 0 0 12 22Z"
+    strokeLinejoin="round"
+  />,
+);
+
+export const MusicNoteIcon = svg(
+  <>
+    <path d="M9 17V5l10-2v12" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="6.5" cy="17" r="2.5" />
+    <circle cx="16.5" cy="15" r="2.5" />
+  </>,
+);
+
+export const PlayIcon = svg(<path d="M7 4.8v14.4l12-7.2-12-7.2Z" strokeLinejoin="round" />);

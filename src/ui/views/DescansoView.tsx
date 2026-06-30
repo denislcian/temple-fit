@@ -13,6 +13,7 @@ import { useAnnounce } from '../components/Announcer';
 import { AppDialog } from '../components/AppDialog';
 import { useAuth } from '../components/AuthContext';
 import { BreathingGuide } from '../components/BreathingGuide';
+import { FlameIcon, MoonIcon, MusicNoteIcon, PlayIcon } from '../components/icons';
 import { SelectField, TextAreaField } from '../components/Field';
 import { SleepReport } from '../components/SleepReport';
 import { SleepTracker } from '../components/SleepTracker';
@@ -74,7 +75,7 @@ export function DescansoView() {
         `Duración: ${Math.floor(n.durationMin / 60)} h ${n.durationMin % 60} min`,
         `Ronquidos detectados: ${n.snoreCount}`,
       ],
-      defaultText: 'Mi descanso de anoche 🌙',
+      defaultText: 'Mi descanso de anoche',
     });
   }
 
@@ -84,7 +85,7 @@ export function DescansoView() {
       kind: 'meditacion',
       title: `Respiración: ${lastBreath.label}`,
       lines: [`Duración: ${lastBreath.min} ${lastBreath.min === 1 ? 'minuto' : 'minutos'}`],
-      defaultText: 'Un momento de calma 🧘',
+      defaultText: 'Un momento de calma',
     });
   }
 
@@ -110,7 +111,7 @@ export function DescansoView() {
   }
 
   return (
-    <>
+    <div className="view-narrow">
       <span className="kicker">Recupérate y duerme mejor</span>
       <h1 id="view-title" tabIndex={-1}>
         Descanso
@@ -119,7 +120,7 @@ export function DescansoView() {
       {streak.total > 0 && (
         <section className="card recovery-streak" aria-labelledby="rstreak-heading">
           <span className="recovery-streak__flame" aria-hidden="true">
-            {streak.current > 0 ? '🔥' : '🌙'}
+            {streak.current > 0 ? FlameIcon : MoonIcon}
           </span>
           <div>
             <h2 id="rstreak-heading" style={{ margin: 0 }}>
@@ -196,7 +197,7 @@ export function DescansoView() {
                 disabled={!sound.supported}
               >
                 <span className="sound-emoji" aria-hidden="true">
-                  🎵
+                  {MusicNoteIcon}
                 </span>
                 <span className="sound-label">{t.label}</span>
                 <span className="sound-state" aria-hidden="true">
@@ -210,7 +211,12 @@ export function DescansoView() {
                       Sonando
                     </>
                   ) : (
-                    '▶ Reproducir'
+                    <>
+                      <span className="sound-play" aria-hidden="true">
+                        {PlayIcon}
+                      </span>{' '}
+                      Reproducir
+                    </>
                   )}
                 </span>
               </button>
@@ -356,6 +362,6 @@ export function DescansoView() {
           </>
         )}
       </AppDialog>
-    </>
+    </div>
   );
 }
