@@ -2620,12 +2620,36 @@ legend {
   flex-shrink: 0;
   align-self: flex-start;
   font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--accent-text);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  padding: 0.22rem 0.6rem;
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  background: transparent;
+  border: 1px solid var(--border-strong, var(--border));
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+/* Estado vacío del feed: centrado y sobrio, en vez de una línea suelta. */
+.feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+}
+.feed-empty__icon {
+  display: inline-flex;
+  opacity: 0.55;
+}
+.feed-empty__icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+.feed-empty p {
+  margin: 0;
+  max-width: 24rem;
 }
 .post-text {
   margin: 0 0 0.75rem;

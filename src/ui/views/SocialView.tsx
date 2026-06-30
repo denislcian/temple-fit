@@ -534,11 +534,14 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       </div>
 
       {sourcedFeed.filter((p) => activeKinds.includes(p.kind)).length === 0 && (
-        <p className="muted" role="status">
-          {feedSource === 'siguiendo'
-            ? 'Aún no hay publicaciones de quien sigues. Sigue a alguien o pásate a Descubrir.'
-            : 'No hay publicaciones de este tipo todavía.'}
-        </p>
+        <div className="feed-empty" role="status">
+          <span className="feed-empty__icon" aria-hidden="true">{CommentIcon}</span>
+          <p>
+            {feedSource === 'siguiendo'
+              ? 'Aún no hay publicaciones de quien sigues. Sigue a alguien o pásate a Descubrir.'
+              : 'No hay publicaciones de este tipo todavía.'}
+          </p>
+        </div>
       )}
 
       {sourcedFeed
