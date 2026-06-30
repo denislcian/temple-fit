@@ -8,6 +8,7 @@ import { socialRepo } from '../../data/repositories/socialRepo';
 import { useAnnounce } from '../components/Announcer';
 import { useAuth } from '../components/AuthContext';
 import { Avatar } from '../components/Avatar';
+import { CommentIcon, HeartIcon } from '../components/icons';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg } from '../utils/format';
 
@@ -129,7 +130,7 @@ export function ProfileView({ userId }: { userId: string }) {
           </h1>
           <p className="meta" style={{ margin: '0.15rem 0 0' }}>
             @{profile.username}
-            {profile.location ? ` · 📍 ${profile.location}` : ''}
+            {profile.location ? ` · ${profile.location}` : ''}
           </p>
           <p className="meta" style={{ margin: '0.15rem 0 0' }}>
             <button
@@ -260,8 +261,9 @@ export function ProfileView({ userId }: { userId: string }) {
               </ul>
             </div>
           )}
-          <p className="meta">
-            <span aria-hidden="true">❤️</span> {post.likes} · 💬 {post.comments.length}
+          <p className="meta post-stats">
+            <span className="stat-ico" aria-hidden="true">{HeartIcon}</span> {post.likes} ·{' '}
+            <span className="stat-ico" aria-hidden="true">{CommentIcon}</span> {post.comments.length}
           </p>
         </article>
       ))}

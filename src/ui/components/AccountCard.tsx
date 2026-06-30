@@ -9,6 +9,7 @@ import { useAnnounce } from './Announcer';
 import { useAuth } from './AuthContext';
 import { ConfirmDialog } from './AppDialog';
 import { Avatar } from './Avatar';
+import { CameraIcon } from './icons';
 import { TextAreaField, TextField } from './Field';
 
 export function AccountCard() {
@@ -175,7 +176,7 @@ function AccountEditor({
         >
           <Avatar id={account.id} name={account.displayName} size={56} photoUrl={avatarUrl || undefined} />
           <span className="avatar-edit__hint" aria-hidden="true">
-            {avatarBusy ? '…' : '📸'}
+            {avatarBusy ? '…' : CameraIcon}
           </span>
         </button>
         <input

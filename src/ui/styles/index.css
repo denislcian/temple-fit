@@ -2390,9 +2390,23 @@ legend {
   display: grid;
   place-items: center;
   font-size: 0.75rem;
+  color: var(--text-secondary, var(--text-muted));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
+}
+.avatar-edit__hint svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+/* Contadores de me gusta / comentarios en el perfil. */
+.post-stats .stat-ico {
+  display: inline-flex;
+  vertical-align: -0.15em;
+}
+.post-stats .stat-ico svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 .link-btn {
   border: none;
@@ -3524,6 +3538,20 @@ dialog[open]::backdrop {
 }
 .recipe-hero--big.recipe-hero--photo img {
   border-radius: var(--radius-m);
+}
+/* Respaldo de receta sin foto: icono de cubiertos sobrio (no emoji). */
+.recipe-hero__ph {
+  display: inline-flex;
+  color: var(--accent-2, var(--accent));
+  opacity: 0.9;
+}
+.recipe-hero__ph svg {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.recipe-hero--big .recipe-hero__ph svg {
+  width: 3rem;
+  height: 3rem;
 }
 
 .recipe-description {

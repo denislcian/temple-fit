@@ -17,6 +17,7 @@ import {
 } from '../../data/recipeModels';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog } from '../components/AppDialog';
+import { UtensilsIcon } from '../components/icons';
 import { SelectField, TextField } from '../components/Field';
 import { localDateISO } from '../utils/format';
 
@@ -137,7 +138,7 @@ export function RecipesView() {
             return (
               <button key={r.id} type="button" className="recipe-card" onClick={() => setDetail(r)}>
                 <span className={`recipe-hero${img ? ' recipe-hero--photo' : ''}`} aria-hidden="true">
-                  {img ? <img src={img} alt="" loading="lazy" /> : r.emoji}
+                  {img ? <img src={img} alt="" loading="lazy" /> : <span className="recipe-hero__ph">{UtensilsIcon}</span>}
                 </span>
                 <span className="recipe-body">
                   <span className="title">{r.name}</span>
@@ -168,7 +169,7 @@ export function RecipesView() {
                   className={`recipe-hero recipe-hero--big${img ? ' recipe-hero--photo' : ''}`}
                   aria-hidden="true"
                 >
-                  {img ? <img src={img} alt="" /> : detail.emoji}
+                  {img ? <img src={img} alt="" /> : <span className="recipe-hero__ph">{UtensilsIcon}</span>}
                 </span>
               );
             })()}
