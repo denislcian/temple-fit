@@ -4011,6 +4011,20 @@ dialog[open]::backdrop {
   fill: currentColor;
 }
 
+/* Fuentes y método de Nutrición: tarjeta plegable, sobria. */
+.nutri-sources summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--text);
+}
+.nutri-sources summary::marker {
+  color: var(--text-muted);
+}
+.nutri-sources[open] summary {
+  margin-bottom: 0.25rem;
+}
+
 /* ── Gráficas ───────────────────────────────────────────── */
 .chart-block {
   margin-bottom: 1.5rem;

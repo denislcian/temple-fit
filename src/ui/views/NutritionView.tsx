@@ -14,12 +14,20 @@ import {
   removeDiaryEntry,
 } from '../../data/repositories/nutritionRepo';
 import { macroTargets } from '../../domain/nutritionTargets';
+import { FORMULA_REFERENCES } from '../../data/formulaReferences';
 import { DropletIcon } from '../components/icons';
 import { useAnnounce } from '../components/Announcer';
 import { AddFoodDialog } from '../components/AddFoodDialog';
 import { DietDialog } from '../components/DietDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { addDays, formatDate, localDateISO } from '../utils/format';
+
+// Objetivos citados a un estándar público (ver formulaReferences.ts). Sin cajas negras.
+const TARGET_SOURCES: { id: string; label: string }[] = [
+  { id: 'mifflin', label: 'Calorías — metabolismo basal (Mifflin-St Jeor) + actividad y objetivo' },
+  { id: 'issn-protein', label: 'Proteína — 1,8-2,2 g/kg de peso según el objetivo' },
+  { id: 'efsa-water', label: 'Agua — ingesta adecuada de referencia' },
+];
 
 function MacroBar({
   label,
@@ -104,7 +112,7 @@ export function NutritionView() {
   }
 
   return (
-    <>
+    <div className="view-narrow">
       <span className="kicker">Combustible para la forja</span>
       <h1 id="view-title" tabIndex={-1}>
         Nutrición
@@ -202,6 +210,46 @@ export function NutritionView() {
         </div>
       </div>
 
+      <details className="card nutri-sources">
+        <summary>De dónde salen estos números (método y fuentes)</summary>
+        <p className="muted" style={{ marginTop: '0.5rem' }}>
+          Sin cajas negras: cada objetivo cita un estándar público y verificable, y los alimentos
+          del catálogo usan valores oficiales por 100 g.
+        </p>
+        <ul className="item-list">
+          {TARGET_SOURCES.map(({ id, label }) => {
+            const ref = FORMULA_REFERENCES[id];
+            return ref ? (
+              <li key={id}>
+                <div>
+                  <span className="title">{label}</span>
+                  <br />
+                  <span className="meta">
+                    {ref.authors} ({ref.year}).{' '}
+                    <a href={ref.url} target="_blank" rel="noopener noreferrer">
+                      {ref.title}
+                    </a>
+                    . <em>{ref.source}</em>.
+                  </span>
+                </div>
+              </li>
+            ) : null;
+          })}
+          <li>
+            <div>
+              <span className="title">Alimentos — valores por 100 g del catálogo</span>
+              <br />
+              <span className="meta">
+                U.S. Department of Agriculture, FoodData Central, base «SR Legacy» (dominio público).{' '}
+                <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener noreferrer">
+                  fdc.nal.usda.gov
+                </a>
+              </span>
+            </div>
+          </li>
+        </ul>
+      </details>
+
       {MEALS.map((meal) => {
         const mealEntries = (entries ?? []).filter((e) => e.meal === meal);
         const mealKcal = mealEntries.reduce((a, e) => a + e.kcal, 0);
@@ -264,6 +312,6 @@ export function NutritionView() {
           onClose={() => setDietOpen(false)}
         />
       )}
-    </>
+    </div>
   );
 }
