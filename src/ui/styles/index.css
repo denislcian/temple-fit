@@ -2629,8 +2629,8 @@ legend {
   white-space: nowrap;
 }
 
-/* Estado vacío del feed: centrado y sobrio, en vez de una línea suelta. */
-.feed-empty {
+/* Estado vacío reutilizable: centrado y sobrio, en vez de una línea suelta. */
+.empty-block {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2639,15 +2639,15 @@ legend {
   padding: 2.5rem 1rem;
   color: var(--text-muted);
 }
-.feed-empty__icon {
+.empty-block__icon {
   display: inline-flex;
   opacity: 0.55;
 }
-.feed-empty__icon svg {
+.empty-block__icon svg {
   width: 2rem;
   height: 2rem;
 }
-.feed-empty p {
+.empty-block p {
   margin: 0;
   max-width: 24rem;
 }

@@ -130,7 +130,10 @@ export function RecipesView() {
       </p>
 
       {filtered.length === 0 ? (
-        <p className="muted">Ninguna receta coincide con esos filtros. Prueba a quitar alguno.</p>
+        <div className="empty-block" role="status">
+          <span className="empty-block__icon" aria-hidden="true">{UtensilsIcon}</span>
+          <p>Ninguna receta coincide con esos filtros. Prueba a quitar alguno.</p>
+        </div>
       ) : (
         <div className="recipe-grid">
           {filtered.map((r) => {
