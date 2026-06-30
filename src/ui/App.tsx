@@ -232,7 +232,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
           // La transición de entrada se dispara con la Web Animations API en el
           // efecto de navegación (arriba). Cada vista sigue montándose/desmontándose
           // por ruta (render condicional), igual que antes.
-          <div className="app-view">
+          <div className="app-view" data-route={route}>
             {route === 'entrenar' && <TrainView />}
             {route === 'coach' && <CoachView />}
             {route === 'nutricion' && <NutritionView />}

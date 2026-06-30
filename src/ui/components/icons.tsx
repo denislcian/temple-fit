@@ -170,3 +170,10 @@ export const MusicNoteIcon = svg(
 );
 
 export const PlayIcon = svg(<path d="M7 4.8v14.4l12-7.2-12-7.2Z" strokeLinejoin="round" />);
+
+export const StarIcon = svg(
+  <path
+    d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5L2.6 9.4l6.5-.9L12 2.6Z"
+    strokeLinejoin="round"
+  />,
+);

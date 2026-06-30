@@ -13,7 +13,7 @@ import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { ExerciseHistoryDialog } from '../components/ExerciseHistoryDialog';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { SelectField, TextAreaField, TextField } from '../components/Field';
-import { HowToIcon, ProgressIcon, TrashIcon } from '../components/icons';
+import { HowToIcon, ProgressIcon, StarIcon, TrashIcon } from '../components/icons';
 import { loadFavorites, saveFavorites, sortByFavorite, toggleFavorite } from '../favorites';
 import { useAsyncData } from '../hooks/useAsyncData';
 
@@ -122,7 +122,7 @@ export function ExercisesView() {
             aria-pressed={onlyFavorites}
             onClick={() => setOnlyFavorites((v) => !v)}
           >
-            ★ Solo favoritos
+            <span className="fav-ico" aria-hidden="true">{StarIcon}</span> Solo favoritos
           </button>
           <button type="button" className="btn btn--primary" onClick={() => setCreating(true)}>
             + Nuevo ejercicio personalizado
@@ -148,7 +148,7 @@ export function ExercisesView() {
               }
               onClick={() => onToggleFavorite(exercise)}
             >
-              <span aria-hidden="true">{favorites.has(exercise.id) ? '★' : '☆'}</span>
+              <span aria-hidden="true">{StarIcon}</span>
             </button>
             <ExerciseImage exerciseId={exercise.id} />
             <div style={{ flex: 1 }}>

@@ -1519,8 +1519,17 @@ legend {
    columna estrecha y centrada (estilo app de gimnasio), tabla de series
    compacta y centrada, y temporizador de descanso también centrado. */
 @media (min-width: 48rem) {
+  /* Columna estrecha y centrada (estilo app de gimnasio) para las vistas de una
+     sola columna. Las que llevan wrapper propio (.train-live / .view-narrow) y
+     el resto, por su ruta. Comunidad/perfil/recetas quedan a lo ancho. */
   .train-live,
-  .view-narrow {
+  .view-narrow,
+  .app-view[data-route='progreso'],
+  .app-view[data-route='rutinas'],
+  .app-view[data-route='ejercicios'],
+  .app-view[data-route='herramientas'],
+  .app-view[data-route='ajustes'],
+  .app-view[data-route='historial'] {
     max-width: 44rem;
     margin-inline: auto;
   }
@@ -2852,6 +2861,22 @@ legend {
 
 .fav-toggle.is-fav span {
   animation: setPop var(--dur-2) var(--ease-spring);
+}
+.fav-toggle svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+.fav-toggle.is-fav svg {
+  fill: currentColor;
+}
+.btn .fav-ico {
+  display: inline-flex;
+  vertical-align: -0.15em;
+  margin-right: 0.15rem;
+}
+.btn .fav-ico svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 /* ── Historial por mes ──────────────────────────────────── */
