@@ -143,13 +143,9 @@ body {
 
 body {
   margin: 0;
-  /* Atmósfera: brasa arriba a la derecha, acero templado abajo a la
-     izquierda — los dos polos de la paleta, muy atenuados. */
-  background:
-    radial-gradient(60rem 24rem at 85% -8rem, var(--bg-glow), transparent 60%),
-    radial-gradient(50rem 30rem at -10% 110%, color-mix(in srgb, var(--accent-2) 6%, transparent), transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
+  /* Estilo "libreta": fondo plano y simple; la estructura la dan los
+     recuadros (tarjetas con borde), no atmósferas ni sombras. */
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   font-size: 1rem;
@@ -703,48 +699,30 @@ p {
 /* ── Tarjetas y secciones ───────────────────────────────── */
 .card {
   position: relative;
-  background: linear-gradient(180deg, color-mix(in srgb, #fff 2%, var(--surface)), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: var(--radius-l);
+  /* Recuadro de libreta: superficie plana con borde nítido, sin sombra. */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
   padding: var(--space-4) 1.125rem;
   margin-bottom: var(--space-3);
-  /* Sombra ambiental + canto superior luminoso (luz cenital simulada). */
-  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition:
-    border-color var(--dur-2) var(--ease-out),
-    box-shadow var(--dur-2) var(--ease-out),
-    transform var(--dur-2) var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-out);
 }
 
-[data-theme='light'] .card {
-  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-/* Micro-elevación al pasar el ratón (solo en dispositivos con hover real). */
+/* El borde se marca al pasar el ratón (solo en dispositivos con hover real). */
 @media (hover: hover) {
   .card:hover {
-    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
-    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
   }
 }
 
-/* Tarjeta destacada: lavado cálido de marca (sin barra lateral). */
+/* Tarjeta destacada: recuadro con el borde en acento (libreta, sin lavados). */
 .card--accent {
-  background: linear-gradient(
-    110deg,
-    color-mix(in srgb, var(--accent) 7%, var(--surface)),
-    var(--surface) 40%
-  );
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
 /* Variante fría (teal), complemento de card--accent. */
 .card--steel {
-  background: linear-gradient(
-    110deg,
-    color-mix(in srgb, var(--accent-2) 6%, var(--surface)),
-    var(--surface) 40%
-  );
+  border-color: color-mix(in srgb, var(--accent-2) 45%, var(--border));
 }
 
 .stat-grid {
@@ -902,8 +880,6 @@ p {
 .btn:hover {
   border-color: var(--accent);
   background: var(--surface-3);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
 }
 
 .btn:active {
@@ -2681,13 +2657,10 @@ legend {
 
 /* ── Tarjetas del feed (Comunidad) ──────────────────────── */
 .post-card {
-  transition:
-    border-color var(--dur-2) var(--ease-out),
-    box-shadow var(--dur-2) var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-out);
 }
 .post-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
-  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
 }
 .post-head {
   display: flex;
