@@ -177,3 +177,17 @@ export const StarIcon = svg(
     strokeLinejoin="round"
   />,
 );
+
+export const LinkIcon = svg(
+  <>
+    <path d="M9.5 14.5 14.5 9.5" strokeLinecap="round" />
+    <path
+      d="M13 6.5 15.2 4.3a3.7 3.7 0 0 1 5.2 5.2L18.2 11.7a3.7 3.7 0 0 1-5.2 0"
+      strokeLinecap="round"
+    />
+    <path
+      d="M11 17.5 8.8 19.7a3.7 3.7 0 0 1-5.2-5.2L5.8 12.3a3.7 3.7 0 0 1 5.2 0"
+      strokeLinecap="round"
+    />
+  </>,
+);

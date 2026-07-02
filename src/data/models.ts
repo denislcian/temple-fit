@@ -80,6 +80,8 @@ export interface SessionEntry {
   sets: WorkoutSet[];
   /** Nota libre del usuario para este ejercicio en esta sesión. */
   note?: string;
+  /** Ejercicios con el mismo número forman una superserie. Ausente = suelto. */
+  supersetGroup?: number;
 }
 
 /** Una sesión de entrenamiento (un día de gimnasio). */

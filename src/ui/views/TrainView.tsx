@@ -21,7 +21,12 @@ import { ConfirmDialog } from '../components/AppDialog';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { TextAreaField, TextField } from '../components/Field';
 import { GymToolsDialog } from '../components/GymToolsDialog';
-import { ChevronDownIcon, ChevronUpIcon, TrashIcon } from '../components/icons';
+import { ChevronDownIcon, ChevronUpIcon, LinkIcon, TrashIcon } from '../components/icons';
+import {
+  cleanupSupersets,
+  supersetLetters,
+  toggleSupersetWithPrevious,
+} from '../../domain/supersets';
 import { RestTimer, SET_DONE_EVENT } from '../components/RestTimer';
 import { setTypeBadge, SetOptionsDialog } from '../components/SetOptionsDialog';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -135,6 +140,17 @@ export function TrainView() {
     });
   }
 
+  /** Enlaza/desenlaza un ejercicio en superserie con el anterior. */
+  function toggleSuperset(index: number) {
+    updateDraft((d) => {
+      const entries = toggleSupersetWithPrevious(d.entries, index);
+      const nowLinked = entries[index]?.supersetGroup !== undefined;
+      const name = exerciseById.get(d.entries[index]?.exerciseId ?? '')?.name ?? 'Ejercicio';
+      announce(nowLinked ? `${name} en superserie con el anterior` : `${name} fuera de la superserie`);
+      return { ...d, entries };
+    });
+  }
+
   function setNote(entryIndex: number, note: string) {
     updateDraft((d) => ({
       ...d,
@@ -207,10 +223,12 @@ export function TrainView() {
   async function finishWorkout() {
     if (!draft) return;
 
-    const entries: SessionEntry[] = draft.entries
+    const entries: SessionEntry[] = cleanupSupersets(
+      draft.entries
       .map((entry) => ({
         exerciseId: entry.exerciseId,
         ...(entry.note?.trim() ? { note: entry.note.trim() } : {}),
+        ...(entry.supersetGroup !== undefined ? { supersetGroup: entry.supersetGroup } : {}),
         sets: entry.sets
           .map((s) => {
             const reps = parseReps(s.reps);
@@ -223,7 +241,8 @@ export function TrainView() {
           })
           .filter((s): s is WorkoutSet => s !== null),
       }))
-      .filter((entry) => entry.sets.length > 0);
+      .filter((entry) => entry.sets.length > 0),
+    );
 
     const doneSets = entries.flatMap((e) => e.sets.filter((s) => s.done));
     if (doneSets.length === 0) {
@@ -405,6 +424,8 @@ export function TrainView() {
     );
   }
 
+  const ssLetters = supersetLetters(draft.entries);
+
   return (
     <>
       <div className="train-live">
@@ -420,11 +441,41 @@ export function TrainView() {
         const exercise = exerciseById.get(entry.exerciseId);
         const last = lastSets.get(entry.exerciseId);
         const suggestion = last && last.length > 0 ? suggestProgression(last) : null;
+        const ssLetter = ssLetters[entryIndex];
+        const linkedWithPrev =
+          entry.supersetGroup !== undefined &&
+          entry.supersetGroup === draft.entries[entryIndex - 1]?.supersetGroup;
         return (
-          <section key={entry.exerciseId} className="card" aria-label={exercise?.name}>
+          <section
+            key={entry.exerciseId}
+            className={`card${ssLetter ? ' card--superset' : ''}`}
+            aria-label={exercise?.name}
+          >
             <div className="exercise-head">
-              <h2>{exercise?.name ?? entry.exerciseId}</h2>
+              <h2>
+                {exercise?.name ?? entry.exerciseId}
+                {ssLetter && (
+                  <span className="superset-chip">
+                    Superserie {ssLetter}
+                  </span>
+                )}
+              </h2>
               <div className="row-actions">
+                <button
+                  type="button"
+                  className={`icon-btn${linkedWithPrev ? ' icon-btn--active' : ''}`}
+                  disabled={entryIndex === 0}
+                  aria-pressed={linkedWithPrev}
+                  onClick={() => toggleSuperset(entryIndex)}
+                  title={linkedWithPrev ? 'Quitar de la superserie' : 'Superserie con el anterior'}
+                  aria-label={
+                    linkedWithPrev
+                      ? `Quitar ${exercise?.name ?? entry.exerciseId} de la superserie`
+                      : `Poner ${exercise?.name ?? entry.exerciseId} en superserie con el ejercicio anterior`
+                  }
+                >
+                  {LinkIcon}
+                </button>
                 <button
                   type="button"
                   className="icon-btn"

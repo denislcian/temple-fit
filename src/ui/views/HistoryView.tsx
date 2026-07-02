@@ -5,6 +5,7 @@ import type { Session } from '../../data/models';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions, removeSession } from '../../data/repositories/sessionRepo';
 import { totals } from '../../domain/stats';
+import { supersetLetters } from '../../domain/supersets';
 import { sessionVolume } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
 import { ConfirmDialog } from '../components/AppDialog';
@@ -166,11 +167,16 @@ export function HistoryView() {
                 <details>
                   <summary className="btn btn--small btn--ghost">Ver detalle</summary>
                   <ul className="item-list">
-                    {session.entries.map((entry) => (
+                    {session.entries.map((entry, entryIndex) => (
                       <li key={entry.exerciseId}>
                         <div>
                           <span className="title">
                             {nameById.get(entry.exerciseId) ?? entry.exerciseId}
+                            {supersetLetters(session.entries)[entryIndex] && (
+                              <span className="superset-chip">
+                                Superserie {supersetLetters(session.entries)[entryIndex]}
+                              </span>
+                            )}
                           </span>
                           <br />
                           <span className="meta num">

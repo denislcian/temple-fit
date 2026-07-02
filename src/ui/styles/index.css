@@ -1479,6 +1479,32 @@ legend {
   margin: 0;
 }
 
+/* ── Superseries ────────────────────────────────────────── */
+/* El recuadro de un ejercicio en superserie lleva el canto izquierdo en teal. */
+.card--superset {
+  border-left: 3px solid var(--accent-2);
+}
+.superset-chip {
+  display: inline-block;
+  margin-left: 0.5rem;
+  vertical-align: 0.15em;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--accent-2);
+  border: 1px solid color-mix(in srgb, var(--accent-2) 55%, var(--border));
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  white-space: nowrap;
+}
+/* Botón de enlace activo (este ejercicio va con el anterior). */
+.icon-btn--active {
+  color: var(--accent-2);
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-2) 10%, var(--surface-2));
+}
+
 /* Aclaración de la convención de peso (p. ej. mancuernas: peso de UNA). */
 .set-hint {
   margin: 0 0 0.6rem;

@@ -18,6 +18,8 @@ export interface DraftEntry {
   exerciseId: string;
   sets: DraftSet[];
   note?: string;
+  /** Ejercicios con el mismo número forman una superserie. Ausente = suelto. */
+  supersetGroup?: number;
 }
 
 export interface Draft {
@@ -69,6 +71,7 @@ export function draftFromSession(session: Session, startedAtISO: string): Draft 
     entries: session.entries.map((entry) => ({
       exerciseId: entry.exerciseId,
       ...(entry.note ? { note: entry.note } : {}),
+      ...(entry.supersetGroup !== undefined ? { supersetGroup: entry.supersetGroup } : {}),
       sets: entry.sets.map((s) => ({
         reps: String(s.reps),
         weight: numToInput(s.weightKg),
