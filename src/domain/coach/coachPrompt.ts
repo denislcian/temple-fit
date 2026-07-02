@@ -6,7 +6,7 @@
 // validateAdvice rechaza cualquier salida con un número o una cita que no
 // estuviera en la entrada. Si algo falla, la app usa composeCoachAdvice.
 import type { Goal } from '../routineGenerator';
-import { GOAL_PRESCRIPTION } from './coachKnowledge';
+import { citation, GOAL_PRESCRIPTION, HEURISTICS } from './coachKnowledge';
 import type { CoachContext } from './coachContext';
 import type { CoachRecommendation, CoachVerdict } from './coachRules';
 
@@ -22,7 +22,14 @@ export interface AdvicePayload {
   objetivo: Goal;
   pauta: { reps: string; cargaPct: string; rir: string; descanso: string };
   recomendaciones: Array<{ titulo: string; detalle: string; fuente?: string }>;
+  /** Solo en modo pregunta (hablar con el coach). */
+  pregunta?: string;
+  /** Base de conocimiento citada (solo en modo pregunta). */
+  conocimiento?: Array<{ regla: string; fuente: string }>;
 }
+
+/** Longitud máxima de la pregunta del usuario. */
+export const MAX_QUESTION_LENGTH = 280;
 
 /** Construye el payload desde las MISMAS salidas que pinta la UI (nunca datos crudos). */
 export function buildAdvicePayload(
@@ -54,6 +61,25 @@ export function buildAdvicePayload(
       detalle: r.detalle,
       ...(r.fuente ? { fuente: r.fuente } : {}),
     })),
+  };
+}
+
+/**
+ * Payload del modo PREGUNTA (hablar con el coach): el consejo anclado de siempre
+ * + la pregunta del usuario + toda la base de conocimiento citada, para que la
+ * respuesta solo pueda apoyarse en reglas con fuente verificada.
+ */
+export function buildQuestionPayload(
+  ctx: CoachContext,
+  verdict: CoachVerdict,
+  recs: CoachRecommendation[],
+  goal: Goal,
+  pregunta: string,
+): AdvicePayload {
+  return {
+    ...buildAdvicePayload(ctx, verdict, recs, goal),
+    pregunta: pregunta.trim().slice(0, MAX_QUESTION_LENGTH),
+    conocimiento: HEURISTICS.map((h) => ({ regla: h.regla, fuente: citation(h.fuente) })),
   };
 }
 
@@ -106,8 +132,12 @@ export function validateAdvice(raw: string, payload: AdvicePayload): AiAdvice | 
     if (!allowed.has(token)) return null;
   }
 
-  // Anti-alucinación de citas: "Apellido et al." debe venir de alguna fuente.
-  const fuentes = payload.recomendaciones.map((r) => r.fuente ?? '').join(' | ');
+  // Anti-alucinación de citas: "Apellido et al." debe venir de alguna fuente
+  // (de las recomendaciones o de la base de conocimiento, si viaja).
+  const fuentes = payload.recomendaciones
+    .map((r) => r.fuente ?? '')
+    .concat((payload.conocimiento ?? []).map((k) => k.fuente))
+    .join(' | ');
   const authorRefs = mensajeT.matchAll(/([A-ZÁÉÍÓÚÑ][\wáéíóúñ-]+)\s+et al\.?/g);
   for (const m of authorRefs) {
     if (!fuentes.includes(m[1]!)) return null;

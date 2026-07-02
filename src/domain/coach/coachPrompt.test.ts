@@ -62,6 +62,35 @@ describe('validateAdvice: rechaza alucinaciones', () => {
   });
 });
 
+describe('validateAdvice: modo pregunta (habla con tu coach)', () => {
+  const QP: AdvicePayload = {
+    ...PAYLOAD,
+    pregunta: '¿Puedo entrenar 6 días a la semana?',
+    conocimiento: [
+      {
+        regla: 'Para fuerza en entrenados, descansa >2 min entre series.',
+        fuente: 'Grgic et al. (descansos entre series, revisión sistemática), 2018',
+      },
+    ],
+  };
+
+  it('los números de la propia pregunta están permitidos en la respuesta', () => {
+    expect(
+      validateAdvice(ok('Frecuencia', 'Entrenar 6 días es viable si el volumen se reparte.'), QP),
+    ).not.toBeNull();
+  });
+
+  it('acepta autores que vienen de la base de conocimiento', () => {
+    expect(
+      validateAdvice(ok('Descansos', 'Descansa 2 min o más; lo respalda Grgic et al., 2018.'), QP),
+    ).not.toBeNull();
+  });
+
+  it('sigue rechazando autores ajenos aunque haya conocimiento', () => {
+    expect(validateAdvice(ok('X', 'Lo dice Fernández et al. claramente.'), QP)).toBeNull();
+  });
+});
+
 describe('payloadHash', () => {
   it('mismo payload → mismo hash; payload distinto → hash distinto', () => {
     const a = payloadHash(PAYLOAD);

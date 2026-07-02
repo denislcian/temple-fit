@@ -56,8 +56,10 @@ export async function isCoachAiAvailable(): Promise<boolean> {
 export async function fetchAiAdvice(payload: AdvicePayload): Promise<CoachAiResult> {
   if (!supabase) return { ok: false, reason: 'no-disponible' };
 
+  // El consejo del día se cachea; las preguntas del chat no (cada una es única).
+  const isQuestion = typeof payload.pregunta === 'string';
   const hash = payloadHash(payload);
-  const cached = readCache(hash);
+  const cached = isQuestion ? null : readCache(hash);
   if (cached) return { ok: true, advice: cached, cached: true };
 
   try {
@@ -72,7 +74,7 @@ export async function fetchAiAdvice(payload: AdvicePayload): Promise<CoachAiResu
     const advice = validateAdvice(raw, payload);
     if (!advice) return { ok: false, reason: 'invalido' };
 
-    writeCache(hash, advice);
+    if (!isQuestion) writeCache(hash, advice);
     return { ok: true, advice, cached: false };
   } catch {
     return { ok: false, reason: 'red' };

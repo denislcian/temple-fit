@@ -16,7 +16,7 @@
 // ADVICE_INSTRUCTION en src/domain/coach/coachPrompt.ts.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const DAILY_LIMIT = 10;
+const DAILY_LIMIT = 20;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const CORS = {
@@ -29,6 +29,12 @@ const INSTRUCTION = `Eres el redactor del coach de una app de entrenamiento de f
 PROHIBIDO: inventar o modificar números (kilos, series, %, repeticiones, horas), añadir consejos o ejercicios nuevos, mencionar estudios/autores/años que no estén en el campo "fuente", dar consejo médico, usar emojis o exclamaciones.
 OBLIGATORIO: usa únicamente cifras que aparezcan en el JSON; si citas una fuente, cópiala EXACTAMENTE como llega en "fuente"; trata la primera recomendación como la prioridad del día; español de tú, tono sobrio y directo; 60-90 palabras.
 Responde SOLO con JSON válido: {"foco":"3-5 palabras","mensaje":"el consejo"}`;
+
+const QUESTION_INSTRUCTION = `Eres el coach de una app de entrenamiento de fuerza y respondes a la pregunta del usuario ("pregunta" en el JSON).
+Tu ÚNICA base permitida es el JSON: el contexto agregado del usuario, sus recomendaciones y la lista "conocimiento" (reglas con su fuente científica).
+PROHIBIDO: inventar números, ejercicios, estudios, autores o años que no estén en el JSON; dar consejo médico, de lesiones, fármacos o suplementación (si preguntan eso, di con respeto que consulten a un profesional sanitario); usar emojis o exclamaciones.
+OBLIGATORIO: responde en español de tú, sobrio y directo, máximo 110 palabras; si usas una regla de "conocimiento", copia su "fuente" EXACTAMENTE; si la pregunta no puede responderse con el JSON, dilo honestamente y sugiere qué registrar en la app para poder ayudar.
+Responde SOLO con JSON válido: {"foco":"tema en 3-5 palabras","mensaje":"la respuesta"}`;
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -57,8 +63,22 @@ function isValidPayload(p: unknown): boolean {
       return false;
     }
   }
+  // Modo pregunta (opcional): pregunta acotada + base de conocimiento citada.
+  if (o.pregunta !== undefined) {
+    if (typeof o.pregunta !== 'string' || o.pregunta.length === 0 || o.pregunta.length > 300) {
+      return false;
+    }
+  }
+  if (o.conocimiento !== undefined) {
+    if (!Array.isArray(o.conocimiento) || o.conocimiento.length > 20) return false;
+    for (const k of o.conocimiento) {
+      const kn = k as Record<string, unknown>;
+      if (typeof kn.regla !== 'string' || kn.regla.length > 300) return false;
+      if (typeof kn.fuente !== 'string' || kn.fuente.length > 200) return false;
+    }
+  }
   // Cinturón extra: el payload serializado completo, acotado.
-  return JSON.stringify(p).length <= 4000;
+  return JSON.stringify(p).length <= 9000;
 }
 
 Deno.serve(async (req) => {
@@ -101,16 +121,17 @@ Deno.serve(async (req) => {
   if (!apiKey) return json(503, { error: 'no-key' });
   const model = Deno.env.get('GROQ_MODEL') ?? 'llama-3.3-70b-versatile';
 
+  const isQuestion = typeof (payload as Record<string, unknown>).pregunta === 'string';
   const groqRes = await fetch(GROQ_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
       temperature: 0.4,
-      max_tokens: 300,
+      max_tokens: isQuestion ? 400 : 300,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: INSTRUCTION },
+        { role: 'system', content: isQuestion ? QUESTION_INSTRUCTION : INSTRUCTION },
         { role: 'user', content: JSON.stringify(payload) },
       ],
     }),

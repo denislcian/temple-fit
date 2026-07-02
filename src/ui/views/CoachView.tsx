@@ -7,7 +7,12 @@ import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { buildCoachContext } from '../../domain/coach/coachContext';
-import { buildAdvicePayload, type AiAdvice } from '../../domain/coach/coachPrompt';
+import {
+  buildAdvicePayload,
+  buildQuestionPayload,
+  MAX_QUESTION_LENGTH,
+  type AiAdvice,
+} from '../../domain/coach/coachPrompt';
 import {
   composeCoachAdvice,
   evaluateCoach,
@@ -58,6 +63,12 @@ export function CoachView() {
   const [aiAdvice, setAiAdvice] = useState<AiAdvice | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState('');
+
+  // Habla con tu coach (preguntas ancladas al contexto + conocimiento citado).
+  const [question, setQuestion] = useState('');
+  const [chat, setChat] = useState<Array<{ q: string; a: AiAdvice }>>([]);
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatNote, setChatNote] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -115,6 +126,27 @@ export function CoachView() {
       );
     }
     setAiBusy(false);
+  }
+
+  async function askQuestion() {
+    const q = question.trim();
+    if (!ctx || !verdict || !q || chatBusy) return;
+    setChatBusy(true);
+    setChatNote('');
+    const result = await fetchAiAdvice(buildQuestionPayload(ctx, verdict, recs, goal, q));
+    if (result.ok) {
+      setChat((prev) => [...prev, { q, a: result.advice }]);
+      setQuestion('');
+    } else {
+      setChatNote(
+        result.reason === 'cuota'
+          ? 'Has llegado al límite diario de preguntas al coach. Mañana se renueva.'
+          : result.reason === 'invalido'
+            ? 'La respuesta no pasó la validación anti-invenciones. Reformula la pregunta e inténtalo de nuevo.'
+            : 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.',
+      );
+    }
+    setChatBusy(false);
   }
 
   const level = (ctx?.sessionCount ?? 0) < 16 ? 'principiante' : 'intermedio';
@@ -219,6 +251,61 @@ export function CoachView() {
               </button>
             </div>
           )}
+        </section>
+      )}
+
+      {/* Habla con tu coach: preguntas ancladas al contexto + conocimiento citado. */}
+      {aiAvailable && (
+        <section className="card" aria-labelledby="chat-heading">
+          <h2 id="chat-heading">Habla con tu coach</h2>
+          <p className="muted" style={{ marginTop: '0.25rem' }}>
+            Pregunta sobre tu entrenamiento (volumen, descansos, sueño, progresión…). Responde solo
+            con tus datos y reglas con estudio citado; nunca da consejo médico.
+          </p>
+
+          {chat.length > 0 && (
+            <ul className="coach-chat" aria-live="polite">
+              {chat.map((turn, i) => (
+                <li key={i}>
+                  <p className="coach-chat__q">{turn.q}</p>
+                  <p className="coach-chat__a">{turn.a.mensaje}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="field" style={{ marginTop: '0.6rem', marginBottom: 0 }}>
+            <label htmlFor="coach-question" className="visually-hidden">
+              Tu pregunta al coach
+            </label>
+            <input
+              id="coach-question"
+              className="input"
+              type="text"
+              maxLength={MAX_QUESTION_LENGTH}
+              placeholder="P. ej.: ¿cuánto descanso entre series para fuerza?"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void askQuestion();
+              }}
+            />
+          </div>
+          {chatNote && (
+            <p className="hint" role="status" style={{ marginTop: '0.4rem' }}>
+              {chatNote}
+            </p>
+          )}
+          <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn btn--small btn--primary"
+              onClick={askQuestion}
+              disabled={chatBusy || !question.trim()}
+            >
+              {chatBusy ? 'Pensando…' : 'Preguntar'}
+            </button>
+          </div>
         </section>
       )}
 
