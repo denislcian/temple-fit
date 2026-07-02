@@ -25,3 +25,6 @@ src/img/*
 # comprimidos en public/music/. La barra inicial ancla la regla a la raiz para
 # NO ignorar tambien public/music/ (donde viven los MP3 que usa la app).
 /music/
+
+# Estado local de la CLI de Supabase
+supabase/.temp/
