@@ -1,11 +1,13 @@
 // CAPA 3 · Interfaz — Coach adaptativo.
 // Siempre muestra el análisis determinista (funciona sin red y sin clave). Si
 // el usuario tiene clave de Gemini, ofrece un consejo redactado por IA encima.
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fetchAiAdvice, isCoachAiAvailable } from '../../data/coachAi';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { getAllSleepSessions } from '../../data/repositories/sleepRepo';
 import { buildCoachContext } from '../../domain/coach/coachContext';
+import { buildAdvicePayload, type AiAdvice } from '../../domain/coach/coachPrompt';
 import {
   composeCoachAdvice,
   evaluateCoach,
@@ -51,10 +53,28 @@ export function CoachView() {
   const [goal, setGoal] = useState<Goal>(
     () => (localStorage.getItem(COACH_GOAL_KEY) as Goal) || 'hipertrofia',
   );
+  // Consejo redactado por IA (proxy en Supabase; solo modo nube con sesión).
+  const [aiAvailable, setAiAvailable] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState<AiAdvice | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiNote, setAiNote] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    void isCoachAiAvailable().then((ok) => {
+      if (alive) setAiAvailable(ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   function changeGoal(g: string) {
     const next = (GOALS.includes(g as Goal) ? g : 'hipertrofia') as Goal;
     setGoal(next);
     localStorage.setItem(COACH_GOAL_KEY, next);
+    setAiAdvice(null);
+    setAiNote('');
   }
 
   const today = localDateISO();
@@ -77,6 +97,25 @@ export function CoachView() {
     () => (ctx && verdict ? composeCoachAdvice(ctx, verdict, recs, goal) : null),
     [ctx, verdict, recs, goal],
   );
+
+  async function askAi() {
+    if (!ctx || !verdict || aiBusy) return;
+    setAiBusy(true);
+    setAiNote('');
+    const result = await fetchAiAdvice(buildAdvicePayload(ctx, verdict, recs, goal));
+    if (result.ok) {
+      setAiAdvice(result.advice);
+    } else {
+      setAiNote(
+        result.reason === 'cuota'
+          ? 'Has llegado al límite diario de consejos con IA. Sigues con el consejo del motor local.'
+          : result.reason === 'invalido'
+            ? 'La respuesta de la IA no pasó la validación anti-invenciones; se mantiene el consejo local.'
+            : 'No se pudo conectar con la IA; sigues con el consejo del motor local.',
+      );
+    }
+    setAiBusy(false);
+  }
 
   const level = (ctx?.sessionCount ?? 0) < 16 ? 'principiante' : 'intermedio';
   const days = Math.min(6, Math.max(2, Math.round(ctx?.sessionsPerWeek || 3)));
@@ -149,19 +188,37 @@ export function CoachView() {
         </SelectField>
       </div>
 
-      {/* Consejo personalizado, redactado EN LOCAL (sin IA, sin red, sin descargas). */}
+      {/* Consejo personalizado: siempre el del motor local; en modo nube con
+          sesión puede redactarlo la IA (los números y citas siguen siendo del motor). */}
       {advice && (
         <section className="card card--accent" aria-labelledby="ai-heading">
           <h2 id="ai-heading">Consejo personalizado</h2>
-          {advice.foco && (
+          {(aiAdvice ?? advice).foco && (
             <p className="coach-foco">
               <span className="coach-foco__icon" aria-hidden="true">
                 {TargetIcon}
               </span>{' '}
-              {advice.foco}
+              {(aiAdvice ?? advice).foco}
             </p>
           )}
-          <p style={{ margin: '0.5rem 0 0' }}>{advice.mensaje}</p>
+          <p style={{ margin: '0.5rem 0 0' }}>{(aiAdvice ?? advice).mensaje}</p>
+          {aiAdvice && (
+            <p className="meta" style={{ marginTop: '0.4rem' }}>
+              Redactado con IA — los datos, reglas y citas son del motor local.
+            </p>
+          )}
+          {aiNote && (
+            <p className="hint" role="status" style={{ marginTop: '0.4rem' }}>
+              {aiNote}
+            </p>
+          )}
+          {aiAvailable && (
+            <div className="btn-row" style={{ marginTop: '0.6rem' }}>
+              <button type="button" className="btn btn--small" onClick={askAi} disabled={aiBusy}>
+                {aiBusy ? 'Redactando…' : aiAdvice ? 'Redactar de nuevo' : 'Redactar con IA'}
+              </button>
+            </div>
+          )}
         </section>
       )}
 

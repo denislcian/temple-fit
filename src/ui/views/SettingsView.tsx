@@ -285,9 +285,12 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
         <p className="muted">
           El Coach es <strong>global y no hay nada que configurar ni que descargar</strong>: cruza tu
           RPE, volumen, frecuencia y descanso para darte un veredicto, recomendaciones con su base
-          científica, un consejo redactado al momento y un programa que te encaja. Todo el cálculo es{' '}
-          <strong>local, instantáneo y offline</strong> — sin clave, sin cuenta y sin que ningún dato
-          salga de aquí. Lo tienes en la pantalla <a href="#/coach">Coach</a>.
+          científica (cada una con su estudio citado), un consejo redactado al momento y un programa
+          que te encaja. Todo el cálculo es <strong>local, instantáneo y offline</strong>. Con cuenta
+          (modo nube) puedes además pedir que una IA <strong>redacte</strong> el consejo: solo se
+          envían datos agregados (RPE medio, sesiones por semana, horas de sueño — nunca tu nombre ni
+          medidas), los números y citas siguen siendo del motor local, y el proveedor no entrena con
+          esos datos. Lo tienes en la pantalla <a href="#/coach">Coach</a>.
         </p>
       </section>
 

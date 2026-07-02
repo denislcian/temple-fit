@@ -6,7 +6,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'dev-dist', 'node_modules'] },
+  // supabase/functions es código Deno (imports npm:/URL y global Deno): fuera del lint del front.
+  { ignores: ['dist', 'coverage', 'dev-dist', 'node_modules', 'supabase/functions'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
