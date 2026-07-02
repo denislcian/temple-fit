@@ -47,6 +47,14 @@ export interface CoachContext {
   exerciseSignals: ExerciseSignal[];
   /** Índice de fatiga 0-10 (combina RPE, sueño y densidad de sesiones). */
   fatigueScore: number;
+  /** Sesiones de los últimos 7 días (ventana de las señales siguientes). */
+  sessions7d: number;
+  /** De esas, cuántas registraron al menos una serie de calentamiento. */
+  warmupSessions7d: number;
+  /** Duración media (min) de las sesiones de los últimos 7 días, o null. */
+  avgDurationMin7d: number | null;
+  /** ¿Alguna sesión reciente usó superseries (supersetGroup)? */
+  usedSupersets7d: boolean;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -166,6 +174,16 @@ export function buildCoachContext(input: CoachContextInput): CoachContext {
   const daysSinceLastSession = lastSession ? daysBetween(todayISO, lastSession.date) : null;
   const sessionsPerWeek = last28.length / 4;
 
+  // Señales de calentamiento, duración y superseries (ventana de 7 días).
+  const warmupSessions7d = last7.filter((s) =>
+    s.entries.some((e) => e.sets.some((set) => set.type === 'calentamiento')),
+  ).length;
+  const durations = last7
+    .map((s) => s.durationMin)
+    .filter((d): d is number => typeof d === 'number' && d > 0);
+  const avgDurationMin7d = avg(durations);
+  const usedSupersets7d = last7.some((s) => s.entries.some((e) => e.supersetGroup !== undefined));
+
   // Índice de fatiga 0-10: RPE alto, sueño bajo y mucha densidad suman fatiga.
   let fatigue = 0;
   if (avgRpe7d !== null) fatigue += Math.max(0, (avgRpe7d - 7) * 2); // 0..6
@@ -191,6 +209,10 @@ export function buildCoachContext(input: CoachContextInput): CoachContext {
     weeksContinuous,
     exerciseSignals,
     fatigueScore,
+    sessions7d: last7.length,
+    warmupSessions7d,
+    avgDurationMin7d: avgDurationMin7d === null ? null : Math.round(avgDurationMin7d),
+    usedSupersets7d,
   };
 }
 

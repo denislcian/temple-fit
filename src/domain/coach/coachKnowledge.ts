@@ -13,17 +13,44 @@ export interface CoachSource {
   url: string;
 }
 
-/** Fuentes citadas (guías/meta-análisis reconocidos, acceso público). */
+/** Fuentes citadas. Todas verificadas contra su DOI/PubMed (título, autores y
+ *  año comprobados) salvo rpLandmarks, que es un marco práctico divulgativo y
+ *  se etiqueta como tal. */
 export const SOURCES = {
-  acsm2026: {
-    autor: 'ACSM, guía de entrenamiento de fuerza',
-    anio: 2026,
-    url: 'https://acsm.org/resistance-training-guidelines-update-2026/',
+  acsm2009: {
+    autor: 'ACSM Position Stand: progresión en entrenamiento de fuerza (Ratamess et al.)',
+    anio: 2009,
+    url: 'https://doi.org/10.1249/MSS.0b013e3181915670',
+  },
+  schoenfeld2016: {
+    autor: 'Schoenfeld et al. (frecuencia semanal, meta-análisis)',
+    anio: 2016,
+    url: 'https://doi.org/10.1007/s40279-016-0543-8',
   },
   schoenfeld2017: {
     autor: 'Schoenfeld et al. (dosis-respuesta de volumen)',
     anio: 2017,
     url: 'https://pubmed.ncbi.nlm.nih.gov/28755103/',
+  },
+  schoenfeld2021: {
+    autor: 'Schoenfeld et al. (continuo de repeticiones y cargas)',
+    anio: 2021,
+    url: 'https://doi.org/10.3390/sports9020032',
+  },
+  grgic2018: {
+    autor: 'Grgic et al. (descansos entre series, revisión sistemática)',
+    anio: 2018,
+    url: 'https://doi.org/10.1007/s40279-017-0788-x',
+  },
+  zourdos2016: {
+    autor: 'Zourdos et al. (escala RPE/RIR para fuerza, validación)',
+    anio: 2016,
+    url: 'https://doi.org/10.1519/JSC.0000000000001049',
+  },
+  helms2016: {
+    autor: 'Helms et al. (prescripción por RIR)',
+    anio: 2016,
+    url: 'https://doi.org/10.1519/SSC.0000000000000218',
   },
   robinson2024: {
     autor: 'Robinson et al. (proximidad al fallo / RIR)',
@@ -35,8 +62,28 @@ export const SOURCES = {
     anio: 2023,
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10809978/',
   },
+  vitale2019: {
+    autor: 'Vitale et al. (sueño y rendimiento en atletas, revisión)',
+    anio: 2019,
+    url: 'https://doi.org/10.1055/a-0905-3103',
+  },
+  watson2015: {
+    autor: 'Watson et al., consenso AASM/SRS (≥7 h de sueño en adultos)',
+    anio: 2015,
+    url: 'https://doi.org/10.5664/jcsm.4758',
+  },
+  iversen2021: {
+    autor: 'Iversen et al. (entrenamiento eficiente en tiempo: superseries)',
+    anio: 2021,
+    url: 'https://doi.org/10.1007/s40279-021-01490-1',
+  },
+  fradkin2010: {
+    autor: 'Fradkin et al. (calentamiento y rendimiento, meta-análisis)',
+    anio: 2010,
+    url: 'https://doi.org/10.1519/JSC.0b013e3181c643a0',
+  },
   rpLandmarks: {
-    autor: 'Renaissance Periodization (landmarks de volumen MEV/MAV/MRV)',
+    autor: 'Renaissance Periodization (landmarks MEV/MAV/MRV; marco práctico, no revisado por pares)',
     anio: 2024,
     url: 'https://rpstrength.com/blogs/articles/training-volume-landmarks-muscle-growth',
   },
@@ -107,17 +154,20 @@ export const GOAL_PRESCRIPTION: Record<Goal, GoalPrescription> = {
 
 /** Umbrales de las reglas (un único sitio para revisarlos/versionarlos). */
 export const THRESHOLDS = {
-  /** RPE a partir del cual una serie se considera "al límite". */
+  /** RPE a partir del cual una serie se considera "al límite" (escala RPE/RIR
+   *  validada: RPE 9 = 1 repetición en reserva — zourdos2016). */
   rpeAltoSesion: 9,
-  /** RPE por debajo del cual hay margen para progresar. */
+  /** RPE por debajo del cual hay margen para progresar (helms2016). */
   rpeBajo: 7,
-  /** Horas de sueño objetivo por debajo de las cuales se baja la intensidad. */
+  /** Sueño objetivo: ≥7 h/noche en adultos (consenso AASM/SRS — watson2015). */
   suenoObjetivoMin: 7 * 60,
   suenoBajoMin: 6 * 60,
   /** Semanas de entrenamiento continuo tras las que conviene una descarga. */
   semanasParaDeload: 6,
-  /** Frecuencia mínima recomendada por músculo (veces/semana). */
+  /** Frecuencia mínima recomendada por músculo (veces/semana — schoenfeld2016). */
   frecuenciaMin: 2,
+  /** Duración media a partir de la cual proponemos superseries (iversen2021). */
+  sesionLargaMin: 75,
 } as const;
 
 /** Las heurísticas como datos (documentación + base del prompt de IA). */
@@ -138,8 +188,8 @@ export const HEURISTICS: Heuristic[] = [
   {
     id: 'progresion-doble',
     titulo: 'Doble progresión',
-    regla: 'Si completas el techo de repeticiones en todas las series con RPE <8, sube la carga (~2,5 kg aislamiento / ~5 kg compuesto).',
-    fuente: 'acsm2026',
+    regla: 'Si completas el techo de repeticiones en todas las series con RPE <8, sube la carga un 2-10% (~2,5 kg aislamiento / ~5 kg compuesto).',
+    fuente: 'acsm2009',
   },
   {
     id: 'volumen-bajo',
@@ -157,7 +207,7 @@ export const HEURISTICS: Heuristic[] = [
     id: 'frecuencia',
     titulo: 'Frecuencia semanal',
     regla: 'Entrenar cada músculo ≥2 veces/semana reparte mejor el volumen que 1 sola.',
-    fuente: 'schoenfeld2017',
+    fuente: 'schoenfeld2016',
   },
   {
     id: 'deload',
@@ -168,8 +218,38 @@ export const HEURISTICS: Heuristic[] = [
   {
     id: 'sueno',
     titulo: 'Ajuste por sueño',
-    regla: 'Con sueño medio por debajo del objetivo, baja 10-20% el volumen/intensidad de la sesión.',
-    fuente: 'acsm2026',
+    regla: 'Con sueño medio por debajo del objetivo (7 h), baja 10-20% el volumen/intensidad de la sesión.',
+    fuente: 'vitale2019',
+  },
+  {
+    id: 'descansos',
+    titulo: 'Descansos entre series',
+    regla: 'Para fuerza en entrenados, descansa >2 min entre series; con descansos cortos (45-90 s) las ganancias siguen siendo robustas en hipertrofia/definición.',
+    fuente: 'grgic2018',
+  },
+  {
+    id: 'rpe-escala',
+    titulo: 'Escala RPE/RIR',
+    regla: 'El RPE 6-10 anclado en repeticiones en reserva (RPE 9 = 1 RIR, RPE 10 = 0 RIR) es una medida válida de intensidad serie a serie.',
+    fuente: 'zourdos2016',
+  },
+  {
+    id: 'cargas-objetivo',
+    titulo: 'Cargas por objetivo',
+    regla: 'La fuerza requiere cargas altas (≥80% 1RM); la hipertrofia se logra en un espectro amplio de cargas si las series se acercan al fallo.',
+    fuente: 'schoenfeld2021',
+  },
+  {
+    id: 'calentamiento',
+    titulo: 'Calentamiento',
+    regla: 'Calentar antes de las series efectivas mejora el rendimiento en la gran mayoría de los casos analizados (79%).',
+    fuente: 'fradkin2010',
+  },
+  {
+    id: 'superseries',
+    titulo: 'Superseries para ahorrar tiempo',
+    regla: 'Agrupar ejercicios en superserie mantiene las ganancias de fuerza e hipertrofia reduciendo la duración de la sesión.',
+    fuente: 'iversen2021',
   },
 ];
 

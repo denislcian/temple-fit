@@ -10,7 +10,16 @@ export type CoachTone = 'positivo' | 'info' | 'ajuste' | 'alerta';
 
 export interface CoachRecommendation {
   id: string;
-  kind: 'fatiga' | 'sueno' | 'deload' | 'volumen' | 'frecuencia' | 'progresion' | 'objetivo' | 'datos';
+  kind:
+    | 'fatiga'
+    | 'sueno'
+    | 'deload'
+    | 'volumen'
+    | 'frecuencia'
+    | 'progresion'
+    | 'tecnica'
+    | 'objetivo'
+    | 'datos';
   tone: CoachTone;
   titulo: string;
   detalle: string;
@@ -98,15 +107,15 @@ export function evaluateCoach(ctx: CoachContext, goal: Goal): CoachRecommendatio
     });
   }
 
-  // 2) Ajuste por sueño bajo.
+  // 2) Ajuste por sueño bajo (objetivo ≥7 h: consenso AASM/SRS).
   if (ctx.avgSleepMin !== null && ctx.avgSleepMin < THRESHOLDS.suenoBajoMin) {
     recs.push({
       id: 'sueno-bajo',
       kind: 'sueno',
       tone: 'ajuste',
       titulo: 'Tu descanso está bajo',
-      detalle: `Has dormido una media de ${SLEEP_FMT(ctx.avgSleepMin)}. Baja un 10-20% el volumen o la intensidad de hoy; la recuperación manda.`,
-      fuente: citation('acsm2026'),
+      detalle: `Has dormido una media de ${SLEEP_FMT(ctx.avgSleepMin)} (objetivo: 7 h o más). Baja un 10-20% el volumen o la intensidad de hoy; la recuperación manda.`,
+      fuente: `${citation('vitale2019')} · ${citation('watson2015')}`,
     });
   }
 
@@ -122,7 +131,7 @@ export function evaluateCoach(ctx: CoachContext, goal: Goal): CoachRecommendatio
     });
   }
 
-  // 4) Progresión: ejercicios listos para subir peso.
+  // 4) Progresión: ejercicios listos para subir peso (+2-10%, ACSM 2009).
   const ready = ctx.exerciseSignals.filter((e) => e.readyToProgress).slice(0, 3);
   for (const e of ready) {
     const inc = e.isCompound ? '~5 kg' : '~2,5 kg';
@@ -131,8 +140,8 @@ export function evaluateCoach(ctx: CoachContext, goal: Goal): CoachRecommendatio
       kind: 'progresion',
       tone: 'positivo',
       titulo: `Sube peso en ${e.name}`,
-      detalle: `Completaste todas las series con holgura. Sube ${inc} la próxima vez (doble progresión).`,
-      fuente: citation('acsm2026'),
+      detalle: `Completaste todas las series con holgura. Sube ${inc} la próxima vez (doble progresión, +2-10%).`,
+      fuente: citation('acsm2009'),
     });
   }
 
@@ -175,7 +184,37 @@ export function evaluateCoach(ctx: CoachContext, goal: Goal): CoachRecommendatio
       tone: 'info',
       titulo: `Reparte ${m.muscle} en 2 días`,
       detalle: `Entrenas ${m.muscle} 1 vez por semana. Repartir el mismo volumen en 2 días suele rendir más y fatiga menos cada sesión.`,
-      fuente: citation('schoenfeld2017'),
+      fuente: citation('schoenfeld2016'),
+    });
+  }
+
+  // 6b) Calentamiento: si esta semana ninguna sesión registró series de
+  // calentamiento, recuérdalo (mejora el rendimiento en la mayoría de casos).
+  if (ctx.sessions7d >= 2 && ctx.warmupSessions7d === 0) {
+    recs.push({
+      id: 'calentamiento',
+      kind: 'tecnica',
+      tone: 'info',
+      titulo: 'Calienta antes de las series efectivas',
+      detalle:
+        'Ninguna sesión de esta semana registró series de calentamiento. Unas series ligeras previas (márcalas como "calentamiento" en la serie) mejoran el rendimiento en la gran mayoría de los casos estudiados.',
+      fuente: citation('fradkin2010'),
+    });
+  }
+
+  // 6c) Superseries: sesiones largas sin usar la agrupación → ahorro de tiempo.
+  if (
+    ctx.avgDurationMin7d !== null &&
+    ctx.avgDurationMin7d >= THRESHOLDS.sesionLargaMin &&
+    !ctx.usedSupersets7d
+  ) {
+    recs.push({
+      id: 'superseries',
+      kind: 'tecnica',
+      tone: 'info',
+      titulo: 'Ahorra tiempo con superseries',
+      detalle: `Tus sesiones duran ~${ctx.avgDurationMin7d} min de media. Agrupar dos ejercicios en superserie (botón de cadena en Entrenar) mantiene las ganancias de fuerza e hipertrofia en menos tiempo.`,
+      fuente: citation('iversen2021'),
     });
   }
 
@@ -205,7 +244,8 @@ function prescriptionRec(goal: Goal): CoachRecommendation {
     tone: 'info',
     titulo: 'Tu pauta para este objetivo',
     detalle: `${p.repsMin}-${p.repsMax} reps al ${p.loadPctMin}-${p.loadPctMax}% del 1RM, RIR ${p.rir}, descanso ${p.rest}. ${p.enfoque}`,
-    fuente: citation('acsm2026'),
+    // Cargas/reps (continuo de repeticiones), descansos y RIR: cada pieza con su fuente.
+    fuente: `${citation('schoenfeld2021')} · ${citation('grgic2018')} · ${citation('helms2016')}`,
   };
 }
 
@@ -233,12 +273,14 @@ export function composeCoachAdvice(
     };
   }
 
-  // La acción más relevante: alerta > ajuste > positivo > info, dejando fuera la
-  // pauta de objetivo y las invitaciones a registrar datos (son de referencia).
+  // Las acciones más relevantes: alerta > ajuste > positivo > info, dejando
+  // fuera la pauta de objetivo y las invitaciones a registrar datos.
   const RANK: Record<CoachTone, number> = { alerta: 0, ajuste: 1, positivo: 2, info: 3 };
-  const top = recs
+  const actionable = recs
     .filter((r) => r.kind !== 'objetivo' && r.kind !== 'datos')
-    .sort((a, b) => RANK[a.tone] - RANK[b.tone])[0];
+    .sort((a, b) => RANK[a.tone] - RANK[b.tone]);
+  const top = actionable[0];
+  const second = actionable[1];
 
   const estado: Record<CoachVerdict['estado'], string> = {
     cargado: 'Hoy vienes cargado, así que la prioridad es recuperar antes que sumar',
@@ -257,6 +299,10 @@ export function composeCoachAdvice(
   const punta = top
     ? ` Lo primero a atender: ${lowerFirst(top.titulo)} — lo tienes detallado justo abajo.`
     : ' Mantén la pauta y registra cómo te sientan las series.';
+  const segunda = second ? ` Después, ${lowerFirst(second.titulo)}.` : '';
 
-  return { foco, mensaje: `${estado[verdict.estado]}.${punta} Recuerda que ${objetivo[goal]}.` };
+  return {
+    foco,
+    mensaje: `${estado[verdict.estado]}.${punta}${segunda} Recuerda que ${objetivo[goal]}.`,
+  };
 }

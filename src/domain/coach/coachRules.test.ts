@@ -16,7 +16,7 @@ function set(reps: number, weightKg: number, rpe?: number): WorkoutSet {
   return { reps, weightKg, done: true, ...(rpe !== undefined ? { rpe } : {}) };
 }
 
-function session(date: string, entries: Array<{ exerciseId: string; sets: WorkoutSet[] }>): Session {
+function session(date: string, entries: Session['entries']): Session {
   return { id: `s-${date}-${Math.round(Math.random() * 1e6)}`, date, entries };
 }
 
@@ -113,6 +113,63 @@ describe('coach: reglas', () => {
     const c = ctx([session(daysAgo(1), [{ exerciseId: 'press-banca', sets: [set(8, 60)] }])]);
     expect(c.rpeSampleSize).toBe(0);
     expect(evaluateCoach(c, 'fuerza').some((r) => r.id === 'datos-rpe')).toBe(true);
+  });
+
+  it('semana sin series de calentamiento → recuerda calentar (Fradkin 2010)', () => {
+    const c = ctx([
+      session(daysAgo(1), [{ exerciseId: 'press-banca', sets: [set(8, 60, 7)] }]),
+      session(daysAgo(3), [{ exerciseId: 'press-banca', sets: [set(8, 60, 7)] }]),
+    ]);
+    expect(c.warmupSessions7d).toBe(0);
+    const rec = evaluateCoach(c, 'hipertrofia').find((r) => r.id === 'calentamiento');
+    expect(rec?.fuente).toContain('Fradkin');
+  });
+
+  it('con series de calentamiento registradas NO aparece el aviso', () => {
+    const warm: WorkoutSet = { reps: 10, weightKg: 20, done: true, type: 'calentamiento' };
+    const c = ctx([
+      session(daysAgo(1), [{ exerciseId: 'press-banca', sets: [warm, set(8, 60, 7)] }]),
+      session(daysAgo(3), [{ exerciseId: 'press-banca', sets: [warm, set(8, 60, 7)] }]),
+    ]);
+    expect(c.warmupSessions7d).toBe(2);
+    expect(evaluateCoach(c, 'hipertrofia').some((r) => r.id === 'calentamiento')).toBe(false);
+  });
+
+  it('sesiones largas sin superseries → sugiere superseries (Iversen 2021)', () => {
+    const c = ctx([
+      { ...session(daysAgo(1), [{ exerciseId: 'press-banca', sets: [set(8, 60, 7)] }]), durationMin: 95 },
+      { ...session(daysAgo(3), [{ exerciseId: 'press-banca', sets: [set(8, 60, 7)] }]), durationMin: 85 },
+    ]);
+    expect(c.avgDurationMin7d).toBe(90);
+    const rec = evaluateCoach(c, 'hipertrofia').find((r) => r.id === 'superseries');
+    expect(rec?.fuente).toContain('Iversen');
+  });
+
+  it('si ya usa superseries no se sugiere', () => {
+    const c = ctx([
+      {
+        ...session(daysAgo(1), [
+          { exerciseId: 'press-banca', sets: [set(8, 60, 7)], supersetGroup: 1 },
+          { exerciseId: 'curl-mancuernas', sets: [set(10, 12, 7)], supersetGroup: 1 },
+        ]),
+        durationMin: 95,
+      },
+    ]);
+    expect(c.usedSupersets7d).toBe(true);
+    expect(evaluateCoach(c, 'hipertrofia').some((r) => r.id === 'superseries')).toBe(false);
+  });
+
+  it('las citas del coach ya no usan el placeholder acsm2026', () => {
+    const hard = [set(5, 100, 9), set(5, 100, 10)];
+    const c = ctx([
+      session(daysAgo(0), [{ exerciseId: 'press-banca', sets: hard }]),
+      session(daysAgo(2), [{ exerciseId: 'curl-mancuernas', sets: [set(12, 10, 6)] }]),
+    ]);
+    for (const goal of ['fuerza', 'hipertrofia', 'definicion'] as const) {
+      for (const rec of evaluateCoach(c, goal)) {
+        expect(rec.fuente ?? '').not.toContain('2026');
+      }
+    }
   });
 });
 
