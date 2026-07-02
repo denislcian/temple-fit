@@ -10,6 +10,8 @@
      Contrastes verificados AA (4.5:1 texto, 3:1 UI). El oscuro "gimnasio" vive
      en [data-theme='dark']. */
   --bg: #f4f8f5; /* blanco con un punto de verde */
+  /* Línea de la cuadrícula de fondo (papel de libreta). Muy sutil. */
+  --grid-line: color-mix(in srgb, var(--border) 55%, transparent);
   --bg-glow: rgba(5, 150, 105, 0.05);
   --surface: #ffffff; /* nivel 1: tarjetas, blanco puro */
   --surface-2: #eef3f0; /* nivel 2: stat, nota */
@@ -76,6 +78,7 @@
   /* Tema oscuro "gimnasio": fondo gris hierro (no negro puro: evita halation),
      brasa naranja y acero templado. Disponible con el botón sol/luna. */
   --bg: #14161a;
+  --grid-line: color-mix(in srgb, var(--border) 38%, transparent);
   --bg-glow: rgba(249, 115, 22, 0.07);
   --surface: #181b21;
   --surface-2: #21252d;
@@ -143,9 +146,13 @@ body {
 
 body {
   margin: 0;
-  /* Estilo "libreta": fondo plano y simple; la estructura la dan los
-     recuadros (tarjetas con borde), no atmósferas ni sombras. */
-  background: var(--bg);
+  /* Estilo "libreta": papel CUADRICULADO sutil de fondo; la estructura la dan
+     los recuadros (tarjetas con borde) apoyados sobre él. */
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--bg);
+  background-size: 24px 24px;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 1rem;
