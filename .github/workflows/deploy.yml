@@ -31,6 +31,12 @@ jobs:
         run: npm ci
 
       - name: Build de producción
+        # Con los secrets configurados, la web publicada compila en modo NUBE
+        # (login + comunidad + consejo IA). Sin ellos, compila en modo local.
+        # La anon key es pública por diseño: la autorización la impone RLS.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
