@@ -16,7 +16,11 @@
 // ADVICE_INSTRUCTION en src/domain/coach/coachPrompt.ts.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const DAILY_LIMIT = 20;
+// Cuotas diarias de IA por plan. El plan premium se activa poniendo
+// profiles.premium_until en el futuro (ver migration-premium.sql); la pasarela
+// de pago que lo haga automáticamente llega aparte.
+const FREE_DAILY_LIMIT = 20;
+const PREMIUM_DAILY_LIMIT = 200;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const CORS = {
@@ -97,14 +101,24 @@ Deno.serve(async (req) => {
   } = await userClient.auth.getUser();
   if (!user) return json(401, { error: 'auth' });
 
-  // 2) Cuota diaria por usuario (RPC security definer; ver migration-coach-ia.sql).
+  // 2) Cuota diaria por usuario según plan (RPC security definer; ver
+  //    migration-coach-ia.sql y migration-premium.sql).
   const admin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const { data: prof } = await admin
+    .from('profiles')
+    .select('premium_until')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const premiumUntil = (prof as { premium_until?: string | null } | null)?.premium_until;
+  const isPremium = !!premiumUntil && new Date(premiumUntil).getTime() > Date.now();
+  const limit = isPremium ? PREMIUM_DAILY_LIMIT : FREE_DAILY_LIMIT;
+
   const { data: usage, error: usageError } = await admin.rpc('coach_ai_increment', {
     p_user_id: user.id,
   });
   if (usageError) return json(500, { error: 'quota-check' });
-  if (typeof usage === 'number' && usage > DAILY_LIMIT) {
-    return json(429, { error: 'quota', limit: DAILY_LIMIT });
+  if (typeof usage === 'number' && usage > limit) {
+    return json(429, { error: 'quota', limit, plan: isPremium ? 'premium' : 'free' });
   }
 
   // 3) Payload anclado y acotado.
