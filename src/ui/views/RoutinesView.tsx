@@ -1,4 +1,5 @@
-// CAPA 3 · Interfaz — Rutinas (plantillas) ilimitadas.
+// CAPA 3 · Interfaz — Rutinas (plantillas). Gratis hasta FREE_ROUTINE_LIMIT;
+// ilimitadas en Premium (ver src/domain/premium.ts).
 // Reordenar con botones "subir/bajar" accesibles por teclado en lugar de
 // solo arrastre (WCAG 2.2 · 2.5.7 Dragging Movements + 2.1.1 Teclado).
 import { useCallback, useState } from 'react';
@@ -10,6 +11,8 @@ import {
   removeRoutine,
   updateRoutine,
 } from '../../data/repositories/routineRepo';
+import { getPremiumStatus } from '../../data/premium';
+import { canAddRoutines, routineLimitMessage } from '../../domain/premium';
 import { useAnnounce } from '../components/Announcer';
 import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { EmptyState } from '../components/EmptyState';
@@ -57,7 +60,16 @@ export function RoutinesView() {
     setNameError(undefined);
   }
 
+  /** Freemium: ¿cabe una rutina más en el plan gratis? Anuncia el límite si no. */
+  async function guardAddOne(): Promise<boolean> {
+    const { premium } = await getPremiumStatus();
+    const gate = canAddRoutines(routines?.length ?? 0, 1, premium);
+    if (!gate.allowed) announce(routineLimitMessage(1));
+    return gate.allowed;
+  }
+
   async function duplicate(routine: Routine) {
+    if (!(await guardAddOne())) return;
     await addRoutine({ name: `${routine.name} (copia)`, exerciseIds: [...routine.exerciseIds] });
     await reload();
     announce(`Rutina ${routine.name} duplicada`);
@@ -95,6 +107,10 @@ export function RoutinesView() {
       await updateRoutine(editor.routineId, { name, exerciseIds: editor.exerciseIds });
       announce(`Rutina ${name} actualizada`);
     } else {
+      if (!(await guardAddOne())) {
+        setNameError(routineLimitMessage(1));
+        return;
+      }
       await addRoutine({ name, exerciseIds: editor.exerciseIds });
       announce(`Rutina ${name} creada`);
     }
@@ -104,7 +120,7 @@ export function RoutinesView() {
 
   return (
     <>
-      <span className="kicker">Tus plantillas, sin límite</span>
+      <span className="kicker">Tus plantillas de entrenamiento</span>
       <h1 id="view-title" tabIndex={-1}>
         Rutinas
       </h1>

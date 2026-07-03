@@ -16,11 +16,11 @@
 // ADVICE_INSTRUCTION en src/domain/coach/coachPrompt.ts.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-// Cuotas diarias de IA por plan. El plan premium se activa poniendo
-// profiles.premium_until en el futuro (ver migration-premium.sql); la pasarela
-// de pago que lo haga automáticamente llega aparte.
-const FREE_DAILY_LIMIT = 20;
-const PREMIUM_DAILY_LIMIT = 200;
+// Cuotas diarias de IA por plan, ajustables sin redeploy vía secretos
+// (supabase secrets set FREE_DAILY_LIMIT=5). El premium se activa con
+// profiles.premium_until (webhook de Stripe o a mano; migration-premium.sql).
+const FREE_DAILY_LIMIT = Number(Deno.env.get('FREE_DAILY_LIMIT') ?? '20');
+const PREMIUM_DAILY_LIMIT = Number(Deno.env.get('PREMIUM_DAILY_LIMIT') ?? '200');
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const CORS = {

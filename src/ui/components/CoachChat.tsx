@@ -8,8 +8,10 @@
 import { useState } from 'react';
 import type { Exercise } from '../../data/models';
 import { fetchAiAdvice } from '../../data/coachAi';
-import { addRoutine } from '../../data/repositories/routineRepo';
+import { getPremiumStatus } from '../../data/premium';
+import { addRoutine, getAllRoutines } from '../../data/repositories/routineRepo';
 import { isRoutineRequest } from '../../domain/coach/chatIntent';
+import { canAddRoutines, routineLimitMessage } from '../../domain/premium';
 import type { CoachContext } from '../../domain/coach/coachContext';
 import {
   buildQuestionPayload,
@@ -92,6 +94,13 @@ export function CoachChat({ ctx, verdict, recs, goal, aiAvailable, exercises }: 
   }
 
   async function savePlan(turnIndex: number, plan: GeneratedPlan) {
+    // Freemium: el plan gratis guarda hasta FREE_ROUTINE_LIMIT rutinas.
+    const [existing, { premium }] = await Promise.all([getAllRoutines(), getPremiumStatus()]);
+    const gate = canAddRoutines(existing.length, plan.days.length, premium);
+    if (!gate.allowed) {
+      setTurns((prev) => [...prev, { kind: 'coach', text: routineLimitMessage(plan.days.length) }]);
+      return;
+    }
     for (const day of plan.days) {
       await addRoutine({
         name: `${plan.title} — ${day.name}`,

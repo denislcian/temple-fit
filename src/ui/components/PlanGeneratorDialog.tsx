@@ -3,7 +3,9 @@
 // este diálogo solo recoge opciones, muestra la vista previa y guarda.
 import { useState } from 'react';
 import type { Exercise } from '../../data/models';
-import { addRoutine } from '../../data/repositories/routineRepo';
+import { getPremiumStatus } from '../../data/premium';
+import { addRoutine, getAllRoutines } from '../../data/repositories/routineRepo';
+import { canAddRoutines, routineLimitMessage } from '../../domain/premium';
 import {
   generatePlan,
   type EquipmentProfile,
@@ -35,6 +37,7 @@ export function PlanGeneratorDialog({
   const [equipment, setEquipment] = useState<EquipmentProfile>('gimnasio');
   const [level, setLevel] = useState<Level>('principiante');
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
+  const [saveError, setSaveError] = useState('');
 
   const nameById = new Map(exercises.map((e) => [e.id, e.name]));
 
@@ -52,6 +55,15 @@ export function PlanGeneratorDialog({
 
   async function savePlan() {
     if (!plan) return;
+    // Freemium: el plan gratis guarda hasta FREE_ROUTINE_LIMIT rutinas.
+    const [existing, { premium }] = await Promise.all([getAllRoutines(), getPremiumStatus()]);
+    const gate = canAddRoutines(existing.length, plan.days.length, premium);
+    if (!gate.allowed) {
+      setSaveError(routineLimitMessage(plan.days.length));
+      announce('Límite de rutinas del plan gratis alcanzado');
+      return;
+    }
+    setSaveError('');
     for (const day of plan.days) {
       await addRoutine({
         name: `${plan.title} — ${day.name}`,
@@ -115,6 +127,11 @@ export function PlanGeneratorDialog({
               </ul>
             </div>
           ))}
+          {saveError && (
+            <p className="notice notice--error" role="alert">
+              {saveError}
+            </p>
+          )}
           <div className="btn-row">
             <button type="button" className="btn btn--primary" onClick={savePlan}>
               Guardar plan ({plan.days.length} rutinas)

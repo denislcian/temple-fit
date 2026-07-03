@@ -1,10 +1,13 @@
 // CAPA 3 · Interfaz — Ajustes: tema, propiedad de los datos y ayuda.
 // Export/import sin paywall: la queja nº 2 de los usuarios de apps
 // comerciales es el secuestro de sus datos.
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { diaryToCsv, exportBundle, importBundle, sessionsToCsv } from '../../data/exportImport';
 import { db } from '../../data/db';
 import { loadGeminiKey, saveGeminiKey } from '../../data/profile';
+import { getPremiumStatus, getUpgradeUrl, refreshPremiumStatus } from '../../data/premium';
+import { isSupabaseEnabled } from '../../data/supabase';
+import { FREE_ROUTINE_LIMIT } from '../../domain/premium';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { AccountCard } from '../components/AccountCard';
@@ -40,6 +43,29 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   );
   const { data: sessions } = useAsyncData(useCallback(() => getAllSessions(), []));
   const install = useInstallPrompt();
+
+  // Plan (freemium): estado premium + enlace de pago si está configurado.
+  const [premium, setPremium] = useState<{ premium: boolean; until: string | null } | null>(null);
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
+  const [premiumBusy, setPremiumBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void getPremiumStatus().then((s) => alive && setPremium(s));
+    void getUpgradeUrl().then((u) => alive && setUpgradeUrl(u));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function recheckPremium() {
+    setPremiumBusy(true);
+    refreshPremiumStatus();
+    const s = await getPremiumStatus();
+    setPremium(s);
+    setPremiumBusy(false);
+    announce(s.premium ? 'Premium activo' : 'Sigues en el plan gratis');
+  }
 
   async function exportJson() {
     const bundle = await exportBundle();
@@ -95,6 +121,50 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       <AccountCard />
 
       <ProfileCard />
+
+      <section className="card" aria-labelledby="plan-heading">
+        <h2 id="plan-heading">Tu plan</h2>
+        {premium?.premium ? (
+          <p className="muted">
+            <strong>Premium</strong> activo
+            {premium.until
+              ? ` hasta el ${new Date(premium.until).toLocaleDateString('es-ES')}`
+              : ''}
+            : rutinas ilimitadas y cuota ampliada del coach con IA. Gracias por apoyar TMPL.
+          </p>
+        ) : (
+          <p className="muted">
+            Plan <strong>gratis</strong>: registro, historial, nutrición y descanso sin límite;
+            hasta {FREE_ROUTINE_LIMIT} rutinas guardadas y cuota diaria del coach con IA.{' '}
+            <strong>Premium</strong> (2,99 €/mes · 24,99 €/año): rutinas ilimitadas y cuota IA
+            ampliada.
+          </p>
+        )}
+        <div className="btn-row">
+          {!premium?.premium && upgradeUrl && (
+            <a className="btn btn--primary" href={upgradeUrl} target="_blank" rel="noreferrer">
+              Hazte Premium
+            </a>
+          )}
+          {!premium?.premium && !upgradeUrl && (
+            <p className="hint" style={{ margin: 0 }}>
+              {isSupabaseEnabled
+                ? 'El pago estará disponible muy pronto.'
+                : 'Premium va ligado a tu cuenta (modo nube).'}
+            </p>
+          )}
+          {isSupabaseEnabled && (
+            <button
+              type="button"
+              className="btn btn--small btn--ghost"
+              onClick={recheckPremium}
+              disabled={premiumBusy}
+            >
+              {premiumBusy ? 'Comprobando…' : 'Ya he pagado — actualizar estado'}
+            </button>
+          )}
+        </div>
+      </section>
 
       <section className="card" aria-labelledby="goal-heading">
         <h2 id="goal-heading">Objetivo semanal</h2>
