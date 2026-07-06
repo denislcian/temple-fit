@@ -79,6 +79,37 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
     const at = alarmMode === 'hora' ? nextAlarm(alarm) : Date.now() + intervalMin * 60000;
     setWakeAt(at);
     tracker.start(at);
+    void checkBattery();
+  }
+
+  /** Aviso de batería baja al empezar la noche (Battery API, si existe). */
+  const [batteryNote, setBatteryNote] = useState('');
+  async function checkBattery() {
+    try {
+      const nav = navigator as Navigator & {
+        getBattery?: () => Promise<{
+          level: number;
+          charging: boolean;
+          addEventListener: (type: string, cb: () => void) => void;
+        }>;
+      };
+      const battery = await nav.getBattery?.();
+      if (!battery) return;
+      const update = () => {
+        if (!battery.charging && battery.level < 0.3) {
+          setBatteryNote(
+            `Batería al ${Math.round(battery.level * 100)} % — enchufa el móvil para que el registro aguante toda la noche.`,
+          );
+        } else {
+          setBatteryNote('');
+        }
+      };
+      update();
+      battery.addEventListener('chargingchange', update);
+      battery.addEventListener('levelchange', update);
+    } catch {
+      // Sin soporte (p. ej. iOS): sin aviso, sin ruido.
+    }
   }
 
   const snore = tracker.events.filter((e) => e.kind === 'ronquido').length;
@@ -106,9 +137,15 @@ export function SleepTracker({ onSaved }: { onSaved: () => void }) {
       <div className="sleep-night">
         <span className="sleep-clock num">{clock}</span>
         {ringing ? (
-          <p className="sleep-wake">⏰ ¡Buenos días!</p>
+          <p className="sleep-wake">Buenos días — hora de levantarse</p>
         ) : (
           <p className="muted">Alarma a las {wakeAt ? clockOf(wakeAt) : alarm} · pantalla encendida</p>
+        )}
+
+        {batteryNote && !ringing && (
+          <p className="notice notice--error" role="status">
+            {batteryNote}
+          </p>
         )}
 
         <div className="sleep-meter" aria-hidden="true">

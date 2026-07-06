@@ -2301,6 +2301,32 @@ legend {
   vertical-align: -2px;
 }
 
+/* Tarjeta "Hoy" de Entrenar: fecha, frase del día y qué toca. */
+.today-card {
+  border-left: 3px solid var(--accent);
+}
+.today-card__date {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.today-card__date::first-letter {
+  text-transform: uppercase;
+}
+.today-card__line {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: var(--accent-text);
+}
+.today-card__plan {
+  margin: 0.6rem 0 0;
+}
+
 /* Hilo de "Habla con tu coach": pregunta marcada, respuesta en recuadro. */
 .coach-chat {
   list-style: none;

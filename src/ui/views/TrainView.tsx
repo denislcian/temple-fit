@@ -14,6 +14,7 @@ import {
 } from '../../data/repositories/sessionRepo';
 import { weeklyStreak } from '../../domain/consistency';
 import { suggestProgression } from '../../domain/gymTools';
+import { motivationalLine, suggestToday } from '../../domain/today';
 import { beatsRecord, computeRecords } from '../../domain/records';
 import { sessionVolume, weeklyVolume, weekStartOf } from '../../domain/volume';
 import { useAnnounce } from '../components/Announcer';
@@ -296,6 +297,13 @@ export function TrainView() {
 
   if (!draft) {
     const today = localDateISO();
+    const suggestion = suggestToday(routines ?? [], sessions ?? [], today);
+    const line = motivationalLine(today);
+    const todayLabel = new Date(`${today}T12:00:00`).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
     const hasHistory = !!sessions && sessions.length > 0;
     const streak = hasHistory ? weeklyStreak(sessions, today) : null;
     // Misma referencia UTC que weekStartOf(session.date), para que una sesión
@@ -325,6 +333,40 @@ export function TrainView() {
             {finishedNotice}
           </p>
         )}
+
+        {/* Hoy: fecha, frase del día y qué toca (rotación sobre tus rutinas). */}
+        <section className="card today-card" aria-label="Tu día">
+          <span className="today-card__date">{todayLabel}</span>
+          <p className="today-card__line">«{line}»</p>
+          {suggestion.kind === 'rutina' && suggestion.routine && (
+            <>
+              <p className="today-card__plan">
+                Hoy toca: <strong>{suggestion.routine.name}</strong>
+                <span className="muted"> — {suggestion.reason}</span>
+              </p>
+              <div className="btn-row">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => startWorkout(suggestion.routine!.id)}
+                >
+                  Empezar {suggestion.routine.name}
+                </button>
+              </div>
+            </>
+          )}
+          {suggestion.kind === 'entrenado' && <p className="today-card__plan">{suggestion.reason}</p>}
+          {suggestion.kind === 'sin-rutinas' && (
+            <>
+              <p className="today-card__plan">{suggestion.reason}</p>
+              <div className="btn-row">
+                <a className="btn btn--primary" href="#/coach">
+                  Pedir mi rutina al coach
+                </a>
+              </div>
+            </>
+          )}
+        </section>
 
         {hasHistory && streak && (
           <div className="stat-grid" aria-label="Resumen de tu actividad">
