@@ -84,4 +84,18 @@ export interface Recipe {
   steps: string[];
   /** URL/dataURL de foto, opcional (futuro: subida de la comunidad). */
   image?: string;
+  /** Vídeo de YouTube (opcional). Se embebe bajo demanda (clic), nunca en carga. */
+  ytUrl?: string;
 }
+
+/** Receta creada por el usuario o guardada desde la comunidad. */
+export interface UserRecipe extends Recipe {
+  createdAt: string;
+  /** 'propia' = la creaste tú; 'comunidad' = guardada de una publicación. */
+  origin: 'propia' | 'comunidad';
+  /** Autoría original si vino de la comunidad. */
+  author?: string;
+}
+
+/** Lo que viaja en una publicación para que otra persona pueda GUARDAR la receta. */
+export type SharedRecipePayload = Omit<Recipe, 'id' | 'image'>;

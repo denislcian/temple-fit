@@ -7,8 +7,10 @@ import type { Post, Visibility } from '../../data/nutritionModels';
 import { VISIBILITY_LABELS } from '../../data/nutritionModels';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
 import { getPremiumStatus } from '../../data/premium';
+import type { SharedRecipePayload, UserRecipe } from '../../data/recipeModels';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { addRoutine, getAllRoutines } from '../../data/repositories/routineRepo';
+import { addUserRecipe, getAllUserRecipes } from '../../data/repositories/userRecipeRepo';
 import { resolveRoutineImport } from '../../domain/feedImport';
 import { canAddRoutines, routineLimitMessage } from '../../domain/premium';
 import { notificationsRepo } from '../../data/repositories/notificationsRepo';
@@ -49,6 +51,30 @@ const KIND_LABEL: Partial<Record<Post['kind'], string>> = {
   sueno: 'Sueño',
   meditacion: 'Meditación',
 };
+
+/** La receta del usuario, lista para viajar en una publicación (sin id ni
+ *  metadatos locales, para que quien la guarde cree SU copia). */
+function toSharedRecipe(r: UserRecipe): SharedRecipePayload {
+  return {
+    name: r.name,
+    emoji: r.emoji,
+    description: r.description,
+    difficulty: r.difficulty,
+    tip: r.tip,
+    category: r.category,
+    tags: r.tags,
+    minutes: r.minutes,
+    servings: r.servings,
+    servingG: r.servingG,
+    kcal: r.kcal,
+    proteinG: r.proteinG,
+    carbsG: r.carbsG,
+    fatG: r.fatG,
+    ingredients: r.ingredients,
+    steps: r.steps,
+    ...(r.ytUrl ? { ytUrl: r.ytUrl } : {}),
+  };
+}
 
 const timeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
 
@@ -104,6 +130,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const { data: posts, reload } = useAsyncData(useCallback(() => socialRepo.getFeed(), []));
   const { data: routines } = useAsyncData(useCallback(() => getAllRoutines(), []));
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
+  const { data: myRecipes } = useAsyncData(useCallback(() => getAllUserRecipes(), []));
   const { data: discover, reload: reloadDiscover } = useAsyncData(
     useCallback(() => socialRepo.discoverAccounts(myId), [myId]),
   );
@@ -246,6 +273,20 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
           recipeId: recipe.id,
         };
       }
+    } else if (attach.startsWith('mireceta:')) {
+      const recipe = (myRecipes ?? []).find((r) => r.id === attach.slice('mireceta:'.length));
+      if (recipe) {
+        kind = 'receta';
+        payload = {
+          title: recipe.name,
+          lines: [
+            `${recipe.minutes} min · ${recipe.servings} ${recipe.servings === 1 ? 'ración' : 'raciones'} · ${recipe.kcal} kcal · ${recipe.proteinG} g proteína`,
+            ...recipe.ingredients.map((i) => `${i.item} — ${i.amount}`),
+          ],
+          // La receta completa viaja en la publicación: quien la vea guarda SU copia.
+          recipe: toSharedRecipe(recipe),
+        };
+      }
     } else if (attach === 'foto' && photo) {
       kind = 'foto';
       image = photo;
@@ -345,6 +386,14 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         ? `Rutina guardada (${resolved.missing} ${resolved.missing === 1 ? 'ejercicio omitido' : 'ejercicios omitidos'} que no existen en tu catálogo)`
         : `Rutina "${post.payload.title}" guardada en tus rutinas`,
     );
+  }
+
+  /** Guardar en mis recetas una receta creada por otra persona de la comunidad. */
+  async function saveRecipeFromPost(post: Post) {
+    const shared = post.payload?.recipe;
+    if (!shared) return;
+    await addUserRecipe(shared, 'comunidad', post.author);
+    announce(`Receta "${shared.name}" guardada. La tienes en Recetas.`);
   }
 
   async function toggleFollow(target: Account) {
@@ -639,7 +688,18 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                   </button>
                 </div>
               )}
-              {post.kind === 'receta' && post.payload.recipeId && (
+              {post.kind === 'receta' && post.payload.recipe && (
+                <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn--small"
+                    onClick={() => void saveRecipeFromPost(post)}
+                  >
+                    Guardar en mis recetas
+                  </button>
+                </div>
+              )}
+              {post.kind === 'receta' && !post.payload.recipe && post.payload.recipeId && (
                 <div className="btn-row" style={{ marginTop: '0.5rem' }}>
                   <a
                     className="btn btn--small"
@@ -788,6 +848,13 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
               Rutina: {r.name}
             </option>
           ))}
+          {(myRecipes ?? [])
+            .filter((r) => r.origin === 'propia')
+            .map((r) => (
+              <option key={r.id} value={`mireceta:${r.id}`}>
+                Mi receta: {r.name}
+              </option>
+            ))}
           {RECIPE_CATALOG.map((r) => (
             <option key={r.id} value={`receta:${r.id}`}>
               Receta: {r.name}

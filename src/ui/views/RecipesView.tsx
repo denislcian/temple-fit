@@ -1,8 +1,10 @@
 // CAPA 3 · Interfaz — Recetas: catálogo filtrable con ingredientes, pasos y
-// macros. Se integra con la nutrición ("Añadir al diario").
-import { useEffect, useMemo, useState } from 'react';
+// macros, más las recetas del usuario (propias y guardadas de la comunidad).
+// Se integra con la nutrición ("Añadir al diario").
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Meal } from '../../data/nutritionModels';
 import { addDiaryEntryAbsolute } from '../../data/repositories/nutritionRepo';
+import { getAllUserRecipes, removeUserRecipe } from '../../data/repositories/userRecipeRepo';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
 import { RECIPE_PHOTO_CREDITS } from '../../data/recipePhotoCredits';
 import {
@@ -14,11 +16,15 @@ import {
   type Recipe,
   type RecipeCategory,
   type RecipeTag,
+  type UserRecipe,
 } from '../../data/recipeModels';
+import { parseYouTubeId, youTubeEmbedUrl } from '../../domain/youtube';
 import { useAnnounce } from '../components/Announcer';
-import { AppDialog } from '../components/AppDialog';
+import { AppDialog, ConfirmDialog } from '../components/AppDialog';
 import { UtensilsIcon } from '../components/icons';
+import { RecipeEditorDialog } from '../components/RecipeEditorDialog';
 import { SelectField, TextField } from '../components/Field';
+import { useAsyncData } from '../hooks/useAsyncData';
 import { localDateISO } from '../utils/format';
 
 const MAX_TIMES = [10, 15, 30];
@@ -42,25 +48,55 @@ function mealFor(category: RecipeCategory): Meal {
   return category === 'postre' ? 'snack' : category;
 }
 
+/** ¿Es una receta del usuario (propia o guardada de la comunidad)? */
+function isUserRecipe(r: Recipe): r is UserRecipe {
+  return 'origin' in r;
+}
+
 export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
   const announce = useAnnounce();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [tag, setTag] = useState('');
   const [maxMin, setMaxMin] = useState('');
-  // Enlace profundo #/recetas/<id> (p. ej. "Ver la receta completa" desde el feed).
-  const [detail, setDetail] = useState<Recipe | null>(
-    () => RECIPE_CATALOG.find((r) => r.id === recipeId) ?? null,
-  );
+  const [detail, setDetail] = useState<Recipe | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<UserRecipe | null>(null);
+  // El vídeo de YouTube solo se carga al pulsar (privacidad: nada de terceros
+  // hasta que el usuario lo pide). Se resetea al abrir otra receta.
+  const [videoOn, setVideoOn] = useState(false);
 
+  const { data: userRecipes, reload } = useAsyncData(useCallback(() => getAllUserRecipes(), []));
+
+  // Las recetas del usuario van primero: son las suyas.
+  const allRecipes = useMemo<Recipe[]>(
+    () => [...(userRecipes ?? []), ...RECIPE_CATALOG],
+    [userRecipes],
+  );
+
+  function openDetail(recipe: Recipe) {
+    setVideoOn(false);
+    setDetail(recipe);
+  }
+
+  // Enlace profundo #/recetas/<id> (p. ej. "Ver la receta completa" desde el
+  // feed). Se consume una sola vez por id: al recargar la lista (crear/borrar
+  // recetas) no debe volver a abrirse sola.
+  const consumedDeepLink = useRef<string | null>(null);
   useEffect(() => {
-    if (recipeId) setDetail(RECIPE_CATALOG.find((r) => r.id === recipeId) ?? null);
-  }, [recipeId]);
+    if (!recipeId || consumedDeepLink.current === recipeId) return;
+    const found = allRecipes.find((r) => r.id === recipeId);
+    if (found) {
+      consumedDeepLink.current = recipeId;
+      setVideoOn(false);
+      setDetail(found);
+    }
+  }, [recipeId, allRecipes]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('es');
-    return RECIPE_CATALOG.filter(
+    return allRecipes.filter(
       (r) =>
         (!category || r.category === (category as RecipeCategory)) &&
         (!tag || r.tags.includes(tag as RecipeTag)) &&
@@ -69,7 +105,7 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
           r.name.toLocaleLowerCase('es').includes(q) ||
           r.ingredients.some((i) => i.item.toLocaleLowerCase('es').includes(q))),
     );
-  }, [query, category, tag, maxMin]);
+  }, [allRecipes, query, category, tag, maxMin]);
 
   async function addToDiary(recipe: Recipe) {
     await addDiaryEntryAbsolute({
@@ -101,6 +137,12 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
           {notice}
         </p>
       )}
+
+      <div className="btn-row" style={{ marginBottom: '1rem' }}>
+        <button type="button" className="btn btn--primary" onClick={() => setEditorOpen(true)}>
+          + Crear receta
+        </button>
+      </div>
 
       <div className="card">
         <TextField label="Buscar por nombre o ingrediente" value={query} onChange={setQuery} />
@@ -145,8 +187,13 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
         <div className="recipe-grid">
           {filtered.map((r) => {
             const img = recipeImage(r.id);
+            const origin = isUserRecipe(r)
+              ? r.origin === 'propia'
+                ? 'Tu receta'
+                : `De ${r.author ?? 'la comunidad'}`
+              : null;
             return (
-              <button key={r.id} type="button" className="recipe-card" onClick={() => setDetail(r)}>
+              <button key={r.id} type="button" className="recipe-card" onClick={() => openDetail(r)}>
                 <span className={`recipe-hero${img ? ' recipe-hero--photo' : ''}`} aria-hidden="true">
                   {img ? <img src={img} alt="" loading="lazy" /> : <span className="recipe-hero__ph">{UtensilsIcon}</span>}
                 </span>
@@ -156,6 +203,7 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
                     {CATEGORY_LABELS[r.category]} · {r.minutes} min · {r.kcal} kcal · {r.proteinG} g P
                   </span>
                   <span className="recipe-tags">
+                    {origin && <span className="pr-badge badge--own">{origin}</span>}
                     {r.tags.slice(0, 3).map((t) => (
                       <span key={t} className="pr-badge badge--steel">
                         {TAG_LABELS[t]}
@@ -190,6 +238,10 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
               {detail.minutes} min · {detail.servings}{' '}
               {detail.servings === 1 ? 'ración' : 'raciones'} ·{' '}
               <span className="recipe-difficulty">{DIFFICULTY_LABELS[detail.difficulty]}</span>
+              {isUserRecipe(detail) &&
+                (detail.origin === 'propia'
+                  ? ' · Tu receta'
+                  : ` · Guardada de ${detail.author ?? 'la comunidad'}`)}
             </p>
 
             <div className="stat-grid">
@@ -228,18 +280,48 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
               ))}
             </ol>
 
-            <p className="recipe-tip">
-              <span className="recipe-tip__label" aria-hidden="true">
-                Truco
-              </span>
-              <span className="visually-hidden">Truco del chef: </span>
-              {detail.tip}
-            </p>
+            {(() => {
+              const ytId = detail.ytUrl ? parseYouTubeId(detail.ytUrl) : null;
+              if (!ytId) return null;
+              return videoOn ? (
+                <div className="recipe-video">
+                  <iframe
+                    src={youTubeEmbedUrl(ytId)}
+                    title={`Vídeo de la receta ${detail.name}`}
+                    allow="encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <button type="button" className="btn" onClick={() => setVideoOn(true)}>
+                  Ver el vídeo (se carga desde YouTube)
+                </button>
+              );
+            })()}
+
+            {detail.tip && (
+              <p className="recipe-tip">
+                <span className="recipe-tip__label" aria-hidden="true">
+                  Truco
+                </span>
+                <span className="visually-hidden">Truco del chef: </span>
+                {detail.tip}
+              </p>
+            )}
 
             <div className="btn-row" style={{ marginTop: '1rem' }}>
               <button type="button" className="btn btn--primary" onClick={() => addToDiary(detail)}>
                 + Añadir al diario
               </button>
+              {isUserRecipe(detail) && (
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={() => setToDelete(detail)}
+                >
+                  Eliminar
+                </button>
+              )}
               <button type="button" className="btn btn--ghost" onClick={() => setDetail(null)}>
                 Cerrar
               </button>
@@ -261,6 +343,32 @@ export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
           </div>
         </AppDialog>
       )}
+
+      <RecipeEditorDialog
+        open={editorOpen}
+        onSaved={async () => {
+          await reload();
+          setNotice('Receta guardada en tu lista. Puedes publicarla desde Comunidad.');
+        }}
+        onClose={() => setEditorOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={toDelete !== null}
+        title={`¿Eliminar la receta "${toDelete?.name ?? ''}"?`}
+        description="Solo se borra de tu lista. Lo ya añadido al diario no cambia."
+        confirmLabel="Sí, eliminar"
+        onConfirm={async () => {
+          if (toDelete) {
+            await removeUserRecipe(toDelete.id);
+            await reload();
+            announce(`Receta ${toDelete.name} eliminada`);
+            setDetail(null);
+          }
+          setToDelete(null);
+        }}
+        onCancel={() => setToDelete(null)}
+      />
     </>
   );
 }

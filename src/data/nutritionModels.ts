@@ -1,4 +1,5 @@
 // CAPA 1 · Datos — Modelos del módulo de nutrición.
+import type { SharedRecipePayload } from './recipeModels';
 
 export type Meal = 'desayuno' | 'comida' | 'cena' | 'snack';
 
@@ -78,9 +79,16 @@ export interface Post {
   /** Quién puede verla. Ausente = pública (retrocompatible). */
   visibility?: Visibility;
   /** Contenido estructurado: título + líneas (ejercicios, series, receta...).
-   *  exerciseIds (rutinas) y recipeId (recetas) permiten GUARDAR desde el feed;
-   *  opcionales para retrocompatibilidad con publicaciones antiguas. */
-  payload?: { title: string; lines: string[]; exerciseIds?: string[]; recipeId?: string };
+   *  exerciseIds (rutinas), recipeId (recetas del catálogo) y recipe (recetas
+   *  creadas por la comunidad, con datos completos) permiten GUARDAR desde el
+   *  feed; opcionales para retrocompatibilidad con publicaciones antiguas. */
+  payload?: {
+    title: string;
+    lines: string[];
+    exerciseIds?: string[];
+    recipeId?: string;
+    recipe?: SharedRecipePayload;
+  };
   /** Foto adjunta como dataURL (comprimida en el dispositivo). */
   image?: string;
   likes: number;
