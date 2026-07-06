@@ -173,4 +173,13 @@ export const ICONS: Record<Route, ReactNode> = {
       <path d="M9.5 20v-5h5v5" />
     </svg>
   ),
+  legal: (
+    // Documento con sello: términos y privacidad.
+    <svg viewBox="0 0 24 24" {...ICON_SVG} aria-hidden="true">
+      <path d="M6 3h9l4 4v14H6Z" {...FILL_SOFT} />
+      <path d="M6 3h9l4 4v14H6Z" />
+      <path d="M15 3v4h4" />
+      <path d="M9 12h6M9 16h6" strokeWidth="1.7" />
+    </svg>
+  ),
 };

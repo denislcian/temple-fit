@@ -96,6 +96,9 @@ export function LandingView() {
           <a className="btn btn--ghost" href="#/ajustes">
             Ajustes y datos
           </a>
+          <a className="btn btn--ghost" href="#/legal">
+            Legal
+          </a>
         </div>
       </section>
     </div>

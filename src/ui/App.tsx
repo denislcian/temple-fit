@@ -12,11 +12,13 @@ import { requestPersistentStorage } from '../data/db';
 import { getAllSessions } from '../data/repositories/sessionRepo';
 import { socialRepo } from '../data/repositories/socialRepo';
 import { computeProfileStats } from '../domain/profileStats';
+import { needsMfaChallenge } from '../data/mfa';
 import { isSupabaseEnabled } from '../data/supabase';
 import { ensureFoodsSeeded } from '../data/repositories/nutritionRepo';
 import { ensureSeeded } from '../data/seed';
 import { AnnouncerProvider, useAnnounce } from './components/Announcer';
 import { AuthProvider, useAuth } from './components/AuthContext';
+import { MfaGate } from './components/MfaGate';
 import { AuthScreen } from './components/AuthScreen';
 import { WelcomeHero } from './components/WelcomeHero';
 import {
@@ -30,6 +32,7 @@ import { useTheme, type Theme } from './hooks/useTheme';
 import { ExercisesView } from './views/ExercisesView';
 import { HistoryView } from './views/HistoryView';
 import { LandingView } from './views/LandingView';
+import { LegalView } from './views/LegalView';
 import { MoreView } from './views/MoreView';
 import { NutritionView } from './views/NutritionView';
 import { RoutinesView } from './views/RoutinesView';
@@ -235,6 +238,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
           // por ruta (render condicional), igual que antes.
           <div className="app-view" data-route={route}>
             {route === 'inicio' && <LandingView />}
+            {route === 'legal' && <LegalView />}
             {route === 'entrenar' && <TrainView />}
             {route === 'coach' && <CoachView />}
             {route === 'nutricion' && <NutritionView />}
@@ -292,8 +296,25 @@ function AuthGate({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
 
 // Decide qué se muestra: cargando → app local → puerta (nube sin sesión) → app.
 function Root() {
-  const { account, loading } = useAuth();
+  const { account, loading, logout, refresh } = useAuth();
   const { theme, setTheme } = useTheme();
+
+  // 2FA: si la cuenta tiene TOTP, la sesión entra en aal1 y hay que completar
+  // el reto antes de mostrar NADA de la app.
+  const [mfaPending, setMfaPending] = useState<boolean | null>(isSupabaseEnabled ? null : false);
+  useEffect(() => {
+    if (!isSupabaseEnabled || !account) {
+      setMfaPending(false);
+      return;
+    }
+    let alive = true;
+    void needsMfaChallenge().then((v) => {
+      if (alive) setMfaPending(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [account]);
 
   // Al haber sesión: sincroniza los datos de la cuenta (sube lo local la 1ª vez,
   // baja lo de la nube) y publica el resumen de stats para tu perfil.
@@ -325,6 +346,25 @@ function Root() {
   }
   if (isSupabaseEnabled && !account) {
     return <AuthGate theme={theme} setTheme={setTheme} />;
+  }
+  if (isSupabaseEnabled && account && mfaPending !== false) {
+    // null = comprobando (instantáneo); true = pedir el código.
+    return mfaPending ? (
+      <MfaGate
+        onDone={() => {
+          setMfaPending(false);
+          void refresh();
+        }}
+        onLogout={logout}
+      />
+    ) : (
+      <div className="gate gate--loading">
+        <span className="spark" aria-hidden="true" />
+        <p className="muted" role="status">
+          Cargando…
+        </p>
+      </div>
+    );
   }
   return <AppShell theme={theme} setTheme={setTheme} />;
 }

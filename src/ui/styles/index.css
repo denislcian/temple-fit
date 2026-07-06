@@ -2301,6 +2301,21 @@ legend {
   vertical-align: -2px;
 }
 
+/* QR de activación del 2FA (SVG generado por Supabase). */
+.mfa-qr {
+  display: inline-block;
+  padding: 0.5rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  margin: 0.25rem 0 0.5rem;
+}
+.mfa-qr svg {
+  display: block;
+  width: 11rem;
+  height: 11rem;
+}
+
 /* Tarjeta "Hoy" de Entrenar: fecha, frase del día y qué toca. */
 .today-card {
   border-left: 3px solid var(--accent);

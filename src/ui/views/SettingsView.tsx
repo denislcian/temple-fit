@@ -11,6 +11,7 @@ import { FREE_ROUTINE_LIMIT } from '../../domain/premium';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
 import { AccountCard } from '../components/AccountCard';
+import { SecurityCard } from '../components/SecurityCard';
 import { useAnnounce } from '../components/Announcer';
 import { ProfileCard } from '../components/ProfileCard';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -121,6 +122,8 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
       <AccountCard />
 
       <ProfileCard />
+
+      <SecurityCard />
 
       <section className="card" aria-labelledby="plan-heading">
         <h2 id="plan-heading">Tu plan</h2>
@@ -390,7 +393,11 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
         <h2 id="about-heading">Acerca de TMPL</h2>
         <p className="muted">
           Proyecto personal de código abierto (licencia MIT). Construido con React, TypeScript e
-          IndexedDB, sin rastreadores ni analítica: tu entrenamiento es asunto tuyo.
+          IndexedDB, sin rastreadores ni analítica: tu entrenamiento es asunto tuyo.{' '}
+          <a className="link" href="#/legal">
+            Términos, privacidad y cookies
+          </a>
+          .
         </p>
       </section>
     </>

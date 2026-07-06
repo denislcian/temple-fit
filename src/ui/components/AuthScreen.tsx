@@ -452,6 +452,13 @@ export function AuthScreen() {
               {busy ? 'Un momento…' : isLast ? 'Crear mi cuenta' : 'Siguiente'}
             </button>
           </div>
+          <p className="hint" style={{ marginTop: '0.6rem' }}>
+            Al crear tu cuenta aceptas los{' '}
+            <a className="link" href="#/legal">
+              términos y la política de privacidad
+            </a>
+            .
+          </p>
         </div>
       )}
 
