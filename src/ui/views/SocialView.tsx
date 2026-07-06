@@ -131,6 +131,14 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   const { data: routines } = useAsyncData(useCallback(() => getAllRoutines(), []));
   const { data: exercises } = useAsyncData(useCallback(() => getAllExercises(), []));
   const { data: myRecipes } = useAsyncData(useCallback(() => getAllUserRecipes(), []));
+  // Quiénes me marcaron como mejor amigo (para ver sus publicaciones 'mejores')
+  // y cuántas personas tengo yo en mi lista (aviso al publicar).
+  const { data: closeOwners, reload: reloadCloseOwners } = useAsyncData(
+    useCallback(() => socialRepo.getCloseFriendOwners(myId), [myId]),
+  );
+  const { data: myCloseFriends } = useAsyncData(
+    useCallback(() => socialRepo.getCloseFriends(myId), [myId]),
+  );
   const { data: discover, reload: reloadDiscover } = useAsyncData(
     useCallback(() => socialRepo.discoverAccounts(myId), [myId]),
   );
@@ -147,15 +155,21 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
   }, [reloadFollowing]);
 
   // Tiempo real (solo en la nube): el feed y el contador de notificaciones se
-  // refrescan solos cuando alguien publica o te notifica.
+  // refrescan solos cuando alguien publica o te notifica. Se refresca también
+  // quiénes te marcaron como mejor amigo: si te marcan después de abrir la
+  // vista, sus publicaciones 'mejores' no deben quedar ocultas por el espejo
+  // del cliente cuando RLS ya te las entrega.
   useEffect(() => {
-    const offFeed = socialRepo.subscribeFeed?.(() => void reload());
+    const offFeed = socialRepo.subscribeFeed?.(() => {
+      void reload();
+      void reloadCloseOwners();
+    });
     const offNotif = notificationsRepo.subscribe?.(myId, () => void reloadUnread());
     return () => {
       offFeed?.();
       offNotif?.();
     };
-  }, [reload, reloadUnread, myId]);
+  }, [reload, reloadCloseOwners, reloadUnread, myId]);
 
   const [publishing, setPublishing] = useState(false);
   const [postText, setPostText] = useState('');
@@ -242,7 +256,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       announce('No se pudo procesar la imagen');
     }
   }
-  const visibleFeed = visiblePosts(posts ?? [], myId, following);
+  const visibleFeed = visiblePosts(posts ?? [], myId, following, closeOwners ?? []);
 
   async function publish() {
     let kind: Post['kind'] = 'texto';
@@ -651,7 +665,11 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                 {relativeTime(post.createdAt)}
                 {post.visibility && post.visibility !== 'publica' && (
                   <span className="post-tag">
-                    {post.visibility === 'privada' ? 'Privada' : 'Seguidores'}
+                    {post.visibility === 'privada'
+                      ? 'Privada'
+                      : post.visibility === 'mejores'
+                        ? 'Mejores amigos'
+                        : 'Seguidores'}
                   </span>
                 )}
                 {post.isDemo && <span className="post-tag">ejemplo</span>}
@@ -895,8 +913,18 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
         >
           <option value="publica">Pública — cualquiera</option>
           <option value="seguidores">Solo mis seguidores</option>
+          <option value="mejores">Mejores amigos — solo tu lista</option>
           <option value="privada">Privada — solo yo</option>
         </SelectField>
+        {visibility === 'mejores' && (
+          <p className="muted" role="status" style={{ margin: '0.35rem 0 0', fontSize: 'var(--fs-sm)' }}>
+            {(myCloseFriends?.length ?? 0) === 0
+              ? 'Tu lista está vacía: nadie más la verá. Añade mejores amigos con la estrella de su perfil.'
+              : myCloseFriends!.length === 1
+                ? 'La verá la única persona de tu lista de mejores amigos.'
+                : `La verán las ${myCloseFriends!.length} personas de tu lista de mejores amigos.`}
+          </p>
+        )}
         </fieldset>
         <div className="btn-row">
           <button type="button" className="btn btn--primary" onClick={publish}>

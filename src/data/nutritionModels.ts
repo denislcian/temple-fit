@@ -57,11 +57,12 @@ export interface PostComment {
 }
 
 /** Quién puede ver una publicación. */
-export type Visibility = 'publica' | 'seguidores' | 'privada';
+export type Visibility = 'publica' | 'seguidores' | 'mejores' | 'privada';
 
 export const VISIBILITY_LABELS: Record<Visibility, string> = {
   publica: 'Pública',
   seguidores: 'Solo seguidores',
+  mejores: 'Mejores amigos',
   privada: 'Privada',
 };
 
@@ -103,6 +104,16 @@ export interface Follow {
   id: string;
   followerId: string;
   followeeId: string;
+  createdAt: string;
+}
+
+/** Mejor amigo: ownerId marcó a friendId. Tabla propia (no un campo en Follow):
+ *  el grafo de seguidores es público, pero la lista de mejores amigos solo la
+ *  ven el dueño y la persona marcada. La marca decide quién ve las
+ *  publicaciones con visibilidad 'mejores' del dueño. */
+export interface CloseFriend {
+  ownerId: string;
+  friendId: string;
   createdAt: string;
 }
 

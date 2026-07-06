@@ -47,6 +47,11 @@ export function DescansoView() {
   const [shareText, setShareText] = useState('');
   const [shareVis, setShareVis] = useState<Visibility>('seguidores');
   const [sharing, setSharing] = useState(false);
+  // Cuántas personas hay en mi lista de mejores amigos (aviso al compartir).
+  const myId = account?.id ?? '';
+  const { data: myCloseFriends } = useAsyncData(
+    useCallback(() => (myId ? socialRepo.getCloseFriends(myId) : Promise.resolve([])), [myId]),
+  );
 
   function markToday() {
     markRecoveryDay(localDateISO());
@@ -344,9 +349,19 @@ export function DescansoView() {
               onChange={(v) => setShareVis(v as Visibility)}
             >
               <option value="seguidores">Solo mis seguidores (recomendado)</option>
+              <option value="mejores">Mejores amigos — solo tu lista</option>
               <option value="publica">Pública — cualquiera</option>
               <option value="privada">Privada — solo yo</option>
             </SelectField>
+            {shareVis === 'mejores' && (
+              <p className="muted" role="status" style={{ margin: '0.35rem 0 0', fontSize: 'var(--fs-sm)' }}>
+                {(myCloseFriends?.length ?? 0) === 0
+                  ? 'Tu lista está vacía: nadie más la verá. Añade mejores amigos con la estrella de su perfil.'
+                  : myCloseFriends!.length === 1
+                    ? 'La verá la única persona de tu lista de mejores amigos.'
+                    : `La verán las ${myCloseFriends!.length} personas de tu lista de mejores amigos.`}
+              </p>
+            )}
             <p className="hint">
               Solo se comparte este resumen. Los detalles (clips de audio, niveles por minuto) se
               quedan en tu dispositivo.

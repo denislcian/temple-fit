@@ -24,7 +24,7 @@ create table if not exists public.posts (
   kind text not null default 'texto'
     check (kind in ('texto','rutina','sesion','receta','foto','sueno','meditacion')),
   visibility text not null default 'publica'
-    check (visibility in ('publica','seguidores','privada')),
+    check (visibility in ('publica','seguidores','mejores','privada')),
   payload jsonb,
   -- Ruta del objeto en Storage (bucket "fotos"); la URL se firma/transforma en cliente.
   image_path text
@@ -95,10 +95,28 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- ── Mejores amigos (lista privada; decide la visibilidad 'mejores') ─────────
+-- También en supabase/migration-mejores-amigos.sql.
+create table if not exists public.close_friends (
+  owner uuid not null references auth.users on delete cascade,
+  friend uuid not null references auth.users on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (owner, friend),
+  check (owner <> friend)
+);
+create index if not exists close_friends_friend_idx on public.close_friends (friend);
+
 -- ── Funciones de ayuda (SECURITY DEFINER para evitar recursión de RLS) ──────
 create or replace function public.is_following(target uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.follows where follower = auth.uid() and followee = target);
+$$;
+
+create or replace function public.is_close_friend_of(author uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.close_friends where owner = author and friend = auth.uid()
+  );
 $$;
 
 create or replace function public.can_see_post(p uuid)
@@ -110,6 +128,7 @@ returns boolean language sql stable security definer set search_path = public as
         po.author = auth.uid()
         or po.visibility = 'publica'
         or (po.visibility = 'seguidores' and public.is_following(po.author))
+        or (po.visibility = 'mejores' and public.is_close_friend_of(po.author))
       )
   );
 $$;
@@ -118,6 +137,7 @@ $$;
 alter table public.profiles      enable row level security;
 alter table public.posts         enable row level security;
 alter table public.follows       enable row level security;
+alter table public.close_friends enable row level security;
 alter table public.post_likes    enable row level security;
 alter table public.post_comments enable row level security;
 
@@ -137,6 +157,7 @@ create policy posts_select on public.posts for select using (
   author = auth.uid()
   or visibility = 'publica'
   or (visibility = 'seguidores' and public.is_following(author))
+  or (visibility = 'mejores' and public.is_close_friend_of(author))
 );
 drop policy if exists posts_insert on public.posts;
 create policy posts_insert on public.posts for insert with check (author = auth.uid());
@@ -152,6 +173,19 @@ drop policy if exists follows_insert on public.follows;
 create policy follows_insert on public.follows for insert with check (follower = auth.uid());
 drop policy if exists follows_delete on public.follows;
 create policy follows_delete on public.follows for delete using (follower = auth.uid());
+
+-- ── Políticas: close_friends (lista privada del dueño) ─────────────────────
+-- Leer: el dueño y la persona marcada (su cliente lo necesita para el feed).
+drop policy if exists close_friends_select on public.close_friends;
+create policy close_friends_select on public.close_friends for select
+  using (owner = auth.uid() or friend = auth.uid());
+drop policy if exists close_friends_insert on public.close_friends;
+create policy close_friends_insert on public.close_friends for insert
+  with check (owner = auth.uid());
+-- Borrar: el dueño o la persona marcada (derecho a salir de la lista de otro).
+drop policy if exists close_friends_delete on public.close_friends;
+create policy close_friends_delete on public.close_friends for delete
+  using (owner = auth.uid() or friend = auth.uid());
 
 -- ── Políticas: post_likes (solo de posts que puedo ver) ─────────────────────
 drop policy if exists likes_select on public.post_likes;

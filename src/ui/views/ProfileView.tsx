@@ -8,7 +8,7 @@ import { socialRepo } from '../../data/repositories/socialRepo';
 import { useAnnounce } from '../components/Announcer';
 import { useAuth } from '../components/AuthContext';
 import { Avatar } from '../components/Avatar';
-import { CommentIcon, HeartIcon } from '../components/icons';
+import { CommentIcon, HeartIcon, StarIcon } from '../components/icons';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatKg } from '../utils/format';
 
@@ -50,6 +50,34 @@ export function ProfileView({ userId }: { userId: string }) {
       return Promise.resolve(null);
     }, [panel, targetId]),
   );
+  // Mi lista de mejores amigos (para las estrellas del panel "Siguiendo").
+  const { data: closeFriends, reload: reloadCloseFriends } = useAsyncData(
+    useCallback(
+      () => (viewerId ? socialRepo.getCloseFriends(viewerId) : Promise.resolve([])),
+      [viewerId],
+    ),
+  );
+  const closeSet = new Set(closeFriends ?? []);
+
+  /** Marca o desmarca a alguien en MI lista de mejores amigos.
+   *  `marked` viene de quien pinta el botón (su fuente de verdad). */
+  async function toggleCloseFriend(friendId: string, name: string, marked: boolean) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await socialRepo.setCloseFriend(viewerId, friendId, !marked);
+      await Promise.all([reloadCloseFriends(), reload()]);
+      announce(
+        marked
+          ? `${name} ya no está en tus mejores amigos`
+          : `Añadiste a ${name} a tus mejores amigos. Verá tus publicaciones de «mejores amigos».`,
+      );
+    } catch (e) {
+      announce(e instanceof Error ? e.message : 'No se pudo cambiar la marca de mejor amigo');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function toggleFollow() {
     if (!profile || profile.isMe) return;
@@ -159,21 +187,46 @@ export function ProfileView({ userId }: { userId: string }) {
             Editar perfil
           </a>
         ) : (
-          <button
-            type="button"
-            className={`btn btn--small ${profile.isFollowing ? '' : 'btn--primary'}`}
-            aria-pressed={profile.isFollowing}
-            onClick={toggleFollow}
-            disabled={busy}
-          >
-            {profile.isFollowing ? 'Siguiendo' : 'Seguir'}
-          </button>
+          <div className="btn-row">
+            {/* La estrella aparece si le sigues (o para poder desmarcar):
+                los mejores amigos son un subconjunto de a quienes sigues. */}
+            {(profile.isFollowing || profile.isCloseFriend) && (
+              <button
+                type="button"
+                className={`fav-toggle ${profile.isCloseFriend ? 'is-fav' : ''}`}
+                aria-pressed={profile.isCloseFriend}
+                aria-label={`Mejor amigo: ${profile.displayName}`}
+                title="Mejor amigo"
+                disabled={busy}
+                onClick={() =>
+                  void toggleCloseFriend(profile.id, profile.displayName, profile.isCloseFriend)
+                }
+              >
+                <span aria-hidden="true">{StarIcon}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className={`btn btn--small ${profile.isFollowing ? '' : 'btn--primary'}`}
+              aria-pressed={profile.isFollowing}
+              onClick={toggleFollow}
+              disabled={busy}
+            >
+              {profile.isFollowing ? 'Siguiendo' : 'Seguir'}
+            </button>
+          </div>
         )}
       </section>
 
       {panel && (
         <section className="card" aria-label={panel === 'followers' ? 'Seguidores' : 'Siguiendo'}>
           <h2 style={{ marginTop: 0 }}>{panel === 'followers' ? 'Seguidores' : 'Siguiendo'}</h2>
+          {profile.isMe && panel === 'following' && (
+            <p className="muted" style={{ marginTop: '-0.25rem' }}>
+              Con la estrella eliges a tus mejores amigos: solo ellos verán tus publicaciones con
+              visibilidad «Mejores amigos».
+            </p>
+          )}
           {connections === undefined && (
             <p className="muted" role="status">
               Cargando…
@@ -198,6 +251,21 @@ export function ProfileView({ userId }: { userId: string }) {
                     <br />
                     <span className="meta">@{acc.username}</span>
                   </div>
+                  {profile.isMe && panel === 'following' && (
+                    <button
+                      type="button"
+                      className={`fav-toggle ${closeSet.has(acc.id) ? 'is-fav' : ''}`}
+                      aria-pressed={closeSet.has(acc.id)}
+                      aria-label={`Mejor amigo: ${acc.displayName}`}
+                      title="Mejor amigo"
+                      disabled={busy}
+                      onClick={() =>
+                        void toggleCloseFriend(acc.id, acc.displayName, closeSet.has(acc.id))
+                      }
+                    >
+                      <span aria-hidden="true">{StarIcon}</span>
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

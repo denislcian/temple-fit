@@ -21,6 +21,7 @@ const posts: Post[] = [
   post('pub', { authorId: 'marta', visibility: 'publica' }),
   post('legacy', { authorId: 'marta' }), // sin visibility = pública
   post('fol', { authorId: 'marta', visibility: 'seguidores' }),
+  post('mejores', { authorId: 'marta', visibility: 'mejores' }),
   post('priv', { authorId: 'marta', visibility: 'privada' }),
   post('mio-priv', { authorId: 'yo', visibility: 'privada' }),
 ];
@@ -48,5 +49,26 @@ describe('visiblePosts', () => {
   it('siempre ves tus propias publicaciones, incluso privadas', () => {
     const ids = visiblePosts(posts, 'yo', []).map((p) => p.id);
     expect(ids).toContain('mio-priv');
+  });
+
+  it('"mejores amigos" solo la ven quienes el AUTOR marcó, aunque le sigan', () => {
+    // Sigo a marta pero no estoy en su lista: no la veo.
+    const sinMarca = visiblePosts(posts, 'yo', ['marta']).map((p) => p.id);
+    expect(sinMarca).not.toContain('mejores');
+    // Marta me marcó como mejor amigo: la veo (incluso sin seguirla).
+    const conMarca = visiblePosts(posts, 'yo', [], ['marta']).map((p) => p.id);
+    expect(conMarca).toContain('mejores');
+  });
+
+  it('la lista de mejores amigos del viewer no abre publicaciones del autor', () => {
+    // Yo marqué a marta como MI mejor amiga, pero ella a mí no: la dirección
+    // que cuenta es la del autor, así que su "mejores" sigue oculta.
+    const ids = visiblePosts(posts, 'yo', ['marta'], []).map((p) => p.id);
+    expect(ids).not.toContain('mejores');
+  });
+
+  it('un invitado nunca ve publicaciones de mejores amigos', () => {
+    const ids = visiblePosts(posts, null, [], []).map((p) => p.id);
+    expect(ids).not.toContain('mejores');
   });
 });

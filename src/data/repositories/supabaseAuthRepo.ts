@@ -231,9 +231,13 @@ export class SupabaseAuthService implements AuthService {
   }
 
   /** RGPD: borra el perfil (cascada → posts, seguidores, likes, comentarios) y
-   *  cierra la sesión. El borrado total de auth.users requiere una Edge Function
-   *  con service_role (pendiente para producción). */
+   *  las marcas de mejor amigo en ambos sentidos, y cierra la sesión. El borrado
+   *  total de auth.users requiere una Edge Function con service_role (pendiente
+   *  para producción). */
   async deleteAccount(id: string): Promise<void> {
+    // La política de close_friends permite borrar siendo owner O friend, así
+    // que también se retiran las marcas que otras personas te pusieron.
+    await this.sb.from('close_friends').delete().or(`owner.eq.${id},friend.eq.${id}`);
     await this.sb.from('profiles').delete().eq('id', id);
     this.logout();
   }

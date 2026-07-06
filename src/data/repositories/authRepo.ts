@@ -189,10 +189,10 @@ class LocalAuthService implements AuthService {
     return ['local'];
   }
 
-  /** Borrado de cuenta (RGPD): elimina la cuenta, sus publicaciones y sus
-   *  relaciones de seguimiento en ambos sentidos. */
+  /** Borrado de cuenta (RGPD): elimina la cuenta, sus publicaciones, sus
+   *  relaciones de seguimiento y sus marcas de mejor amigo en ambos sentidos. */
   async deleteAccount(id: string): Promise<void> {
-    await db.transaction('rw', [db.accounts, db.posts, db.follows], async () => {
+    await db.transaction('rw', [db.accounts, db.posts, db.follows, db.closeFriends], async () => {
       await db.accounts.delete(id);
       const own = await db.posts.where('authorId').equals(id).toArray();
       await db.posts.bulkDelete(own.map((p) => p.id));
@@ -200,6 +200,10 @@ class LocalAuthService implements AuthService {
         .filter((f) => f.followerId === id || f.followeeId === id)
         .toArray();
       await db.follows.bulkDelete(rel.map((f) => f.id));
+      const marks = await db.closeFriends
+        .filter((c) => c.ownerId === id || c.friendId === id)
+        .toArray();
+      await db.closeFriends.bulkDelete(marks.map((c) => [c.ownerId, c.friendId] as [string, string]));
     });
     if ((await this.currentAccountId()) === id) this.logout();
   }

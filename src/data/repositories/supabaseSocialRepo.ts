@@ -251,6 +251,9 @@ export class SupabaseSocialRepository implements SocialRepository {
 
   async unfollow(followerId: string, followeeId: string): Promise<void> {
     await this.sb.from('follows').delete().eq('follower', followerId).eq('followee', followeeId);
+    // Los mejores amigos son un subconjunto de a quienes sigues: al dejar de
+    // seguir, la marca cae también (evita marcas huérfanas sin UI de gestión).
+    await this.sb.from('close_friends').delete().eq('owner', followerId).eq('friend', followeeId);
   }
 
   async countFollowers(accountId: string): Promise<number> {
@@ -259,6 +262,40 @@ export class SupabaseSocialRepository implements SocialRepository {
       .select('followee', { count: 'exact', head: true })
       .eq('followee', accountId);
     return count ?? 0;
+  }
+
+  // Mejores amigos: tabla close_friends (owner, friend). RLS solo deja leer
+  // las filas donde eres el dueño o la persona marcada; escribir, solo el dueño.
+  async getCloseFriends(ownerId: string): Promise<string[]> {
+    const { data } = await this.sb.from('close_friends').select('friend').eq('owner', ownerId);
+    return ((data as { friend: string }[] | null) ?? []).map((r) => r.friend);
+  }
+
+  async getCloseFriendOwners(friendId: string): Promise<string[]> {
+    const { data } = await this.sb.from('close_friends').select('owner').eq('friend', friendId);
+    return ((data as { owner: string }[] | null) ?? []).map((r) => r.owner);
+  }
+
+  async setCloseFriend(ownerId: string, friendId: string, close: boolean): Promise<void> {
+    if (ownerId === friendId) return;
+    if (close) {
+      // ignoreDuplicates → ON CONFLICT DO NOTHING: la tabla no tiene política
+      // UPDATE (a propósito), así que un upsert normal fallaría si la fila existe.
+      const { error } = await this.sb
+        .from('close_friends')
+        .upsert(
+          { owner: ownerId, friend: friendId },
+          { onConflict: 'owner,friend', ignoreDuplicates: true },
+        );
+      if (error) throw new Error('No se pudo guardar la marca de mejor amigo');
+    } else {
+      const { error } = await this.sb
+        .from('close_friends')
+        .delete()
+        .eq('owner', ownerId)
+        .eq('friend', friendId);
+      if (error) throw new Error('No se pudo quitar la marca de mejor amigo');
+    }
   }
 
   async discoverAccounts(viewerId: string): Promise<Account[]> {
@@ -298,11 +335,17 @@ export class SupabaseSocialRepository implements SocialRepository {
   }
 
   async getProfile(userId: string, viewerId: string): Promise<ProfileData | null> {
-    const [profRes, followers, followingRes, isFollowing, statsRes, me] = await Promise.all([
+    const [profRes, followers, followingRes, isFollowing, closeRes, statsRes, me] = await Promise.all([
       this.sb.from('profiles').select('*').eq('id', userId).maybeSingle(),
       this.countFollowers(userId),
       this.sb.from('follows').select('follower', { count: 'exact', head: true }).eq('follower', userId),
       this.isFollowing(viewerId, userId),
+      this.sb
+        .from('close_friends')
+        .select('friend')
+        .eq('owner', viewerId)
+        .eq('friend', userId)
+        .maybeSingle(),
       this.sb
         .from('profile_stats')
         .select('sessions, volume_kg, streak_weeks, best_lifts')
@@ -334,6 +377,7 @@ export class SupabaseSocialRepository implements SocialRepository {
       followers,
       following: followingRes.count ?? 0,
       isFollowing,
+      isCloseFriend: closeRes.data !== null,
       isMe: me === userId,
       stats: s
         ? {

@@ -24,6 +24,8 @@ export interface ProfileData {
   followers: number;
   following: number;
   isFollowing: boolean;
+  /** ¿El viewer tiene a esta persona en SU lista de mejores amigos? */
+  isCloseFriend: boolean;
   isMe: boolean;
   stats: PublicStats;
 }
@@ -50,6 +52,13 @@ export interface SocialRepository {
   follow(followerId: string, followeeId: string): Promise<void>;
   unfollow(followerId: string, followeeId: string): Promise<void>;
   countFollowers(accountId: string): Promise<number>;
+  // Mejores amigos (lista privada del dueño; decide la visibilidad 'mejores')
+  /** Ids que ownerId marcó como mejores amigos. */
+  getCloseFriends(ownerId: string): Promise<string[]>;
+  /** Ids de quienes marcaron a friendId como mejor amigo (para filtrar el feed). */
+  getCloseFriendOwners(friendId: string): Promise<string[]>;
+  /** Marca (true) o desmarca (false) a friendId en la lista de ownerId. */
+  setCloseFriend(ownerId: string, friendId: string, close: boolean): Promise<void>;
   /** Cuentas que siguen a userId. */
   getFollowers(userId: string): Promise<Account[]>;
   /** Cuentas a las que userId sigue. */
@@ -186,10 +195,32 @@ class LocalSocialRepository implements SocialRepository {
       .equals([followerId, followeeId])
       .first();
     if (row) await db.follows.delete(row.id);
+    // Al dejar de seguir, la marca de mejor amigo cae también (los mejores
+    // amigos se gestionan desde el panel "Siguiendo": sin huérfanos).
+    await db.closeFriends.delete([followerId, followeeId]);
   }
 
   async countFollowers(accountId: string): Promise<number> {
     return db.follows.where('followeeId').equals(accountId).count();
+  }
+
+  async getCloseFriends(ownerId: string): Promise<string[]> {
+    const rows = await db.closeFriends.where('ownerId').equals(ownerId).toArray();
+    return rows.map((r) => r.friendId);
+  }
+
+  async getCloseFriendOwners(friendId: string): Promise<string[]> {
+    const rows = await db.closeFriends.where('friendId').equals(friendId).toArray();
+    return rows.map((r) => r.ownerId);
+  }
+
+  async setCloseFriend(ownerId: string, friendId: string, close: boolean): Promise<void> {
+    if (ownerId === friendId) return;
+    if (close) {
+      await db.closeFriends.put({ ownerId, friendId, createdAt: new Date().toISOString() });
+    } else {
+      await db.closeFriends.delete([ownerId, friendId]);
+    }
   }
 
   async getFollowers(userId: string): Promise<Account[]> {
@@ -239,10 +270,11 @@ class LocalSocialRepository implements SocialRepository {
     await ensureSeeded();
     const acc = await db.accounts.get(userId);
     if (!acc) return null;
-    const [followers, following, isFollowing, stats] = await Promise.all([
+    const [followers, following, isFollowing, closeRow, stats] = await Promise.all([
       this.countFollowers(userId),
       db.follows.where('followerId').equals(userId).count(),
       this.isFollowing(viewerId, userId),
+      db.closeFriends.get([viewerId, userId]),
       this.statsFor(userId, viewerId),
     ]);
     return {
@@ -255,6 +287,7 @@ class LocalSocialRepository implements SocialRepository {
       followers,
       following,
       isFollowing,
+      isCloseFriend: closeRow !== undefined,
       isMe: userId === viewerId,
       stats,
     };
@@ -274,9 +307,12 @@ class LocalSocialRepository implements SocialRepository {
 
   async getUserPosts(userId: string, viewerId: string): Promise<Post[]> {
     await ensureSeeded();
-    const following = new Set(await this.getFollowing(viewerId));
+    const [following, closeOwners] = await Promise.all([
+      this.getFollowing(viewerId),
+      this.getCloseFriendOwners(viewerId),
+    ]);
     const all = await db.posts.where('authorId').equals(userId).toArray();
-    const visible = visiblePosts(all, viewerId, following).sort((a, b) =>
+    const visible = visiblePosts(all, viewerId, following, closeOwners).sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     );
     return this.withAvatars(visible);
@@ -326,7 +362,7 @@ async function ensureSeeded(): Promise<void> {
       createdAt: hoursAgo(50),
       kind: 'texto',
       visibility: 'publica',
-      text: 'Bienvenido a la comunidad 👋 Crea tu cuenta para publicar tus entrenamientos, seguir a otras personas y elegir quién ve cada publicación (pública, solo seguidores o privada). En este modo local todo vive en tu dispositivo; la versión en la nube lo hará compartido de verdad.',
+      text: 'Bienvenido a la comunidad 👋 Crea tu cuenta para publicar tus entrenamientos, seguir a otras personas y elegir quién ve cada publicación (pública, solo seguidores, mejores amigos o privada). En este modo local todo vive en tu dispositivo; la versión en la nube lo hará compartido de verdad.',
       likes: 21,
       likedByMe: false,
       comments: [],

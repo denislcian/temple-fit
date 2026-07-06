@@ -11,13 +11,18 @@ import type { Post } from '../data/nutritionModels';
  * @param posts todas las publicaciones
  * @param viewerId cuenta que mira (null si no ha iniciado sesión)
  * @param followeeIds ids de las cuentas a las que sigue el viewer
+ * @param closeFriendOwnerIds ids de los autores que marcaron al viewer como
+ *   mejor amigo (ojo: la dirección se invierte — decide la lista del AUTOR,
+ *   no la del viewer)
  */
 export function visiblePosts(
   posts: Post[],
   viewerId: string | null,
   followeeIds: Iterable<string>,
+  closeFriendOwnerIds: Iterable<string> = [],
 ): Post[] {
   const following = new Set(followeeIds);
+  const closeOf = new Set(closeFriendOwnerIds);
   return posts.filter((post) => {
     // Las publicaciones de ejemplo del modo local siempre se ven.
     if (post.isDemo) return true;
@@ -29,6 +34,8 @@ export function visiblePosts(
         return true;
       case 'seguidores':
         return post.authorId !== undefined && following.has(post.authorId);
+      case 'mejores':
+        return post.authorId !== undefined && closeOf.has(post.authorId);
       case 'privada':
         return false;
     }
