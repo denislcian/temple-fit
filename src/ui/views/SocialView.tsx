@@ -6,8 +6,11 @@ import type { Account } from '../../data/authModels';
 import type { Post, Visibility } from '../../data/nutritionModels';
 import { VISIBILITY_LABELS } from '../../data/nutritionModels';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
+import { getPremiumStatus } from '../../data/premium';
 import { getAllExercises } from '../../data/repositories/exerciseRepo';
-import { getAllRoutines } from '../../data/repositories/routineRepo';
+import { addRoutine, getAllRoutines } from '../../data/repositories/routineRepo';
+import { resolveRoutineImport } from '../../domain/feedImport';
+import { canAddRoutines, routineLimitMessage } from '../../domain/premium';
 import { notificationsRepo } from '../../data/repositories/notificationsRepo';
 import { authService } from '../../data/repositories/authRepo';
 import { getAllSessions } from '../../data/repositories/sessionRepo';
@@ -216,14 +219,19 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
 
   async function publish() {
     let kind: Post['kind'] = 'texto';
-    let payload: { title: string; lines: string[] } | undefined;
+    let payload: Post['payload'];
     let image: string | undefined;
 
     if (attach.startsWith('rutina:')) {
       const routine = routines?.find((r) => r.id === attach.slice('rutina:'.length));
       if (routine) {
         kind = 'rutina';
-        payload = { title: routine.name, lines: routine.exerciseIds.map((id) => nameById.get(id) ?? id) };
+        payload = {
+          title: routine.name,
+          lines: routine.exerciseIds.map((id) => nameById.get(id) ?? id),
+          // Con los ids, quien la vea puede GUARDARLA en su biblioteca.
+          exerciseIds: [...routine.exerciseIds],
+        };
       }
     } else if (attach.startsWith('receta:')) {
       const recipe = RECIPE_CATALOG.find((r) => r.id === attach.slice('receta:'.length));
@@ -235,6 +243,7 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
             `${recipe.minutes} min · ${recipe.servings} ${recipe.servings === 1 ? 'ración' : 'raciones'} · ${recipe.kcal} kcal · ${recipe.proteinG} g proteína`,
             ...recipe.ingredients.map((i) => `${i.item} — ${i.amount}`),
           ],
+          recipeId: recipe.id,
         };
       }
     } else if (attach === 'foto' && photo) {
@@ -311,6 +320,31 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
       });
     }
     announce('Comentario publicado');
+  }
+
+  /** Guardar en mi biblioteca la rutina de una publicación (con puerta freemium). */
+  async function saveRoutineFromPost(post: Post) {
+    if (!post.payload) return;
+    const resolved = resolveRoutineImport(post.payload, exercises ?? []);
+    if (resolved.exerciseIds.length === 0) {
+      announce('No se pudo importar: sus ejercicios no existen en tu catálogo');
+      return;
+    }
+    const [mine, { premium }] = await Promise.all([getAllRoutines(), getPremiumStatus()]);
+    if (!canAddRoutines(mine.length, 1, premium).allowed) {
+      announce(routineLimitMessage(1));
+      return;
+    }
+    await addRoutine({
+      name: post.payload.title,
+      exerciseIds: resolved.exerciseIds,
+      notes: `De ${post.author}, guardada desde la comunidad.`,
+    });
+    announce(
+      resolved.missing > 0
+        ? `Rutina guardada (${resolved.missing} ${resolved.missing === 1 ? 'ejercicio omitido' : 'ejercicios omitidos'} que no existen en tu catálogo)`
+        : `Rutina "${post.payload.title}" guardada en tus rutinas`,
+    );
   }
 
   async function toggleFollow(target: Account) {
@@ -593,6 +627,28 @@ function Feed({ account, onLogout }: { account: Account; onLogout: () => void })
                   </li>
                 ))}
               </ul>
+              {/* Adoptar el contenido: la gracia de compartir. */}
+              {post.kind === 'rutina' && (
+                <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn--small"
+                    onClick={() => void saveRoutineFromPost(post)}
+                  >
+                    Guardar en mis rutinas
+                  </button>
+                </div>
+              )}
+              {post.kind === 'receta' && post.payload.recipeId && (
+                <div className="btn-row" style={{ marginTop: '0.5rem' }}>
+                  <a
+                    className="btn btn--small"
+                    href={`#/recetas/${encodeURIComponent(post.payload.recipeId)}`}
+                  >
+                    Ver la receta completa
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

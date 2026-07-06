@@ -1,6 +1,6 @@
 // CAPA 3 · Interfaz — Recetas: catálogo filtrable con ingredientes, pasos y
 // macros. Se integra con la nutrición ("Añadir al diario").
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Meal } from '../../data/nutritionModels';
 import { addDiaryEntryAbsolute } from '../../data/repositories/nutritionRepo';
 import { RECIPE_CATALOG } from '../../data/recipeCatalog';
@@ -42,14 +42,21 @@ function mealFor(category: RecipeCategory): Meal {
   return category === 'postre' ? 'snack' : category;
 }
 
-export function RecipesView() {
+export function RecipesView({ recipeId }: { recipeId?: string } = {}) {
   const announce = useAnnounce();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [tag, setTag] = useState('');
   const [maxMin, setMaxMin] = useState('');
-  const [detail, setDetail] = useState<Recipe | null>(null);
+  // Enlace profundo #/recetas/<id> (p. ej. "Ver la receta completa" desde el feed).
+  const [detail, setDetail] = useState<Recipe | null>(
+    () => RECIPE_CATALOG.find((r) => r.id === recipeId) ?? null,
+  );
   const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (recipeId) setDetail(RECIPE_CATALOG.find((r) => r.id === recipeId) ?? null);
+  }, [recipeId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('es');

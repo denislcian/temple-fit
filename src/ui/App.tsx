@@ -247,7 +247,7 @@ function AppShell({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => v
             {route === 'ejercicios' && <ExercisesView />}
             {route === 'herramientas' && <ToolsView />}
             {route === 'descanso' && <DescansoView />}
-            {route === 'recetas' && <RecipesView />}
+            {route === 'recetas' && <RecipesView recipeId={param} />}
             {route === 'progreso' && (
               <Suspense
                 fallback={

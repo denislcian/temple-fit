@@ -77,8 +77,10 @@ export interface Post {
   kind: 'rutina' | 'sesion' | 'texto' | 'receta' | 'foto' | 'sueno' | 'meditacion';
   /** Quién puede verla. Ausente = pública (retrocompatible). */
   visibility?: Visibility;
-  /** Contenido estructurado: título + líneas (ejercicios, series, receta...). */
-  payload?: { title: string; lines: string[] };
+  /** Contenido estructurado: título + líneas (ejercicios, series, receta...).
+   *  exerciseIds (rutinas) y recipeId (recetas) permiten GUARDAR desde el feed;
+   *  opcionales para retrocompatibilidad con publicaciones antiguas. */
+  payload?: { title: string; lines: string[]; exerciseIds?: string[]; recipeId?: string };
   /** Foto adjunta como dataURL (comprimida en el dispositivo). */
   image?: string;
   likes: number;
